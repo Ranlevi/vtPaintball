@@ -1,0 +1,42 @@
+Textual Holodeck
+----------------
+A city with houses. Streets have names.
+Doors lead to creative area for a specific user.
+The user spawns infront of their door.
+The door has a sign to descrive the content.
+Maybe add a button to randomly teleport to another door.
+A user has an amount of rooms. He can disable unneeded exits.
+
+Users can create and modify whatever they want.
+No dying or killing - pure role playing. 
+A user can claim ownership of an empty room (or renounce it)
+Only an owner can edit a room.
+visitors can't get anything out of a room.
+The world needs to be saved.
+Users can teleport to a room with it's id (which can be copied from the cmds)
+IDs should be short.
+Need to create a help page.
+
+Each users has a Holodeck, which is a collection of rooms that he owns.
+An empty holodeck room has a button. Pressing it generates the deck and assiangs onwership. 
+
+Inside an holodeck only the owner can create stuff.
+Anyone can edit what they are wearing in the holodeck.
+Only the owner can take things out of the holodeck.
+outside the holodeck, things on the floor expire.
+
+There's an admin account.
+
+- World class holds all the entities, and methods to manipulate the database.
+- Each entitiy class is responsible for itself. Adding to the world and spawning other entities is handled outside.
+
+An infinite corridor. Each door is a holodeck assigned for someone.
+No need for changing ownership.
+Each holodeck has 100 rooms cube.
+User spawns in his holodeck, or teleport home.
+Decks created dynamically.
+
+todo:
+Corridor rooms should not have the option to edit exits, since they are 
+created automatically when a new user logs in.
+

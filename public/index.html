@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <title>Holodeck</title>
+    <meta   charset="utf-8"> <!-- For Hebrew support on old browsers -->
+    <meta   http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Support IE browsers -->
+    <meta   name="viewport"              content="width=device-width, initial-scale=1">
+    <link   rel="stylesheet"  href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+    <link   rel="stylesheet"  href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">        
+    <link   rel="stylesheet"  href="./style.css"> 
+    <script src="/socket.io/socket.io.js"></script>
+    <script type="module"     src="./client.js" defer></script>
+    </head>
+  <body>
+
+    <!-- For console debug on mobile browsers -->
+    <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script> -->
+    <!-- <script>eruda.init();</script> -->    
+    
+    <!-- Game Area -->
+   <div id="Parent">
+    <div id="Chat" class="is-align-self-stretch"></div>
+
+    <div id="Input" class="has-background-light">
+      
+      <div class="control">        
+        <form id="input_field">            
+          <input
+            id="input_form"             
+            class="input" 
+            autocomplete="off"
+            type="text" 
+            rows="1" 
+            placeholder="Text input">
+          </input>          
+        </form>
+      </div>
+      
+    </div> 
+              
+    <div id="Dashboard">            
+
+      <div id="freeze_btn" class="icon is-large has-text-success">        
+        <i class="mdi mdi-24px mdi-hand-back-left"></i>
+      </div>
+
+      <div id="settings_btn" class="icon is-large">
+        <i class="mdi mdi-24px mdi-cog"></i>        
+      </div>       
+      
+      <div id="inv_btn" class="icon is-large">
+        <i class="mdi mdi-24px mdi-human"></i>        
+      </div>  
+
+      <div id="disconnect_btn" class="icon is-large">
+        <i class="mdi mdi-24px mdi-lan-disconnect"></i>        
+      </div>
+    </div>    
+   </div>
+   
+   <!-- Login Modal -->
+   <div id="login_modal" class="modal is-active">
+    <div class="modal-background"></div>
+    <div id="modal_content" class="modal-content">
+      
+      <div class="has-text-white has-text-centered">Welcome to</div>
+      <div class="has-text-white is-size-2 has-text-centered">Holodeck</div>
+      <div class="has-text-white has-text-centered">
+        A modern, mobile-friendly, textual Holodeck where you can create *anything*.
+      </div>
+      <div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>
+      <div class="block"></div>
+      <div class="has-text-white has-text-centered">Create a new charcter (or Login an existing one)</div>
+
+      <form>
+        <div class="field login_input">
+          <label class="label has-text-white">Name</label>
+          <div class="control">
+            <input id="username_input" autocomplete="off" class="input" type="text" placeholder="e.g Morpheus, Neo...">
+          </div>
+        </div>
+        
+        <div class="field login_input">
+          <label class="label has-text-white">Password</label>
+          <div class="control">
+            <input id="password_input" autocomplete="off" class="input" type="password" placeholder="e.g. **********">
+          </div>
+        </div>
+      </form>
+
+      <div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div> 
+
+      <div class="control login_input">
+        <button id="submit_btn" class="button is-primary">Submit</button>
+      </div>
+      <div class="block"></div>
+      <div class="has-text-danger has-text-centered is-size-7">
+        Important: DO NOT REUSE EXISTING PASSWORDS!
+      </div>
+      <div class="has-text-danger has-text-centered is-size-7">
+        This is an alpha version, passwords are not stored securely (yet). 
+      </div>
+      
+    </div>      
+  </div>
+
+  <!-- Settings Modal  -->
+  <div id="settings_modal" class="modal">
+    <div class="modal-background"></div>
+
+    <div id="settings_modal_content" class="modal-content">            
+      <div class="login_input">
+        <label class="label has-text-white">Enter a new description for your charecter:</label>
+        <div class="control">
+          <textarea 
+            id="description_input" 
+            class="textarea" rows="3"
+            placeholder="e.g A Lumberjack: I sleep all night and work all day!">
+          </textarea>
+        </div>
+      </div>
+      
+      <div class="control login_input">
+        <button id="settings_submit_btn" class="button is-primary">Submit</button>
+        <button id="settings_cancel_btn" class="button is-danger">Cancel</button>
+      </div>     
+      
+    </div>      
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="edit_modal" class="modal">
+    <div class="modal-background"></div>
+    <div class="modal-content">      
+
+      <form id="edit_modal_form"></form>
+
+    </div>
+    <button id="edit_modal_close_btn" class="modal-close is-large" aria-label="close"></button>
+    <button id="edit_submit_btn" type="click" class="button is-primary">Submit</button>
+  </div>
+
+   
+  </body>
+</html>
+
+

@@ -1,0 +1,25 @@
+{
+  "users": {
+    "aa": {
+      "type":           "User",
+      "id":             "u0000000",
+      "name":           "aa",
+      "subtype":        "User",
+      "description":    "Admin Account.",
+      "password":       "aa",      
+      "is_admin":       true,
+      "container_id":   "r0000000",
+      "head":           null,
+      "torso":          null,
+      "legs":           null,
+      "feet":           null,
+      "holding":        null,
+      "slots":          [],
+      "slots_size_limit": 10,
+      "spawn_room_id":  "r0000000"
+    }
+  },
+  "items": {
+    
+  }  
+}

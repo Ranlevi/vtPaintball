@@ -1,0 +1,23 @@
+{
+  "name": "vtpaintball",
+  "version": "1.0.0",
+  "description": "Virtual Textual Paintball",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ranlevi/vtPaintball.git"
+  },
+  "author": "Ran Levi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Ranlevi/vtPaintball/issues"
+  },
+  "homepage": "https://github.com/Ranlevi/vtPaintball#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^4.4.0"
+  }
+}

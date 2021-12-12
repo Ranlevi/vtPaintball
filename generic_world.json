@@ -1,0 +1,25 @@
+{
+  "last_room_in_corridor": "r0000000",
+  "entities": [
+    {
+      "type":         "Room",
+      "id":           "r0000000",
+      "name":         "Room 0",      
+      "subtype":      "Room",
+      "description":  "This is the first room of the game.",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       null,
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#FFFFFF",
+      "owner_id":         "u0000000",
+      "is_corridor_room": true
+    }
+  ]
+}
+
