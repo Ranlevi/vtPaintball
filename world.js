@@ -5,24 +5,7 @@ class World {
   constructor(){
     this.world = new Map(); //id: item instance.
     this.users = new Map(); 
-    
-    //Holds the registered users, and their saved items.
-    this.users_db = {
-      users: {}, //username:  props
-      items: {}  //id:        props
-    };
-
-    //Default Admin account.
-    // this.users_db.users['HaichiPapa'] =  {
-      this.users_db.users['aa'] =  {
-        id:                 'u0000000', 
-        name:               "aa",      
-        subtype:            "User",
-        description:        "Admin Account.",
-        password:           "aa", //String
-        owned_holodeck_id:  "h0000000"
-      };
-
+        
     this.entities_db = null;
   }
 
@@ -67,39 +50,6 @@ class World {
 
     //No user with given username was found.
     return null;
-  }
-
-  save_user_to_users_db(user_id){
-
-    let user = this.users.get(user_id);
-    //Update the users_db object with new values
-    this.users_db[user.props.name] = {
-      id:                 user.props.id, 
-      name:               user.props.name,      
-      subtype:            user.props.subtype,
-      description:        user.props.description,
-      password:           user.props.password,
-      owned_holodeck_id:  user.props.owned_holodeck_id,
-      is_admin:           user.props.is_admin,      
-      container_id:       user.props.container_id,
-      head:               user.props.head,
-      torso:              user.props.torso,
-      legs:               user.props.legs,
-      feet:               user.props.feet,
-      holding:            user.props.holding,
-      slots:              user.props.slots,
-      slots_size_limit:   user.props.slots_size_limit, 
-    }
-
-    let inv_arr = user.get_all_items();        
-    for (const obj of inv_arr){
-      //obj: {id: string, location: string}
-      let entity = this.get_instance(obj.id);
-      this.users_db.items[entity.props.id] = {
-        type: "Item",
-        props: Utils.deepCopyFunction(entity.props)
-      };               
-    }
   }
 
 }

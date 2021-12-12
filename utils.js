@@ -39,8 +39,8 @@ class ID_Generator {
         id = 'n';
         break;
 
-      case "holodeck":
-        id = 'h';
+      case "Game":
+        id = 'g';
         break;
     }
 

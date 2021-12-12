@@ -5,7 +5,6 @@ let parent=               document.getElementById('Parent');
 let login_modal=          document.getElementById("login_modal");
 let submit_btn=           document.getElementById("submit_btn");
 let username_input =      document.getElementById("username_input");
-let password_input =      document.getElementById("password_input");
 let warning_text=         document.getElementById("warning_text");
 let input_field=          document.getElementById("input_field");
 let inv_btn=              document.getElementById("inv_btn");
@@ -89,7 +88,7 @@ socket.on('Login Message', (msg)=>{
   if (msg.content.is_login_successful){        
     login_modal.classList.remove('is-active');
   } else {
-    warning_text.innerHTML = 'Wrong username/password.';
+    warning_text.innerHTML = 'A User with this name already exists in the game.';
   }
 });
 
@@ -273,23 +272,18 @@ submit_btn.addEventListener('click', ()=>{
 
   let login_msg = {    
     content: {
-      username: null,
-      password: null
+      username: null
     }    
   }
 
   //Extract data from the form, and send it to the server via WS.
-  let username = username_input.value;
-  let password = password_input.value;
+  let username = username_input.value;  
 
   if (username===""){
     warning_text.innerHTML = "Please enter a Name.";
-  } else if (password===""){
-    warning_text.innerHTML = "Please enter a Password";
   } else {
     login_msg.content.username=username;
-    login_msg.content.password=password;
-
+    
     socket.emit('Login Message', login_msg);    
   }  
 });
@@ -504,5 +498,3 @@ input_field.addEventListener('submit', (evt)=> {
   input_form.value = '';
   input_form.blur(); //close soft keyboard.   
 })
-
-

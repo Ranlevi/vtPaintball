@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-    <title>Holodeck</title>
+    <title>vtPaintball</title>
     <meta   charset="utf-8"> <!-- For Hebrew support on old browsers -->
     <meta   http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Support IE browsers -->
     <meta   name="viewport"              content="width=device-width, initial-scale=1">
@@ -64,42 +64,28 @@
     <div id="modal_content" class="modal-content">
       
       <div class="has-text-white has-text-centered">Welcome to</div>
-      <div class="has-text-white is-size-2 has-text-centered">Holodeck</div>
+      <div class="has-text-white is-size-2 has-text-centered">vtPaintball</div>
       <div class="has-text-white has-text-centered">
-        A modern, mobile-friendly, textual Holodeck where you can create *anything*.
+        A textual, mobile-friendly, multiplayer paintball game.
       </div>
       <div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>
       <div class="block"></div>
-      <div class="has-text-white has-text-centered">Create a new charcter (or Login an existing one)</div>
+      <div class="has-text-white has-text-centered">Enter your username:</div>
 
       <form>
-        <div class="field login_input">
-          <label class="label has-text-white">Name</label>
+        <div class="field login_input">          
           <div class="control">
             <input id="username_input" autocomplete="off" class="input" type="text" placeholder="e.g Morpheus, Neo...">
           </div>
-        </div>
+        </div>       
         
-        <div class="field login_input">
-          <label class="label has-text-white">Password</label>
-          <div class="control">
-            <input id="password_input" autocomplete="off" class="input" type="password" placeholder="e.g. **********">
-          </div>
-        </div>
       </form>
 
       <div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div> 
 
       <div class="control login_input">
         <button id="submit_btn" class="button is-primary">Submit</button>
-      </div>
-      <div class="block"></div>
-      <div class="has-text-danger has-text-centered is-size-7">
-        Important: DO NOT REUSE EXISTING PASSWORDS!
-      </div>
-      <div class="has-text-danger has-text-centered is-size-7">
-        This is an alpha version, passwords are not stored securely (yet). 
-      </div>
+      </div>      
       
     </div>      
   </div>
@@ -139,7 +125,6 @@
     <button id="edit_modal_close_btn" class="modal-close is-large" aria-label="close"></button>
     <button id="edit_submit_btn" type="click" class="button is-primary">Submit</button>
   </div>
-
    
   </body>
 </html>

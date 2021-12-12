@@ -21,10 +21,8 @@ class Room {
         up:               null,
         down:             null
       },
-      lighting:           "white", //CSS colors      
-      owner_id:           null, //or id string
-      is_corridor_room:   false
-
+      lighting:           "white", //CSS colors 
+      game_id:            null, //Or string 
     }
 
     //Overwrite the default props with the custome ones from the save file.
@@ -172,7 +170,9 @@ class User {
       holding:            null,
       slots:              [],
       slots_size_limit:   10,
-      spawn_room_id:      null      
+      spawn_room_id:      null,
+      current_game_id:    null,
+      owned_game_id:      null,
     }
     
     //Overwrite default props with saved props.         
@@ -711,54 +711,29 @@ class User {
     this.send_msg_to_room(`${target}`);
   }
 
-  //Create an Item or NPC in an owned holodeck room.
-  create_cmd(target=null){
-
-    //Can create things only in the holodeck you own.
-    let room = this.world.get_instance(this.props.container_id);
+  //Create a game, with the user as the owner.
+  create_cmd(){
     
-    if (room.props.owner_id!==this.props.id){
-      this.send_chat_msg_to_client(`You can only create in holodecks you own.`);  
-      return;
+    let props = {
+      owner_id: this.props.id
     }
 
-    //The user owns the holodeck.
-    
-    if (target===null){    
-      this.send_chat_msg_to_client(`What do you want to create?`);  
-      return;
-    }
+    let game = new Game(this.world, props);
+    this.props.owned_game_id = game.props.id;
 
-    let entity_definition = this.world.entities_db[target];
-    
-    if (entity_definition===undefined){
-      this.send_chat_msg_to_client(`That's not something you can create.`);  
-      return;
-    }
+    //Remove the user from the current room. 
+    //Add him to the spwan room of the game.
+    //A room exists. Teleport to it.
+    let origin_room = this.world.get_instance(this.props.container_id);
+    this.send_msg_to_room(`teleports to a new game.`);
+    origin_room.remove_entity(this.props.id);
 
-    let props = Utils.deepCopyFunction(entity_definition.props);
-    props["container_id"]=  this.props.container_id;
-    props["owner_id"]=      this.props.id;
-    
-    let entity;
-    
-    switch (entity_definition.type){
-      case("Item"):
-        entity = new Item(this.world, props);        
-        break;
+    let dest_room = this.world.get_instance(game.props.blue_spawn_room_id);
+    dest_room.add_entity(this.props.id);
+    this.props.container_id = dest_room.props.id;
+    this.send_chat_msg_to_client(`You have spawned in the blue room.`);  
+    this.look_cmd();
 
-      case('NPC'):
-        entity = new NPC(this.world, props);                  
-        break;                
-
-      default:
-        console.error(`classes.js->User.create_cmd: unknown type ${entity_definition.props.type}`);
-    }              
-    
-    this.world.add_to_world(entity);
-    room.add_entity(entity.props.id);
-    entity.send_msg_to_room(`has spawned here.`);
-   
   }
  
   //Teleport the user to another room. Target is an ID.
@@ -1341,7 +1316,55 @@ class NPC {
 
 }
 
+class Game {
+  constructor(world, props=null){
+
+    this.world =          world;
+    this.props = {
+      owner_id:           null,
+      id:                 Utils.id_generator.get_new_id("Game"),
+      blue_spawn_room_id: null,
+      red_spawn_room_id:  null,
+      entities:           [],
+    }
+
+    //Overwrite the default props with the saved ones.
+    if (props!==null){
+      for (const [key, value] of Object.entries(props)){
+        this.props[key]= value;
+      }
+    }
+
+    this.init_map();
+  }
+
+  init_map(){
+    //Temporary implementation: change later to dynamic load.
+    let props = {
+      game_id: this.props.id
+    };
+
+    let blue_spawn_room = new Room(this, props);
+    this.world.add_to_world(blue_spawn_room);
+    this.props.blue_spawn_room_id = blue_spawn_room.props.id;
+
+    let mid_room = new Room(this, props);
+    this.world.add_to_world(mid);    
+
+    let red_spawn_room = new Room(this, props);
+    this.world.add_to_world(red_spawn_room);
+    this.props.red_spawn_room_id = red_spawn_room.props.id;
+
+    //Connect the rooms
+    blue_spawn_room.props.exits.north=  {id: mid_room.props.id, code: null};
+    mid_room.props.exit.south=          {id: blue_spawn_room.props.id, code: null};
+    mid_room.props.exit.north=          {id: red_spawn_room.props.id, code: null};
+    red_spawn_room.props.exits.south=   {id: mid_room.props.id, code: null};
+  }
+}
+
 exports.Item=             Item;
 exports.User=             User;
 exports.Room=             Room;
 exports.NPC=              NPC;
+exports.Game=             Game;
