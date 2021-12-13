@@ -1,3 +1,4 @@
+const e = require('cors');
 const Utils= require('./utils');
 // const World= require('./world');
 
@@ -173,6 +174,7 @@ class User {
       spawn_room_id:      null,
       current_game_id:    null,
       owned_game_id:      null,
+      team:               null,
     }
     
     //Overwrite default props with saved props.         
@@ -187,6 +189,10 @@ class User {
 
   set_container_id(container_id){
     this.props.container_id = container_id;
+  }
+
+  set_team(team_color){ //String (Blue / Red)
+    this.props.team = team_color;
   }
 
   get_id(){
@@ -688,7 +694,7 @@ class User {
       this.send_chat_msg_to_client('No User by this name is online.');
       return;
     }
-
+    
     let user = this.world.get_instance(user_id);
 
     if (content===''){
@@ -719,6 +725,7 @@ class User {
     }
 
     let game = new Game(this.world, props);
+    this.world.add_to_world(game);
     this.props.owned_game_id = game.props.id;
 
     //Remove the user from the current room. 
@@ -731,7 +738,10 @@ class User {
     let dest_room = this.world.get_instance(game.props.blue_spawn_room_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
-    this.send_chat_msg_to_client(`You have spawned in the blue room.`);  
+    this.props.team=          "Blue";
+    this.send_chat_msg_to_client(`You have spawned in the blue room.`);
+    this.send_chat_msg_to_client("Enter 'start' to begin the game.")
+    this.send_chat_msg_to_client(`Game ID is: ${this.props.owned_game_id}`);
     this.look_cmd();
 
   }
@@ -845,6 +855,41 @@ class User {
 
     //Target has an action.
     entity.do_action(this.props.id);    
+  }
+
+  join_cmd(target=null){
+
+    if (target===null){    
+      this.send_chat_msg_to_client(`JOIN needs the Game ID (e.g. 'join g1234567).'`);  
+      return;
+    }
+
+    //Target is not null.
+    let game = this.world.get_instance(target);
+
+    if (game===undefined || game.props.type!=="Game"){
+      //No game with given ID
+      this.send_chat_msg_to_client(`No game with id: ${target}.`);  
+      return;
+    }
+
+    //Game found.
+    //Add the user to the game
+    let spawn_room_id =  game.join_game(this.props.id);
+
+    //Remove the user from the current room. 
+    //Add him to the spwan room of the game.
+
+    let origin_room = this.world.get_instance(this.props.container_id);
+    this.send_msg_to_room(`teleports to join a game.`);
+    origin_room.remove_entity(this.props.id);
+
+    let dest_room = this.world.get_instance(spawn_room_id);
+    dest_room.add_entity(this.props.id);
+    this.props.container_id = dest_room.props.id;    
+    this.send_chat_msg_to_client(`You have spawned in the game.`);    
+    this.look_cmd();
+
   }
   
   //Handle Messages
@@ -1322,6 +1367,7 @@ class Game {
     this.world =          world;
     this.props = {
       owner_id:           null,
+      type:               "Game",
       id:                 Utils.id_generator.get_new_id("Game"),
       blue_spawn_room_id: null,
       red_spawn_room_id:  null,
@@ -1344,22 +1390,67 @@ class Game {
       game_id: this.props.id
     };
 
-    let blue_spawn_room = new Room(this, props);
+    let blue_spawn_room = new Room(this.world, props);
     this.world.add_to_world(blue_spawn_room);
     this.props.blue_spawn_room_id = blue_spawn_room.props.id;
 
-    let mid_room = new Room(this, props);
-    this.world.add_to_world(mid);    
+    let mid_room = new Room(this.world, props);
+    this.world.add_to_world(mid_room);    
 
-    let red_spawn_room = new Room(this, props);
+    let red_spawn_room = new Room(this.world, props);
     this.world.add_to_world(red_spawn_room);
     this.props.red_spawn_room_id = red_spawn_room.props.id;
 
     //Connect the rooms
     blue_spawn_room.props.exits.north=  {id: mid_room.props.id, code: null};
-    mid_room.props.exit.south=          {id: blue_spawn_room.props.id, code: null};
-    mid_room.props.exit.north=          {id: red_spawn_room.props.id, code: null};
+    mid_room.props.exits.south=          {id: blue_spawn_room.props.id, code: null};
+    mid_room.props.exits.north=          {id: red_spawn_room.props.id, code: null};
     red_spawn_room.props.exits.south=   {id: mid_room.props.id, code: null};
+  }
+
+  //Join a team according to the team parameter, or if null - in balance.
+  //Returns the spawn room id.
+  join_game(user_id, team=null){
+    this.props.entities.push(user_id);
+
+    let user = this.world.get_instance(user_id);
+    
+    if (team===null){
+      //Find the smaller team and have the user join it.
+      let num_of_blue_players = 0;
+      let num_of_red_player   = 0;
+
+      for (const id of this.props.entities){
+        let entity = this.world.get_instance(id);
+        if (entity.props.type==="User"){
+          if (entity.props.team==="Blue"){
+            num_of_blue_players += 1;            
+          } else if (entity.props.team==="Red"){
+            num_of_red_player += 1;
+          }
+        }
+
+        if (num_of_blue_players>=num_of_red_player){
+          user.set_team("Red");
+          return this.props.red_spawn_room_id;
+        } else {
+          user.set_team("Blue");
+          return this.props.blue_spawn_room_id;    
+        }
+      }
+
+
+    } else if (team==="Blue"){
+      user.set_team("Blue");
+      return this.props.blue_spawn_room_id;
+    } else if (team==="Read"){
+      user.set_team("Red");
+      return this.props.red_spawn_room_id;
+    }
+  }
+
+  do_tick(){
+    //TBD
   }
 }
 

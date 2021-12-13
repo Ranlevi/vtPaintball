@@ -44,7 +44,7 @@ class World {
     
     for (let inst of this.users.values()){      
       if (inst.props.name===username){
-        return inst.id;        
+        return inst.props.id;        
       }
     }
 

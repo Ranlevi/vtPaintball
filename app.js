@@ -1,15 +1,13 @@
 /*
 Apps.js
 -------
-teleport home, random.
-A way to delete created items. (from the edit modal)
+
 Entry point for the server.
 Handles serving the Client to users, user login
 and user input.
 
 TODO:
-do we need expiration?
-Add edit to the user cmds.
+enter for login
 fix send_msg_to_room to not have the entity name as default.
 add report abuse to user's cmds
 save user creditials in the browser
@@ -314,6 +312,16 @@ class Game_Controller {
 
       case "use":
         user.use_cmd(target);
+        break;
+
+      case "join":
+      case "j":
+        user.join_cmd(target);
+        break;
+
+      case "start":
+      case "st":
+        user.start_cmd();
         break;
 
       default:
