@@ -7,8 +7,9 @@ and user input.
 
 TODO:
 write help page.
-enter for login
-fix send_msg_to_room to not have the entity name as default.
+quit command to return to lobby
+can't join a game already started.
+
 add report abuse to user's cmds
 save user creditials in the browser
 https://developers.google.com/web/fundamentals/security/credential-management/save-forms

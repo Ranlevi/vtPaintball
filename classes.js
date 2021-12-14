@@ -11,9 +11,9 @@ class Room {
       type:               "Room",
       id:                 Utils.id_generator.get_new_id("room"),
       entities:           [],
-      name:               "An Empty Room",      
+      name:               "A Room",      
       subtype:            "Room",
-      description:        "An empty, 3m by 3m room with bare white walls.",      
+      description:        "",      
       exits: {
         north:            null, //direction: {id: string, code: string}
         south:            null,
@@ -78,27 +78,23 @@ class Room {
         
     let msg = `<h1>${this.get_name()}</h1>` +
               `<p>${this.props.description}</p>` + 
-              `<p><span class="style1">Exits:</span></p>`;
+              `<p><span class="style1">Exits: `;
     
+    let exits_exists = false;
     for (const [direction, obj] of Object.entries(this.props.exits)){   
       
       if (obj!==null){
-
-        let room_label;        
-        let dest_room = this.world.get_instance(obj.id);
-        
-        if (dest_room===undefined){
-          room_label = "An empty room."
-        } else {
-          room_label = dest_room.props.name;
-        }
-
-        msg += `<p><span class="pn_link" data-element="pn_cmd" ` + 
+        exits_exists = true;
+        msg += `<span class="pn_link" data-element="pn_cmd" ` + 
                 `data-actions="${direction.toUpperCase()}" >` +
-                `${direction.toUpperCase()}</span> - ${room_label}</p> `
+                `${direction.toUpperCase()}</span> `
       }
     }
     
+    if (!exits_exists){
+      msg += "None.</span></p>"
+    }
+
     msg += '<p>In the room: ';
     
     for (const entity_id of this.props.entities){
@@ -246,9 +242,19 @@ class User {
   
   //Returns an HTML string for the name of the entity.
   get_name(){    
+
+    let team_class;
+    if (this.props.team===null){
+      team_class = "";
+    } else if (this.props.team==="Blue"){
+      team_class = "blue_team";
+    } else if (this.props.team==="Red"){
+      team_class = "red_team";
+    }
+
     let html = 
       `<span `+
-      `class="pn_link" `+
+      `class="pn_link ${team_class}" `+
       `data-element="pn_link" `+
       `data-type="${this.props.subtype}" `+
       `data-id="${this.props.id}" `+
@@ -324,6 +330,14 @@ class User {
       this.send_chat_msg_to_client(`There's no exit to ${direction}.`);
       return;
     }
+    
+    if (this.props.current_game_id!==null){
+      let game = this.world.get_instance(this.props.current_game_id);
+      if (!game.props.is_started){
+        this.send_chat_msg_to_client(`You can only leave the room once the game has started.`);
+        return;
+      }
+    }
 
     //An exit exists.    
     //Check if locked, and if true - check for key on the user's body.
@@ -350,24 +364,9 @@ class User {
     }
 
     //Key found (or exit is not locked)
-
-    //Check if the user is moving to a non-holodeck room with holodeck items.
-    let next_room= this.world.get_instance(next_room_obj.id);
-    if (next_room.props.owner_id!==current_room.props.owner_id){
-      //The next room is not part of the current holodeck.
-      
-      let inv_arr = this.get_all_items();
-      for (const obj of inv_arr){
-        let item = this.world.get_instance(obj.id);
-        if (item.props.owner_id===current_room.props.owner_id){
-          //The user carries something that belongs to the current holodeck.
-          this.send_chat_msg_to_client(`You're carrying something on your ${obj.location} that belongs to this holodeck. Please remove it before leaving the holodeck.`);
-          return;                   
-        }
-      }
-    }
-
     //User can move to the next room.
+
+    let next_room = this.world.get_instance(next_room_obj.id);
 
     //Send messages. 
     this.send_chat_msg_to_client(`You travel ${direction}.`);
@@ -763,6 +762,7 @@ class User {
 
     let game = new Game(this.world, props);
     this.world.add_to_world(game);
+    game.props.entities.push(this.props.id);
     this.props.owned_game_id = game.props.id;
 
     //Remove the user from the current room. 
@@ -775,6 +775,7 @@ class User {
     let dest_room = this.world.get_instance(game.props.blue_spawn_room_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
+    this.props.current_game_id = game.props.id;
     this.props.team=          "Blue";
     this.send_chat_msg_to_client(`You have spawned in the blue room.`);
     this.send_chat_msg_to_client("Enter 'start' to begin the game.")
@@ -911,9 +912,17 @@ class User {
     }
 
     //Game found.
+    //Check if game has already started.
+    if (game.props.is_started){
+      this.send_chat_msg_to_client(`Can't join: The game has already started...`);  
+      return;
+    }
+
+    //User can join the game.
     //Add the user to the game
     let spawn_room_id =  game.join_game(this.props.id);
     this.props.spawn_room_id = spawn_room_id;
+    this.props.current_game_id = game.props.id;
 
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
@@ -962,6 +971,26 @@ class User {
       this.send_chat_msg_to_client(`You miss!`);
       return;
     }
+  }
+
+  //Send a message to all the users in the game - and start it.
+  start_cmd(){
+
+    let game = this.world.get_instance(this.props.current_game_id);
+    
+    if (game.props.owner_id!==this.props.id){
+      this.send_chat_msg_to_client("Only the user who created the game can start it.");
+      return;
+    }
+
+    //User can start the game.
+    game.props.is_started = true;
+
+    for (const user_id of game.props.entities){
+      let user = this.world.get_instance(user_id);
+      user.send_chat_msg_to_client("THE GAME HAS STARTED!!");
+    }
+
   }
   
   //Handle Messages
@@ -1443,6 +1472,7 @@ class Game {
       blue_spawn_room_id: null,
       red_spawn_room_id:  null,
       entities:           [],
+      is_started:         false,
     }
 
     //Overwrite the default props with the saved ones.
@@ -1458,19 +1488,24 @@ class Game {
   init_map(){
     //Temporary implementation: change later to dynamic load.
     let props = {
-      game_id: this.props.id
+      game_id: this.props.id      
     };
 
     let blue_spawn_room = new Room(this.world, props);
     this.world.add_to_world(blue_spawn_room);
     this.props.blue_spawn_room_id = blue_spawn_room.props.id;
+    blue_spawn_room.props.name = "Blue Team Spawn";
+    blue_spawn_room.props.lighting = "blue";
 
     let mid_room = new Room(this.world, props);
-    this.world.add_to_world(mid_room);       
+    this.world.add_to_world(mid_room);      
+    mid_room.props.lighting = "black"; 
 
     let red_spawn_room = new Room(this.world, props);
     this.world.add_to_world(red_spawn_room);
     this.props.red_spawn_room_id = red_spawn_room.props.id;
+    red_spawn_room.props.name = "Red Team Spawn";
+    red_spawn_room.props.lighting = "red";
 
     //Connect the rooms
     blue_spawn_room.props.exits.north=  {id: mid_room.props.id, code: null};

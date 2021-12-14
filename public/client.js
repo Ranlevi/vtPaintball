@@ -499,12 +499,27 @@ input_field.addEventListener('submit', (evt)=> {
   input_form.blur(); //close soft keyboard.   
 })
 
-username_input.addEventListener("keyup", (evt)=> {
-  evt.preventDefault();
-  if (evt.keyCode===)
-})
+username_input.addEventListener("keydown", (evt)=> {
+    
+  if (evt.key==="Enter"){
 
-document. getElementById("myInputID"). addEventListener("keyup", function(event) {
-  if (event. keyCode === 13) {
-  document. getElementById("myFormID"). submit();
-  return false;
+    evt.preventDefault();  
+    
+    let login_msg = {    
+      content: {
+        username: null
+      }    
+    }
+  
+    //Extract data from the form, and send it to the server via WS.
+    let username = username_input.value;  
+  
+    if (username===""){
+      warning_text.innerHTML = "Please enter a Name.";
+    } else {
+      login_msg.content.username=username;
+      
+      socket.emit('Login Message', login_msg);    
+    }  
+  }
+})

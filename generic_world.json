@@ -5,8 +5,8 @@
       "id":           "r0000000",
       "name":         "Game Lobby",      
       "subtype":      "Room",
-      "description":  "This is the lobby of the game.",
-      "entities":     [],
+      "description":  "This is the Lobby. Enter 'create' to start a vtPaintball game, or 'join <i><some ID></i> to join an existing game. A Sign is hanging off one of the wall - you can 'look sign' to read it.",
+      "entities":     ["i0000000"],
       "exits": {
         "north":      null,
         "south":      null,
@@ -17,7 +17,25 @@
       },
       "lighting":         "#FFFFFF",
       "owner_id":         "u0000000"      
+    },
+    {
+      "type":               "Item",
+      "id":                 "i0000000",
+      "name":               "A Sign",      
+      "subtype":            "Sign",
+      "description":        "The sign reads: 'Welcome to vtPaintball! This is a multiplayer, text-based game. Once you enter 'create' or 'join <some ID>', you will be teleported to the game area, which is a made of many connected rooms. You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!'",              
+      "is_consumable":      false,      
+      "is_holdable":        false,
+      "wear_slot":          null,
+      "is_gettable":        false,
+      "container_id":       "r0000000",
+      "key_code":           null,
+      "expiration_limit":   null,
+      "action":             null,
+      "game_id":            null,
+      "owner_id":           "u0000000"       
     }
+    
   ]
 }
 

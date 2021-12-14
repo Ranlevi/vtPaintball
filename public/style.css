@@ -89,10 +89,18 @@ html, body {
 }
 
 .pn_link {
-  color:          blue;
+  color:          black;
   text-decoration:  underline;
   cursor:           pointer;
   font-weight:      600;
+}
+
+.blue_team {
+  color: blue;
+}
+
+.red_team {
+  color: red;
 }
 
 .pn_action {
