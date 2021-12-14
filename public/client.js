@@ -498,3 +498,13 @@ input_field.addEventListener('submit', (evt)=> {
   input_form.value = '';
   input_form.blur(); //close soft keyboard.   
 })
+
+username_input.addEventListener("keyup", (evt)=> {
+  evt.preventDefault();
+  if (evt.keyCode===)
+})
+
+document. getElementById("myInputID"). addEventListener("keyup", function(event) {
+  if (event. keyCode === 13) {
+  document. getElementById("myFormID"). submit();
+  return false;

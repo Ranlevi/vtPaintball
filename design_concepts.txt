@@ -2,6 +2,8 @@ vtPaintBall
 ===========
 
 A text based paintball game.
+
+Login:
 User enters a name. The server verifies that no other user has the same name.
 The user spawns in a lobby. 
 He can chat with other users, or commands: create / join #### (some code).

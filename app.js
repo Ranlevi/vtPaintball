@@ -1,12 +1,12 @@
 /*
 Apps.js
 -------
-
 Entry point for the server.
 Handles serving the Client to users, user login
 and user input.
 
 TODO:
+write help page.
 enter for login
 fix send_msg_to_room to not have the entity name as default.
 add report abuse to user's cmds
@@ -36,6 +36,10 @@ app.use(express.static('public'));
 
 app.get('/', (req, res) => {  
   res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/help', (req, res) => {
+  res.sendFile(__dirname + '/public/help.html');
 });
 
 server.listen(5000, () => {
