@@ -319,6 +319,11 @@ class Game_Controller {
         user.join_cmd(target);
         break;
 
+      case "shot":
+      case "sh":
+        user.shot_cmd(target);
+        break;
+
       case "start":
       case "st":
         user.start_cmd();

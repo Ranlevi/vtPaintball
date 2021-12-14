@@ -18,3 +18,5 @@ When two users meet, one can shot the other. The losing side respawns, game scor
 is updated. 
 The game includes sounds that users make to give hints, colors, weapons, traps...
 When score is reached - one side wins. Users can stay in the game and restart, or quit to lobby. 
+
+There is no damage: a shot either hit or not.

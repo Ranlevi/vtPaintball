@@ -204,6 +204,43 @@ class User {
     this.send_status_msg_to_client();
   }   
 
+  //Check if a shot hits the user, and if so, respawn
+  //return true if hit, else false
+  do_shot(shooter_id){
+    //Shots have 70:30 chance of hitting
+    let num = Math.random();
+
+    if (num>=0.7){
+      //Hit
+      let shooter = this.world.get_instance(shooter_id);
+      this.send_chat_msg_to_client(`You were HIT by ${shooter.get_name()}.`);
+
+      this.spwan_in_room(this.props.spawn_room_id);
+      return true;
+
+    } else {
+      //Miss
+      return false;
+    }
+
+  }
+
+  spwan_in_room(dest_id){
+    //A room exists. Teleport to it.
+    let origin_room = this.world.get_instance(this.props.container_id);
+    this.send_msg_to_room(`disappears.`);
+    origin_room.remove_entity(this.props.id);
+
+    let dest_room = this.world.get_instance(dest_id);
+    dest_room.add_entity(this.props.id);
+    this.props.container_id = dest_room.props.id;
+    this.send_chat_msg_to_client(`Poof!`);  
+    this.look_cmd();
+
+    //Send a message to the new room.
+    this.send_msg_to_room(`appears in the room.`);
+  }
+
   //Aux. Methods.
   //--------------
   
@@ -876,6 +913,7 @@ class User {
     //Game found.
     //Add the user to the game
     let spawn_room_id =  game.join_game(this.props.id);
+    this.props.spawn_room_id = spawn_room_id;
 
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
@@ -890,6 +928,40 @@ class User {
     this.send_chat_msg_to_client(`You have spawned in the game.`);    
     this.look_cmd();
 
+  }
+
+  //If the user is holding a gun, shot the target
+  shot_cmd(target=null){
+
+    if (target===null){    
+      this.send_chat_msg_to_client(`Who do you want to shot?`);  
+      return;
+    }
+
+    if (this.props.holding===null){
+      this.send_chat_msg_to_client(`With what? You're not holding anything in your hands.`);  
+      return;
+    }
+
+    let result = Utils.search_for_target(this.world,target, this.props.id);
+
+    if (result===null){
+      //Target not found
+      this.send_chat_msg_to_client(`There's no ${target} around.`);
+      return;      
+    }
+
+    let entity = this.world.get_instance(result.id);
+
+    result = entity.do_shot(this.props.id);
+
+    if (result===true){
+      this.send_chat_msg_to_client(`You hit ${entity.get_name()}!`);
+      return;
+    } else {
+      this.send_chat_msg_to_client(`You miss!`);
+      return;
+    }
   }
   
   //Handle Messages
@@ -999,8 +1071,7 @@ class Item {
       name:             "Unnamed Item",
       description:      "This is an unnamed Item.",
       subtype:          "Item",
-      container_id:     null,
-      holodeck_id:      null,      
+      container_id:     null,      
       key_code:         null,      
       action:           null,
       expiration_limit: null,
@@ -1008,7 +1079,7 @@ class Item {
       is_consumable:    false,
       is_holdable:      false,
       is_gettable:      false,
-      owner_id:         null,
+      game_id:          null
     }
       
     //Overwrite the default props with the saved ones.
@@ -1395,7 +1466,7 @@ class Game {
     this.props.blue_spawn_room_id = blue_spawn_room.props.id;
 
     let mid_room = new Room(this.world, props);
-    this.world.add_to_world(mid_room);    
+    this.world.add_to_world(mid_room);       
 
     let red_spawn_room = new Room(this.world, props);
     this.world.add_to_world(red_spawn_room);
@@ -1406,6 +1477,13 @@ class Game {
     mid_room.props.exits.south=          {id: blue_spawn_room.props.id, code: null};
     mid_room.props.exits.north=          {id: red_spawn_room.props.id, code: null};
     red_spawn_room.props.exits.south=   {id: mid_room.props.id, code: null};
+
+    //Add a gun in the mid room.
+    props = this.world.entities_db.gun.props;
+    let gun = new Item(this.world, props);
+    this.world.add_to_world(gun);
+    gun.props.container_id = mid_room.props.id;
+    mid_room.add_entity(gun.props.id);
   }
 
   //Join a team according to the team parameter, or if null - in balance.
