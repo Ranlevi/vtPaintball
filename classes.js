@@ -210,6 +210,9 @@ class User {
       //Hit
       let shooter = this.world.get_instance(shooter_id);
       this.send_chat_msg_to_client(`You were HIT by ${shooter.get_name()}.`);
+      
+      let game = this.world.get_instance(this.props.current_game_id);
+      game.do_hit(shooter_id, victim_id);
 
       this.spwan_in_room(this.props.spawn_room_id);
       return true;
@@ -960,6 +963,11 @@ class User {
       return;      
     }
 
+    if (result.id===this.props.id){
+      this.send_chat_msg_to_client(`Do you want to shot YOURSELF?!`);
+      return; 
+    }
+
     let entity = this.world.get_instance(result.id);
 
     result = entity.do_shot(this.props.id);
@@ -1473,6 +1481,9 @@ class Game {
       red_spawn_room_id:  null,
       entities:           [],
       is_started:         false,
+      blue_points:        0,
+      red_points:         0,
+      max_score:          5
     }
 
     //Overwrite the default props with the saved ones.
@@ -1564,6 +1575,38 @@ class Game {
 
   do_tick(){
     //TBD
+  }
+
+  do_hit(shooter_id, victim_id){
+
+    let shooter = this.world.get_instance(shooter_id);
+    let victim  = this.world.get_instance(victim_id);    
+    
+    if (shooter.props.team==="Blue"){
+      this.props.blue_points += 1;        
+    } else if (shooter.props.team==="Red"){
+      this.props.red_points += 1;
+    }
+
+    this.send_msg_to_all_player(`${shooter.get_name()} hits ${victim.get_name()}!`);
+    this.send_msg_to_all_player(`BLUE: ${this.props.blue_points} - RED: ${this.props.red_points}`);
+
+    if (this.props.blue_points===this.props.max_score){
+      this.send_msg_to_all_player(`BLUE TEAM WINS!`);
+      this.end_game();
+    } else if (this.props.red_points===this.props.max_score){
+      this.send_msg_to_all_player(`RED TEAM WINS!`);
+      this.end_game();
+    }
+  }
+
+  send_msg_to_all_player(msg){
+    for (const entity_id of this.props.entities){
+      let entity = this.world.get_instance(entity_id);
+      if (entity.props.type==="User"){
+        entity.send_chat_msg_to_client(msg);
+      }
+    }
   }
 }
 

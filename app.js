@@ -8,7 +8,6 @@ and user input.
 TODO:
 write help page.
 quit command to return to lobby
-can't join a game already started.
 
 add report abuse to user's cmds
 save user creditials in the browser
