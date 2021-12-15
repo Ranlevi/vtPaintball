@@ -61,12 +61,9 @@ class Room {
     
     let html = 
       `<span `+
-      `class="pn_link" `+
-      `data-element="pn_link" `+
-      `data-type="${this.props.type}" `+
+      `data-element="name" `+      
       `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}" `+
-      `data-actions="Look_Copy ID">`+
+      `data-name="${this.props.name}>" `+      
       `${this.props.name}`+
       `</span>`;
 
@@ -1230,9 +1227,8 @@ class Item {
     //Returns an HTML string for the name of the entity.
     let html = 
       `<span `+
-      `class="pn_link" `+
-      `data-element="pn_link" `+
-      `data-type="${this.props.subtype}" `+
+      `data-element="name" `+
+      `data-type="${this.props.type}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}" `+
       `data-actions="Look_Get_Drop_Wear_Hold_Consume_Remove_Use_Edit">`+

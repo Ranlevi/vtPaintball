@@ -30,7 +30,8 @@ let status_obj = {
   legs:     "",
   feet:     "",
   slots:    "",
-  is_playing: false
+  is_playing: false,
+  id:       ""
 };
 let currently_edited_item_id = null;
 
@@ -255,6 +256,27 @@ socket.on('Edit Message', (msg)=>{
   edit_modal.classList.add('is-active');
 });
 
+socket.on('Cmds Box Message', (msg)=>{
+
+  let list = "";
+  for (const item of msg.content.cmds_list){
+
+    list += `<li>${item}</li>`;
+  }
+
+  let html = `<ul>${list}</ul>`;
+      
+  let div = document.createElement("div");
+  div.classList.add("box");
+  div.classList.add("box_cmds");    
+  div.innerHTML = html;    
+  chat.append(div);
+
+  if (!stop_chat_scroll){
+    div.scrollIntoView();  
+  }
+});
+
 socket.on('disconnect', ()=>{
   console.log(`Connection Closed By Server.`);
 });
@@ -310,63 +332,19 @@ freeze_btn.addEventListener('click', ()=>{
 //Handle clicks on hyperlinks
 chat.addEventListener('click', (evt)=>{
   evt.stopPropagation();
+  
+  if (evt.target.dataset.element==="name"){
 
-  //Display a cmds box with available commands.
-  if (evt.target.dataset.element==="pn_link"){    
-    
-    let actions = evt.target.dataset.actions.split('_');     
-    let list = '';
-
-    //Populate the actions list.
-    for (const action of actions){
-
-      switch(action){
-        case "Look":
-        case "Copy ID":
-          list += `<li><span class="pn_action" data-element="pn_action" ` + 
-              `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
-              `data-name="${evt.target.dataset.name}"> `+ 
-              `${action} ${evt.target.dataset.name}</span></li>`
-          break;
-
-        case "Shot":
-          if (status_obj.is_playing===true){
-            list += `<li><span class="pn_action" data-element="pn_action" ` + 
-              `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
-              `data-name="${evt.target.dataset.name}"> `+ 
-              `${action} ${evt.target.dataset.name}</span></li>`
-          }
-          break;
-
-        case "Edit":
-          break;
-      }
-
-      list += `<li><span class="pn_action" data-element="pn_action" ` + 
-              `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
-              `data-name="${evt.target.dataset.name}"> `+ 
-              `${action} ${evt.target.dataset.name}</span></li>`
+    let msg = {
+      id: evt.target.dataset.id
     }
-    
-    let html = `<ul>${list}</ul>`;
-      
-    let div = document.createElement("div");
-    div.classList.add("box");
-    div.classList.add("box_cmds");    
-    div.innerHTML = html;    
-    chat.append(div);
 
-    if (!stop_chat_scroll){
-      div.scrollIntoView();  
-    }    
-      
-  } else if (evt.target.dataset.element==="pn_action"){
-    //Send a message to the server, in response to a click in the cmds box.
-    //Note: a hyperlink click is translated to an input text message (i.e., the links
-    //      are just an alias to entering textual commands.)
-    
-    //Handle Copy ID
+    socket.emit('Name Link Message', msg);
+
+  } else if (evt.target.dataset.element==="cmd"){
+
     if (evt.target.dataset.action==="Copy ID"){
+
       navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
         /* clipboard successfully set */
         //Create a Chat box and add it to the Chat, as feedback.
@@ -383,53 +361,100 @@ chat.addEventListener('click', (evt)=>{
       }, function() {
         console.error('Copy ID failed.');
       });
+    }
 
-    } else {
+    if (evt.target.dataset.action==="Shot" ||
+        evt.target.dataset.action==="Look"){
 
-      //Handle other cmds
       let msg = {      
         content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
-      }
-
-      socket.emit('User Input Message', msg);    
-
-      //Create a Chat box and add it to the Chat, as feedback.
-      let div = document.createElement("div");    
-      div.classList.add("box");
-      div.classList.add("box_user");    
-      div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
-      chat.append(div);
-
-      if (!stop_chat_scroll){
-        div.scrollIntoView();  
-      }
+      }  
+      socket.emit('User Input Message', msg);
     }
-    
-    
-    
-    //Send a 1-word command, such as North.
-  } else if (evt.target.dataset.element==="pn_cmd"){
-
-    let msg = {      
-      content: `${evt.target.dataset.actions}`
-    }
-    socket.emit('User Input Message', msg);        
-
+   
     //Create a Chat box and add it to the Chat, as feedback.
-    let div = document.createElement("div");
+    let div = document.createElement("div");    
     div.classList.add("box");
-    div.classList.add("box_user");
-    div.append(`${evt.target.dataset.actions}`);  
+    div.classList.add("box_user");    
+    div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
     chat.append(div);
 
     if (!stop_chat_scroll){
       div.scrollIntoView();  
     }
-    
-  } else {
-    input_field.focus();
+
   }
-})
+}
+
+
+
+    //Display a cmds box with available commands.
+    // let list = '';
+
+    // if (evt.target.dataset.type==="User"){
+
+    //   if (status_obj.is_playing && status_obj.id!==evt.target.dataset.id){
+    //     //Shot
+    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
+    //             `data-action="Shot" data-id="${evt.target.dataset.id}" ` + 
+    //             `data-name="${evt.target.dataset.name}">Shot</span></li>`;
+    //   }
+
+    //   if (status_obj.id===evt.target.dataset.id){
+    //     //Edit
+    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
+    //             `data-action="Edit" data-id="${evt.target.dataset.id}" ` + 
+    //             `data-name="${evt.target.dataset.name}">Edit</span></li>`;
+
+    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
+    //             `data-action="Inventory" data-id="${evt.target.dataset.id}" ` + 
+    //             `data-name="${evt.target.dataset.name}">Inventory</span></li>`;
+    //   }
+
+    // } else if (evt.target.dataset.type==="Item"){
+
+
+
+
+    // }
+
+    // //Look
+    // list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
+    //         `data-action="Look" data-id="${evt.target.dataset.id}" ` + 
+    //         `data-name="${evt.target.dataset.name}">Look</span></li>`;
+
+    // //Copy ID
+    // list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
+    //         `data-action="Copy ID" data-id="${evt.target.dataset.id}" ` + 
+    //         `data-name="${evt.target.dataset.name}">Copy ID</span></li>`;
+
+
+    
+    
+    
+  //   //Send a 1-word command, such as North.
+  // } else if (evt.target.dataset.element==="pn_cmd"){
+
+  //   let msg = {      
+  //     content: `${evt.target.dataset.actions}`
+  //   }
+  //   socket.emit('User Input Message', msg);        
+
+  //   //Create a Chat box and add it to the Chat, as feedback.
+  //   let div = document.createElement("div");
+  //   div.classList.add("box");
+  //   div.classList.add("box_user");
+  //   div.append(`${evt.target.dataset.actions}`);  
+  //   chat.append(div);
+
+  //   if (!stop_chat_scroll){
+  //     div.scrollIntoView();  
+  //   }
+    
+  // } else {
+  //   input_field.focus();
+  // }
+// })
 
 //Pressing the inv btn displays an inventory message in the Chat.
 inv_btn.addEventListener('click', ()=>{

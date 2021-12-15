@@ -23,6 +23,15 @@ When score is reached - one side wins. Users can stay in the game and restart, o
 
 There is no damage: a shot either hit or not.
 
+
+
+
+
+Types of links:
+- Name (User, room, item, npc)
+- CMDs (direction, copy id, edit.)
+
+
 What are links in the game?
 User clicking his own name: Edit, Look, Copy Id, Inventory. (no need for button)
 User clicking another user: Look. Copy Id, Shot (in game only)

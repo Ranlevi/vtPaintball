@@ -8,6 +8,7 @@ and user input.
 TODO:
 write help page.
 admin can send msg to all users.
+remove edit and inv buttons
 add report abuse to user's cmds
 save user creditials in the browser
 https://developers.google.com/web/fundamentals/security/credential-management/save-forms
@@ -95,6 +96,13 @@ class Game_Controller {
       socket.on('Edit Message', (msg)=>{
         let entity = this.world.get_instance(msg.id);
         entity.do_edit(msg.props, socket.user_id);    
+      });
+
+      socket.on('Name Link Message', (msg)=>{
+        //User clicked a name link 
+        let user = this.world.get_instance(socket.user_id);
+        
+
       });
     
       socket.on('Disconnect Message', () => {
