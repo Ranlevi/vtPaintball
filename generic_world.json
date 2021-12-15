@@ -5,7 +5,7 @@
       "id":           "r0000000",
       "name":         "Game Lobby",      
       "subtype":      "Room",
-      "description":  "This is the Lobby. Enter 'create' to start a vtPaintball game, or 'join <some ID>' to join an existing game. A Sign is hanging off one of the wall - you can 'look sign' to read it.",
+      "description":  "This is the Lobby. Enter 'create' to start a vtPaintball game, or 'join some_ID' to join an existing game. A Sign is hanging off one of the wall - you can 'look sign' to read it.",
       "entities":     ["i0000000"],
       "exits": {
         "north":      null,

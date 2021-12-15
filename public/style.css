@@ -88,7 +88,7 @@ html, body {
   margin-right:     auto; 
 }
 
-.pn_link {
+.name {
   color:          black;
   text-decoration:  underline;
   cursor:           pointer;
@@ -103,7 +103,7 @@ html, body {
   color: red;
 }
 
-.pn_action {
+.cmd_box_link {
   color:          blue;
   text-decoration:  underline;
   cursor:           pointer;

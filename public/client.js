@@ -49,7 +49,7 @@ socket.on('Chat Message', (msg)=>{
 
   let div = document.createElement("div");
   div.classList.add("box");
-  div.classList.add("box_server");
+  div.classList.add("box_server");  
   div.innerHTML = msg.content;
   chat.append(div);
 
@@ -259,7 +259,7 @@ socket.on('Edit Message', (msg)=>{
 socket.on('Cmds Box Message', (msg)=>{
 
   let list = "";
-  for (const item of msg.content.cmds_list){
+  for (const item of msg.content){
 
     list += `<li>${item}</li>`;
   }
@@ -341,96 +341,55 @@ chat.addEventListener('click', (evt)=>{
 
     socket.emit('Name Link Message', msg);
 
-  } else if (evt.target.dataset.element==="cmd"){
+  } else if (evt.target.dataset.element==="cmd_box_link"){
+    //User clicked a link in the Cmds Box
 
-    if (evt.target.dataset.action==="Copy ID"){
-
-      navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-        /* clipboard successfully set */
+    switch(evt.target.dataset.action){
+      case "Look":
+      case "Shot":
         //Create a Chat box and add it to the Chat, as feedback.
         let div = document.createElement("div");    
         div.classList.add("box");
         div.classList.add("box_user");    
-        div.append(`Copied ID ${evt.target.dataset.id} to Clipboard.`);  
+        div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
         chat.append(div);
 
         if (!stop_chat_scroll){
           div.scrollIntoView();  
         }
-        
-      }, function() {
-        console.error('Copy ID failed.');
-      });
-    }
 
-    if (evt.target.dataset.action==="Shot" ||
-        evt.target.dataset.action==="Look"){
+        let msg = {      
+          content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
+        }  
+        socket.emit('User Input Message', msg);        
+        break;
 
-      let msg = {      
-        content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
-      }  
-      socket.emit('User Input Message', msg);
-    }
-   
-    //Create a Chat box and add it to the Chat, as feedback.
-    let div = document.createElement("div");    
-    div.classList.add("box");
-    div.classList.add("box_user");    
-    div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
-    chat.append(div);
+      case "Copy ID":
+        navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
+          /* clipboard successfully set */
+          //Create a Chat box and add it to the Chat, as feedback.
+          let div = document.createElement("div");    
+          div.classList.add("box");
+          div.classList.add("box_user");    
+          div.append(`Copied ID ${evt.target.dataset.id} to Clipboard.`);  
+          chat.append(div);
+  
+          if (!stop_chat_scroll){
+            div.scrollIntoView();  
+          }
+          
+        }, function() {
+          console.error('Copy ID failed.');
+        });
+        break;
 
-    if (!stop_chat_scroll){
-      div.scrollIntoView();  
-    }
+      case "Edit":
+        break;
+    }   
 
   }
-}
 
-
-
-    //Display a cmds box with available commands.
-    // let list = '';
-
-    // if (evt.target.dataset.type==="User"){
-
-    //   if (status_obj.is_playing && status_obj.id!==evt.target.dataset.id){
-    //     //Shot
-    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
-    //             `data-action="Shot" data-id="${evt.target.dataset.id}" ` + 
-    //             `data-name="${evt.target.dataset.name}">Shot</span></li>`;
-    //   }
-
-    //   if (status_obj.id===evt.target.dataset.id){
-    //     //Edit
-    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
-    //             `data-action="Edit" data-id="${evt.target.dataset.id}" ` + 
-    //             `data-name="${evt.target.dataset.name}">Edit</span></li>`;
-
-    //     list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
-    //             `data-action="Inventory" data-id="${evt.target.dataset.id}" ` + 
-    //             `data-name="${evt.target.dataset.name}">Inventory</span></li>`;
-    //   }
-
-    // } else if (evt.target.dataset.type==="Item"){
-
-
-
-
-    // }
-
-    // //Look
-    // list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
-    //         `data-action="Look" data-id="${evt.target.dataset.id}" ` + 
-    //         `data-name="${evt.target.dataset.name}">Look</span></li>`;
-
-    // //Copy ID
-    // list += `<li><span class="cmd_box_link" data-element="cmd_box_link" ` + 
-    //         `data-action="Copy ID" data-id="${evt.target.dataset.id}" ` + 
-    //         `data-name="${evt.target.dataset.name}">Copy ID</span></li>`;
-
-
-    
-    
+});    
     
   //   //Send a 1-word command, such as North.
   // } else if (evt.target.dataset.element==="pn_cmd"){

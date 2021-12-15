@@ -60,12 +60,8 @@ class Room {
   get_name(){
     
     let html = 
-      `<span `+
-      `data-element="name" `+      
-      `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}>" `+      
-      `${this.props.name}`+
-      `</span>`;
+      `<span class="name" data-element="name" data-id="${this.props.id}" `+
+      `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
   }
@@ -134,6 +130,19 @@ class Room {
 
     let user = this.world.get_instance(user_id);
     user.send_chat_msg_to_client('Editing succesful.');
+  }
+
+  get_cmds_arr(clicking_user_id){
+    let arr = [
+      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `data-action="Look" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Look</span>`,
+      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `data-action="Copy ID" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Copy ID</span>`,
+    ];
+
+    return arr;
   }
   
 }
@@ -226,7 +235,7 @@ class User {
     let origin_room = this.world.get_instance(this.props.container_id);
     this.send_msg_to_room(`disappears.`);
     origin_room.remove_entity(this.props.id);
-
+    
     let dest_room = this.world.get_instance(dest_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
@@ -253,17 +262,43 @@ class User {
     }
 
     let html = 
-      `<span `+
-      `class="pn_link ${team_class}" `+
-      `data-element="pn_link" `+
-      `data-type="${this.props.subtype}" `+
-      `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}" `+
-      `data-actions="Look_Copy ID_Edit_Shot">`+
-      `${this.props.name}`+
-      `</span>`;
+      `<span class="name ${team_class}" data-element="name" data-id="${this.props.id}" `+
+      `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
+  }
+
+  get_cmds_arr(clicking_user_id){
+
+    let arr = [];
+
+    if (this.props.current_game_id!==null && this.props.id!==clicking_user_id){
+      let game = this.world.get_instance(this.props.current_game_id);
+
+      if (game.props.is_started){
+        arr.push(
+          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `data-action="Shot" data-id="${this.props.id}" ` + 
+          `data-name="${this.props.name}">Shot</span>`
+        );
+      }
+    }
+    
+    arr.push(
+      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `data-action="Look" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Look</span>`
+    );
+
+    if (clicking_user_id===this.props.id){
+      arr.push(
+        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `data-action="Edit" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Edit</span>`
+      );
+    }
+
+    return arr;
   }
 
   //Return a String message with what other see when they look at the user.
@@ -777,6 +812,7 @@ class User {
     this.props.container_id = dest_room.props.id;
     this.props.current_game_id = game.props.id;
     this.props.team=          "Blue";
+    this.props.spawn_room_id = game.props.blue_spawn_room_id;
     this.send_chat_msg_to_client(`You have spawned in the blue room.`);
     this.send_chat_msg_to_client("Enter 'start' to begin the game.")
     this.send_chat_msg_to_client(`Game ID is: ${this.props.owned_game_id}`);
@@ -1077,6 +1113,13 @@ class User {
     }    
     
     this.props.socket.emit('Login Message', message);
+  }
+
+  send_cmds_arr_to_client(cmds_arr){
+    let msg = {
+      content: cmds_arr
+    }
+    this.props.socket.emit('Cmds Box Message', msg);
   }
 
   //Recive a message from another entity.

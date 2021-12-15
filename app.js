@@ -99,9 +99,12 @@ class Game_Controller {
       });
 
       socket.on('Name Link Message', (msg)=>{
-        //User clicked a name link 
+        //User clicked a name link
+        //We return a list of commands  
         let user = this.world.get_instance(socket.user_id);
-        
+        let entity = this.world.get_instance(msg.id);
+
+        user.send_cmds_arr_to_client(entity.get_cmds_arr(socket.user_id));        
 
       });
     
