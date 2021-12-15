@@ -7,8 +7,7 @@ and user input.
 
 TODO:
 write help page.
-quit command to return to lobby
-
+admin can send msg to all users.
 add report abuse to user's cmds
 save user creditials in the browser
 https://developers.google.com/web/fundamentals/security/credential-management/save-forms
@@ -59,6 +58,7 @@ class Game_Controller {
 
     this.io.on('connection', (socket) => {
       console.log('a client connected');
+      socket.user_id = null;
     
       //Create a new user or load a new one.
       socket.on('Login Message', (msg)=>{
@@ -78,8 +78,11 @@ class Game_Controller {
       });
     
       //Send text inputs for processing.
-      socket.on('User Input Message', (msg)=>{        
-        this.process_user_input(msg.content, socket.user_id);        
+      socket.on('User Input Message', (msg)=>{            
+        if (socket.user_id!==null){
+          this.process_user_input(msg.content, socket.user_id);        
+        }
+        
       });
     
       //Set the user's description field.
@@ -331,6 +334,10 @@ class Game_Controller {
       case "start":
       case "st":
         user.start_cmd();
+        break;
+
+      case "quit":
+        user.quit_cmd();
         break;
 
       default:

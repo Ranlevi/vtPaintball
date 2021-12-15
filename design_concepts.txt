@@ -22,3 +22,12 @@ The game includes sounds that users make to give hints, colors, weapons, traps..
 When score is reached - one side wins. Users can stay in the game and restart, or quit to lobby. 
 
 There is no damage: a shot either hit or not.
+
+What are links in the game?
+User clicking his own name: Edit, Look, Copy Id, Inventory. (no need for button)
+User clicking another user: Look. Copy Id, Shot (in game only)
+User clicking item: Look, Use (if avaliable), Hold Get Wear (if possible), Remove (if wearing/holding), Drop (if have it).
+User clicking on room: Look, Copy ID
+User clicking on direction: move to it.
+User clicking on game id: join, Copy ID
+User clicking on 'start' or 'create': do cmds.

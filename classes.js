@@ -63,10 +63,10 @@ class Room {
       `<span `+
       `class="pn_link" `+
       `data-element="pn_link" `+
-      `data-type="${this.props.subtype}" `+
+      `data-type="${this.props.type}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}" `+
-      `data-actions="Look_Copy ID_Edit">`+
+      `data-actions="Look_Copy ID">`+
       `${this.props.name}`+
       `</span>`;
 
@@ -212,7 +212,7 @@ class User {
       this.send_chat_msg_to_client(`You were HIT by ${shooter.get_name()}.`);
       
       let game = this.world.get_instance(this.props.current_game_id);
-      game.do_hit(shooter_id, victim_id);
+      game.do_hit(shooter_id, this.props.id);
 
       this.spwan_in_room(this.props.spawn_room_id);
       return true;
@@ -262,7 +262,7 @@ class User {
       `data-type="${this.props.subtype}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}" `+
-      `data-actions="Look_Copy ID">`+
+      `data-actions="Look_Copy ID_Edit_Shot">`+
       `${this.props.name}`+
       `</span>`;
 
@@ -984,6 +984,11 @@ class User {
   //Send a message to all the users in the game - and start it.
   start_cmd(){
 
+    if (this.props.current_game_id===null){
+      this.send_chat_msg_to_client("You are not in game yet. Enter 'create' or 'join <some ID>' to play.");
+      return;
+    }
+
     let game = this.world.get_instance(this.props.current_game_id);
     
     if (game.props.owner_id!==this.props.id){
@@ -992,12 +997,23 @@ class User {
     }
 
     //User can start the game.
-    game.props.is_started = true;
+    game.start_game();
+  }
 
-    for (const user_id of game.props.entities){
-      let user = this.world.get_instance(user_id);
-      user.send_chat_msg_to_client("THE GAME HAS STARTED!!");
+  quit_cmd(){
+
+    if (this.props.current_game_id===null){
+      this.send_chat_msg_to_client("Quit what? You're not playing yet.");
+      return;
     }
+
+    let game = this.world.get_instance(this.props.current_game_id);
+    game.player_quit(this.props.id);
+
+    this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");
+
+    this.props.current_game_id = null;
+    this.spwan_in_room('r0000000');
 
   }
   
@@ -1483,7 +1499,7 @@ class Game {
       is_started:         false,
       blue_points:        0,
       red_points:         0,
-      max_score:          5
+      max_score:          2
     }
 
     //Overwrite the default props with the saved ones.
@@ -1507,16 +1523,19 @@ class Game {
     this.props.blue_spawn_room_id = blue_spawn_room.props.id;
     blue_spawn_room.props.name = "Blue Team Spawn";
     blue_spawn_room.props.lighting = "blue";
+    this.props.entities.push(blue_spawn_room.props.id);
 
     let mid_room = new Room(this.world, props);
     this.world.add_to_world(mid_room);      
     mid_room.props.lighting = "black"; 
+    this.props.entities.push(mid_room.props.id);
 
     let red_spawn_room = new Room(this.world, props);
     this.world.add_to_world(red_spawn_room);
     this.props.red_spawn_room_id = red_spawn_room.props.id;
     red_spawn_room.props.name = "Red Team Spawn";
     red_spawn_room.props.lighting = "red";
+    this.props.entities.push(red_spawn_room.props.id);
 
     //Connect the rooms
     blue_spawn_room.props.exits.north=  {id: mid_room.props.id, code: null};
@@ -1588,25 +1607,60 @@ class Game {
       this.props.red_points += 1;
     }
 
-    this.send_msg_to_all_player(`${shooter.get_name()} hits ${victim.get_name()}!`);
-    this.send_msg_to_all_player(`BLUE: ${this.props.blue_points} - RED: ${this.props.red_points}`);
+    this.send_msg_to_all_players(`${shooter.get_name()} hits ${victim.get_name()}!`);
+    this.send_msg_to_all_players(`BLUE: ${this.props.blue_points} - RED: ${this.props.red_points}`);
 
     if (this.props.blue_points===this.props.max_score){
-      this.send_msg_to_all_player(`BLUE TEAM WINS!`);
+      this.send_msg_to_all_players(`BLUE TEAM WINS!`);
       this.end_game();
     } else if (this.props.red_points===this.props.max_score){
-      this.send_msg_to_all_player(`RED TEAM WINS!`);
+      this.send_msg_to_all_players(`RED TEAM WINS!`);
       this.end_game();
     }
   }
 
-  send_msg_to_all_player(msg){
+  start_game(){
+    this.props.is_started = true;
+    this.props.blue_points = 0;
+    this.props.red_points = 0;
+
+    this.send_msg_to_all_players('THE GAME HAS STARTED!!');
+  }
+
+  end_game(){
+    this.props.is_started = false;
+  }
+
+  send_msg_to_all_players(msg){
     for (const entity_id of this.props.entities){
       let entity = this.world.get_instance(entity_id);
       if (entity.props.type==="User"){
         entity.send_chat_msg_to_client(msg);
       }
     }
+  }
+
+  player_quit(user_id){
+
+    let ix = this.props.entities.indexOf(user_id);
+    if (ix!==-1){
+      this.props.entities.splice(ix,1);
+    }
+
+    if (this.props.entities.length===0){
+      //All player have quit the game. Close it.
+      this.destroy_game();
+    }
+  }
+
+  destroy_game(){
+    //remove rooms and items from the world.
+    for (const id of this.props.entities){
+      this.world.remove_from_world(id);
+    }
+
+    //remove the game itself
+    this.world.remove_from_world(this.props.id);
   }
 }
 

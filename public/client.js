@@ -29,7 +29,8 @@ let status_obj = {
   torso:    "",
   legs:     "",
   feet:     "",
-  slots:    ""
+  slots:    "",
+  is_playing: false
 };
 let currently_edited_item_id = null;
 
@@ -318,6 +319,29 @@ chat.addEventListener('click', (evt)=>{
 
     //Populate the actions list.
     for (const action of actions){
+
+      switch(action){
+        case "Look":
+        case "Copy ID":
+          list += `<li><span class="pn_action" data-element="pn_action" ` + 
+              `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
+              `data-name="${evt.target.dataset.name}"> `+ 
+              `${action} ${evt.target.dataset.name}</span></li>`
+          break;
+
+        case "Shot":
+          if (status_obj.is_playing===true){
+            list += `<li><span class="pn_action" data-element="pn_action" ` + 
+              `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
+              `data-name="${evt.target.dataset.name}"> `+ 
+              `${action} ${evt.target.dataset.name}</span></li>`
+          }
+          break;
+
+        case "Edit":
+          break;
+      }
+
       list += `<li><span class="pn_action" data-element="pn_action" ` + 
               `data-action="${action}" data-id="${evt.target.dataset.id}" ` + 
               `data-name="${evt.target.dataset.name}"> `+ 
