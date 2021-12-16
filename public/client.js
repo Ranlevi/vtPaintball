@@ -347,6 +347,13 @@ chat.addEventListener('click', (evt)=>{
     switch(evt.target.dataset.action){
       case "Look":
       case "Shot":
+      case "Get":
+      case "Hold":
+      case "Wear":
+      case "Remove":
+      case "Drop":
+      case "Consume":
+      case "Use":
         //Create a Chat box and add it to the Chat, as feedback.
         let div = document.createElement("div");    
         div.classList.add("box");
@@ -384,36 +391,63 @@ chat.addEventListener('click', (evt)=>{
         break;
 
       case "Edit":
+        settings_modal.classList.add('is-active');
+        description_input.focus();
+        break;
+
+      case "Inventory":
+        let html = 
+          `Your Inventory:`+
+          `<p>&#9995; ${status_obj.holding}</p>`+
+          `<p>&#x1F3A9 ${status_obj.head}</p>`+ 
+          `<p>&#x1F455 ${status_obj.torso}</p>`+ 
+          `<p>&#x1F456 ${status_obj.legs}</p>`+ 
+          `<p>&#x1F45E ${status_obj.feet}</p>`+
+          `<p>&#x1F9F3 ${status_obj.slots}</p>`;
+
+        let div = document.createElement("div");
+        div.classList.add("box");
+        div.classList.add("box_server");
+        div.innerHTML = html;
+        chat.append(div);
+
+        //If the chat is not frezzed, scroll it to view the latest msg.
+        if (!stop_chat_scroll){
+          div.scrollIntoView();  
+        }
         break;
     }   
 
+  } else if (evt.target.dataset.element==="exit"){
+    let msg = {      
+      content: `${evt.target.dataset.actions}`
+    }
+    socket.emit('User Input Message', msg);        
+
+    //Create a Chat box and add it to the Chat, as feedback.
+    let div = document.createElement("div");
+    div.classList.add("box");
+    div.classList.add("box_user");
+    div.append(`${evt.target.dataset.actions}`);  
+    chat.append(div);
+
+    if (!stop_chat_scroll){
+      div.scrollIntoView();  
+    }
+  
+  } else if (evt.target.dataset.element==="game_id"){
+    let msg = {
+      id: evt.target.dataset.id
+    }
+
+    socket.emit('Game ID Link Message', msg);
+    
+  } else {
+    input_field.focus();
   }
 
 });    
     
-  //   //Send a 1-word command, such as North.
-  // } else if (evt.target.dataset.element==="pn_cmd"){
-
-  //   let msg = {      
-  //     content: `${evt.target.dataset.actions}`
-  //   }
-  //   socket.emit('User Input Message', msg);        
-
-  //   //Create a Chat box and add it to the Chat, as feedback.
-  //   let div = document.createElement("div");
-  //   div.classList.add("box");
-  //   div.classList.add("box_user");
-  //   div.append(`${evt.target.dataset.actions}`);  
-  //   chat.append(div);
-
-  //   if (!stop_chat_scroll){
-  //     div.scrollIntoView();  
-  //   }
-    
-  // } else {
-  //   input_field.focus();
-  // }
-// })
 
 //Pressing the inv btn displays an inventory message in the Chat.
 inv_btn.addEventListener('click', ()=>{

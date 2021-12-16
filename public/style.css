@@ -95,6 +95,13 @@ html, body {
   font-weight:      600;
 }
 
+.exit {
+  color:          darkgreen;
+  text-decoration:  underline;
+  cursor:           pointer;
+  font-weight:      600;
+}
+
 .blue_team {
   color: blue;
 }

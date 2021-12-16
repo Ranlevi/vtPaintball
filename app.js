@@ -9,6 +9,8 @@ TODO:
 write help page.
 admin can send msg to all users.
 remove edit and inv buttons
+bug: holding while already holding another item, wearing why already wearing
+bug: wearing something that is not gettable
 add report abuse to user's cmds
 save user creditials in the browser
 https://developers.google.com/web/fundamentals/security/credential-management/save-forms

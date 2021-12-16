@@ -78,7 +78,7 @@ class Room {
       
       if (obj!==null){
         exits_exists = true;
-        msg += `<span class="pn_link" data-element="pn_cmd" ` + 
+        msg += `<span class="exit" data-element="exit" ` + 
                 `data-actions="${direction.toUpperCase()}" >` +
                 `${direction.toUpperCase()}</span> `
       }
@@ -294,7 +294,10 @@ class User {
       arr.push(
         `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
         `data-action="Edit" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Edit</span>`
+        `data-name="${this.props.name}">Edit</span>`,
+        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `data-action="Inventory" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Inventory</span>`
       );
     }
 
@@ -815,9 +818,10 @@ class User {
     this.props.spawn_room_id = game.props.blue_spawn_room_id;
     this.send_chat_msg_to_client(`You have spawned in the blue room.`);
     this.send_chat_msg_to_client("Enter 'start' to begin the game.")
-    this.send_chat_msg_to_client(`Game ID is: ${this.props.owned_game_id}`);
+    this.send_chat_msg_to_client(
+      `Game ID is: <span class="game_id" data-element="game_id" data-id="${this.props.owned_game_id}" `+
+      `>${this.props.owned_game_id}</span>`);
     this.look_cmd();
-
   }
  
   //Teleport the user to another room. Target is an ID.
@@ -1316,6 +1320,123 @@ class Item {
     user.send_chat_msg_to_client('Editing succesful.');
 
   }
+
+  get_cmds_arr(clicking_user_id){
+    let arr = [];
+    let clicking_user = this.world.get_instance(clicking_user_id);
+
+    if (this.props.container_id===clicking_user.props.container_id){
+      //Both item and user are in the same room.
+
+      //Look
+      arr.push(
+        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `data-action="Look" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Look</span>`      
+      );
+
+      //Get
+      if (this.props.is_gettable){
+        arr.push(
+          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `data-action="Get" data-id="${this.props.id}" ` + 
+          `data-name="${this.props.name}">Get</span>`      
+        );
+      }
+    }
+
+    //Hold
+    if (this.props.is_holdable){
+      if (this.props.container_id===clicking_user.props.container_id || 
+          //Item is in the same room as user
+          (this.props.container_id===clicking_user.props.id && clicking_user.props.holding!==this.props.id)
+          //Item is on the user's body but not held
+          ){
+          arr.push(
+            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `data-action="Hold" data-id="${this.props.id}" ` + 
+            `data-name="${this.props.name}">Hold</span>`      
+          );
+        }
+    }
+
+    //Wear
+    if (this.props.wear_slot!==null){
+      //Item can be worn
+      if ((this.props.container_id===clicking_user.props.container_id && 
+          //Item in the same room as user
+          this.props.is_gettable
+          //Item can be picked up
+        ) || (
+          this.props.container_id===clicking_user.props.id && 
+          //Item is on the user's body
+          clicking_user.props[this.props.wear_slot]!==this.props.id
+          //User is not already wearing the item
+        )){
+          arr.push(
+            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `data-action="Wear" data-id="${this.props.id}" ` + 
+            `data-name="${this.props.name}">Wear</span>`      
+          );
+      }
+    }
+
+    //Remove
+    if (clicking_user.props.holding===this.props.id ||
+        //User is holding the item
+        clicking_user.props[this.props.wear_slot]===this.props.id
+        //User is wearing the item
+      ){
+        arr.push(
+          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `data-action="Remove" data-id="${this.props.id}" ` + 
+          `data-name="${this.props.name}">Remove</span>`      
+        );
+      }   
+
+    //Drop
+    if (this.props.container_id===clicking_user.props.id){
+      arr.push(
+        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `data-action="Drop" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Drop</span>`      
+      );
+    }
+
+    //Consume
+    if (this.props.is_consumable){
+      //Item can be consume
+      if ((this.props.container_id===clicking_user.props.container_id && 
+          //Item in the same room as user
+          this.props.is_gettable
+          //Item can be picked up
+        ) || this.props.container_id===clicking_user.props.id
+            //Item is on the user's body
+        ){
+          arr.push(
+            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `data-action="Consume" data-id="${this.props.id}" ` + 
+            `data-name="${this.props.name}">Consume</span>`      
+          );
+      }
+    }
+
+    //Use
+    if (this.props.action!==null && 
+        //Item can be used
+        (this.props.container_id===clicking_user.props.container_id || 
+         //Item is in the same room as the user
+         this.props.container_id===clicking_user.props.id
+         //Item is on the user's body
+        )
+      ){
+        arr.push(
+          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `data-action="Use" data-id="${this.props.id}" ` + 
+          `data-name="${this.props.name}">Use</span>`      
+        );
+    }
+  }
   
 }
 
@@ -1522,6 +1643,20 @@ class NPC {
     user.send_chat_msg_to_client('Editing succesful.');
   }
 
+  get_cmds_arr(clicking_user_id){
+    let arr = [];
+    let clicking_user = this.world.get_instance(clicking_user_id);
+
+    if (this.props.container_id===clicking_user.props.container_id){
+      //Both item and user are in the same room.
+      //Look
+      arr.push(
+        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `data-action="Look" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Look</span>`      
+      );
+    }
+  }
 }
 
 class Game {
