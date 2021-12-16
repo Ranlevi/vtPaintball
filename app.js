@@ -8,9 +8,7 @@ and user input.
 TODO:
 write help page.
 admin can send msg to all users.
-remove edit and inv buttons
-bug: holding while already holding another item, wearing why already wearing
-bug: wearing something that is not gettable
+
 add report abuse to user's cmds
 save user creditials in the browser
 https://developers.google.com/web/fundamentals/security/credential-management/save-forms
@@ -106,7 +104,12 @@ class Game_Controller {
         let user = this.world.get_instance(socket.user_id);
         let entity = this.world.get_instance(msg.id);
 
-        user.send_cmds_arr_to_client(entity.get_cmds_arr(socket.user_id));        
+        user.send_cmds_arr_to_client(entity.get_cmds_arr(socket.user_id)); 
+      });
+
+      socket.on('Game ID Link Message', (msg)=>{
+        let user = this.world.get_instance(socket.user_id);
+        user.send_cmds_arr_to_client(user.get_game_id_link_cmds());
 
       });
     
@@ -351,6 +354,10 @@ class Game_Controller {
 
       case "quit":
         user.quit_cmd();
+        break;
+
+      case "adminsay":
+        user.admin_msg_cmd(target);
         break;
 
       default:

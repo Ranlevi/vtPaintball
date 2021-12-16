@@ -552,6 +552,12 @@ class User {
       this.send_chat_msg_to_client(`You're already holding it!`);
       return;
     }
+
+    //Check if already holding something
+    if (this.props.holding!==null){
+      this.send_chat_msg_to_client(`You're already holding something. Remove it to hold a new item.`);
+      return;
+    }
  
     //Check if target is holdable
     let entity = this.world.get_instance(result.id);
@@ -601,6 +607,12 @@ class User {
 
     //Target found
     let entity = this.world.get_instance(result.id);
+
+    //Check if it's in the room and not gettable
+    if (result.location==="room" && entity.props.is_gettable===false){
+      this.send_chat_msg_to_client(`You can't pick it up.`);
+      return;
+    }
 
     //Check that it's an Item (all others can't be worn)
     if (!(entity instanceof Item) || entity.props.wear_slot===null){
@@ -1126,6 +1138,31 @@ class User {
     this.props.socket.emit('Cmds Box Message', msg);
   }
 
+  admin_msg_cmd(msg){
+
+    if (!this.props.is_admin){
+      this.send_chat_msg_to_client("Only an Admin can do that.");
+      return;
+    }
+
+    //The user is an admin
+    for (const user of this.world.users.values()){
+      user.send_chat_msg_to_client(msg);
+    }
+  }
+
+  get_game_id_link_cmds(){
+    let arr = [];    
+
+    arr.push(
+      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `data-action="Copy ID" data-id="${this.props.current_game_id}" ` + 
+      `">Copy ID</span>`
+    );
+
+    return arr;  
+  }
+
   //Recive a message from another entity.
   get_msg(sender_id, content){
     //Forward the recived message to the client.
@@ -1135,10 +1172,13 @@ class User {
     this.send_chat_msg_to_client(msg);
   }
 
-  //Save user state to users_db, and remove him from the world.
+  //remove him from the world.
   disconnect_from_game(){
 
-    this.world.save_user_to_users_db(this.props.id);
+    if (this.props.current_game_id!==null){
+      let game = this.world.get_instance(this.props.current_game_id);
+      game.player_quit(this.props.id);
+    }
     
     let room = this.world.get_instance(this.props.container_id);
     room.remove_entity(this.props.id);
@@ -1273,12 +1313,11 @@ class Item {
   get_name(){
     //Returns an HTML string for the name of the entity.
     let html = 
-      `<span `+
+      `<span class="name" `+
       `data-element="name" `+
       `data-type="${this.props.type}" `+
       `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}" `+
-      `data-actions="Look_Get_Drop_Wear_Hold_Consume_Remove_Use_Edit">`+
+      `data-name="${this.props.name}">`+      
       `${this.props.name}`+
       `</span>`;
 
@@ -1436,6 +1475,8 @@ class Item {
           `data-name="${this.props.name}">Use</span>`      
         );
     }
+
+    return arr;
   }
   
 }

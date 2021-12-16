@@ -7,8 +7,6 @@ let submit_btn=           document.getElementById("submit_btn");
 let username_input =      document.getElementById("username_input");
 let warning_text=         document.getElementById("warning_text");
 let input_field=          document.getElementById("input_field");
-let inv_btn=              document.getElementById("inv_btn");
-let settings_btn=         document.getElementById("settings_btn");
 let settings_modal=       document.getElementById("settings_modal");
 let settings_submit_btn=  document.getElementById("settings_submit_btn");
 let settings_cancel_btn=  document.getElementById("settings_cancel_btn");
@@ -283,7 +281,7 @@ socket.on('disconnect', ()=>{
 
 disconnect_btn.addEventListener('click', ()=>{
   socket.emit('Disconnect Message', {});
-
+  socket = null;
   input_form.setAttribute("disabled", true);
 });
  
@@ -343,6 +341,7 @@ chat.addEventListener('click', (evt)=>{
 
   } else if (evt.target.dataset.element==="cmd_box_link"){
     //User clicked a link in the Cmds Box
+    let div;
 
     switch(evt.target.dataset.action){
       case "Look":
@@ -355,7 +354,7 @@ chat.addEventListener('click', (evt)=>{
       case "Consume":
       case "Use":
         //Create a Chat box and add it to the Chat, as feedback.
-        let div = document.createElement("div");    
+        div = document.createElement("div");    
         div.classList.add("box");
         div.classList.add("box_user");    
         div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
@@ -405,16 +404,17 @@ chat.addEventListener('click', (evt)=>{
           `<p>&#x1F45E ${status_obj.feet}</p>`+
           `<p>&#x1F9F3 ${status_obj.slots}</p>`;
 
-        let div = document.createElement("div");
-        div.classList.add("box");
-        div.classList.add("box_server");
-        div.innerHTML = html;
-        chat.append(div);
+        insert_server_box(html);
+        // let div = document.createElement("div");
+        // div.classList.add("box");
+        // div.classList.add("box_server");
+        // div.innerHTML = html;
+        // chat.append(div);
 
-        //If the chat is not frezzed, scroll it to view the latest msg.
-        if (!stop_chat_scroll){
-          div.scrollIntoView();  
-        }
+        // //If the chat is not frezzed, scroll it to view the latest msg.
+        // if (!stop_chat_scroll){
+        //   div.scrollIntoView();  
+        // }
         break;
     }   
 
@@ -441,26 +441,15 @@ chat.addEventListener('click', (evt)=>{
     }
 
     socket.emit('Game ID Link Message', msg);
-    
+    //recieve this msg in the app
   } else {
     input_field.focus();
   }
 
 });    
-    
 
-//Pressing the inv btn displays an inventory message in the Chat.
-inv_btn.addEventListener('click', ()=>{
-
-  let html = 
-    `Your Inventory:`+
-    `<p>&#9995; ${status_obj.holding}</p>`+
-    `<p>&#x1F3A9 ${status_obj.head}</p>`+ 
-    `<p>&#x1F455 ${status_obj.torso}</p>`+ 
-    `<p>&#x1F456 ${status_obj.legs}</p>`+ 
-    `<p>&#x1F45E ${status_obj.feet}</p>`+
-    `<p>&#x1F9F3 ${status_obj.slots}</p>`;
-
+function insert_server_box(html){
+  
   let div = document.createElement("div");
   div.classList.add("box");
   div.classList.add("box_server");
@@ -470,14 +459,8 @@ inv_btn.addEventListener('click', ()=>{
   //If the chat is not frezzed, scroll it to view the latest msg.
   if (!stop_chat_scroll){
     div.scrollIntoView();  
-  }
-})
-
-//Pressing the Settings btn displays the settings modal.
-settings_btn.addEventListener('click', ()=>{
-  settings_modal.classList.add('is-active');
-  description_input.focus();
-})
+  } 
+}
 
 //Close the settings modal without submitting to the server.
 settings_cancel_btn.addEventListener('click', ()=>{
