@@ -20,7 +20,7 @@ html, body {
   flex-direction:   column;
   overflow-y:       scroll;
   background-color: white;
-  transition:       background-color 2s linear;
+  transition:       background-color 1s linear;
 }
 
 #Input {    

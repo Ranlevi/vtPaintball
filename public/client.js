@@ -13,26 +13,27 @@ let settings_cancel_btn=  document.getElementById("settings_cancel_btn");
 let description_input=    document.getElementById("description_input");
 let input_form=           document.getElementById("input_form");
 let edit_modal=           document.getElementById("edit_modal");
-let edit_modal_form=   document.getElementById("edit_modal_form");
+let edit_modal_form=      document.getElementById("edit_modal_form");
 let edit_modal_close_btn= document.getElementById("edit_modal_close_btn");
 let edit_submit_btn=      document.getElementById("edit_submit_btn");
 
 const CLIENT_VERSION=     0.1;
 
-let stop_chat_scroll=       false;
-let current_chat_bg_color=  null;
-let status_obj = {
-  holding:  "",
-  head:     "",
-  torso:    "",
-  legs:     "",
-  feet:     "",
-  slots:    "",
-  is_playing: false,
-  id:       ""
-};
-let currently_edited_item_id = null;
+let stop_chat_scroll=         false;
+let currently_edited_item_id= null;
 
+let status_obj = {
+  holding:        "",
+  head:           "",
+  torso:          "",
+  legs:           "",
+  feet:           "",
+  slots:          "",  
+  room_lighting:  null,
+};
+
+//When index.html loads, the Login Modal appears. 
+//Focus on the username field of the Login Modal.
 username_input.focus();
 
 //Open a SOCKETIO connection.
@@ -44,48 +45,20 @@ let socket = io();
 //Display the Chat Message as a server_box.
 //msg: {content: html string}
 socket.on('Chat Message', (msg)=>{  
-
-  let div = document.createElement("div");
-  div.classList.add("box");
-  div.classList.add("box_server");  
-  div.innerHTML = msg.content;
-  chat.append(div);
-
-  //If the chat is not frezzed, scroll it to view the latest msg.
-  if (!stop_chat_scroll){
-    div.scrollIntoView();  
-  }
+  insert_server_box(msg.content);
 });
 
-//Update the status object, health display & background.
-//msg: {content: {inventory obj}}
+//Update the status object.
 socket.on('Status Message', (msg)=>{
-  
-  status_obj = {
-    holding:  msg.content.holding,
-    head:     msg.content.head,
-    torso:    msg.content.torso,
-    legs:     msg.content.legs,
-    feet:     msg.content.feet,
-    slots:    msg.content.slots
-  }
-
-  if (current_chat_bg_color===null){
-    current_chat_bg_color = msg.content.room_lighting;
-  }
-
-  //Change the chat backgroud color.
-  if (msg.content.room_lighting!==current_chat_bg_color){
-    chat.style.backgroundColor= msg.content.room_lighting;
-    current_chat_bg_color=      msg.content.room_lighting;
-  }
+  status_obj = msg;
+  chat.style.backgroundColor = status_obj.room_lighting;  
 });
 
 //Check if Login was successful. If true - remove modal. Else - display error.
-//msg: {content: {is_login_successful: bool}}
+//msg: {is_login_successful: bool}
 socket.on('Login Message', (msg)=>{
   
-  if (msg.content.is_login_successful){        
+  if (msg.is_login_successful){        
     login_modal.classList.remove('is-active');
   } else {
     warning_text.innerHTML = 'A User with this name already exists in the game.';
@@ -448,19 +421,7 @@ chat.addEventListener('click', (evt)=>{
 
 });    
 
-function insert_server_box(html){
-  
-  let div = document.createElement("div");
-  div.classList.add("box");
-  div.classList.add("box_server");
-  div.innerHTML = html;
-  chat.append(div);
 
-  //If the chat is not frezzed, scroll it to view the latest msg.
-  if (!stop_chat_scroll){
-    div.scrollIntoView();  
-  } 
-}
 
 //Close the settings modal without submitting to the server.
 settings_cancel_btn.addEventListener('click', ()=>{
@@ -548,3 +509,22 @@ username_input.addEventListener("keydown", (evt)=> {
     }  
   }
 })
+
+
+// Aux. Functions
+//-------------------
+
+//Add a server box to the Chat interface.
+function insert_server_box(html){
+  
+  let div = document.createElement("div");
+  div.classList.add("box");
+  div.classList.add("box_server");
+  div.innerHTML = html;
+  chat.append(div);
+
+  //If the chat is not freezed, scroll it to view the latest msg.
+  if (!stop_chat_scroll){
+    div.scrollIntoView();  
+  } 
+}

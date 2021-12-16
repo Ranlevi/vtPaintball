@@ -6,13 +6,10 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
+add a game command, with info. Pressing the game name shows edit of the game
 write help page.
-admin can send msg to all users.
-
+favicon
 add report abuse to user's cmds
-save user creditials in the browser
-https://developers.google.com/web/fundamentals/security/credential-management/save-forms
-https://web.dev/sign-in-form-best-practices/
 */
 
 const SERVER_VERSION=  0.1;

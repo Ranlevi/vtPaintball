@@ -1080,16 +1080,15 @@ class User {
   //Send a status msg to the client.
   send_status_msg_to_client(){
 
-    let msg = {      
-      content:  {        
-        holding:      'Nothing.',        
-        head:         'Nothing.',
-        torso:        'Nothing.',
-        legs:         'Nothing.',
-        feet:         'Nothing.',        
-        slots:        'Nothing.',
-        room_lighting: this.world.get_instance(this.props.container_id).props.lighting,
-      }
+    let msg = {                    
+      holding:      'Nothing.',        
+      head:         'Nothing.',
+      torso:        'Nothing.',
+      legs:         'Nothing.',
+      feet:         'Nothing.',        
+      slots:        'Nothing.',      
+      room_lighting: this.world.get_instance(this.props.container_id).props.lighting
+
     }   
         
     for (const part of this.BODY_PARTS){
@@ -1125,7 +1124,7 @@ class User {
 
   send_login_msg_to_client(is_login_successful){
     let message = {      
-      content: {is_login_successful: is_login_successful}
+      is_login_successful: is_login_successful
     }    
     
     this.props.socket.emit('Login Message', message);

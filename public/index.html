@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
-    <title>vtPaintball</title>
+    <title>Text Tag</title>
     <meta   charset="utf-8"> <!-- For Hebrew support on old browsers -->
     <meta   http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Support IE browsers -->
     <meta   name="viewport"              content="width=device-width, initial-scale=1">
@@ -19,25 +19,28 @@
     
     <!-- Game Area -->
    <div id="Parent">
+     <!-- Chat Window -->
     <div id="Chat" class="is-align-self-stretch"></div>
 
+    <!-- Input Field -->
     <div id="Input" class="has-background-light">
       
       <div class="control">        
         <form id="input_field">            
           <input
-            id="input_form"             
-            class="input" 
-            autocomplete="off"
-            type="text" 
-            rows="1" 
-            placeholder="Text input">
+            id=           "input_form"             
+            class=        "input" 
+            autocomplete= "off"
+            type=         "text" 
+            rows=         "1" 
+            placeholder=  "Text input">
           </input>          
         </form>
       </div>
       
     </div> 
               
+    <!-- Buttons and more -->
     <div id="Dashboard">            
 
       <div id="freeze_btn" class="icon is-large has-text-success">        
@@ -52,27 +55,37 @@
    
    <!-- Login Modal -->
    <div id="login_modal" class="modal is-active">
+
     <div class="modal-background"></div>
+
     <div id="modal_content" class="modal-content">
       
       <div class="has-text-white has-text-centered">Welcome to</div>
-      <div class="has-text-white is-size-2 has-text-centered">vtPaintball</div>
+      <div class="has-text-danger-dark is-size-2 has-text-centered">Text Tag</div>
+      <div class="has-text-white has-text-centered">A textual, mobile-friendly, multiplayer</div>
+      <div class="has-text-white has-text-centered">Lastertag game!</div>
       <div class="has-text-white has-text-centered">
-        A textual, mobile-friendly, multiplayer paintball game. (<a href="/help" target="_blank">More Info.</a>)
+        (<a class="has-text-primary" href="/help" target="_blank">More Info.</a>)
       </div>
       <div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>
       <div class="block"></div>
       <div class="has-text-white has-text-centered">Enter your username:</div>
 
+      <!-- Username Input Field -->
       <form>
         <div class="field login_input">          
           <div class="control">
-            <input id="username_input" autocomplete="off" class="input" type="text" placeholder="e.g Morpheus, Neo...">
+            <input 
+              id=           "username_input" 
+              autocomplete= "off" 
+              class=        "input" 
+              type=         "text" 
+              placeholder=  "e.g Morpheus, Neo...">
           </div>
-        </div>       
-        
+        </div>
       </form>
 
+      <!-- An empty DIV for errors and warnings -->
       <div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div> 
 
       <div class="control login_input">
@@ -82,8 +95,9 @@
     </div>      
   </div>
 
-  <!-- Settings Modal  -->
+  <!-- Settings Modal, for user details and settings. -->
   <div id="settings_modal" class="modal">
+    
     <div class="modal-background"></div>
 
     <div id="settings_modal_content" class="modal-content">            
