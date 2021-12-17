@@ -1,21 +1,22 @@
-let chat=                 document.getElementById('Chat');
-let disconnect_btn=       document.getElementById('disconnect_btn');
-let freeze_btn=           document.getElementById('freeze_btn');
-let parent=               document.getElementById('Parent');
-let login_modal=          document.getElementById("login_modal");
-let submit_btn=           document.getElementById("submit_btn");
-let username_input =      document.getElementById("username_input");
-let warning_text=         document.getElementById("warning_text");
-let input_field=          document.getElementById("input_field");
-let settings_modal=       document.getElementById("settings_modal");
-let settings_submit_btn=  document.getElementById("settings_submit_btn");
-let settings_cancel_btn=  document.getElementById("settings_cancel_btn");
-let description_input=    document.getElementById("description_input");
-let input_form=           document.getElementById("input_form");
-let edit_modal=           document.getElementById("edit_modal");
-let edit_modal_form=      document.getElementById("edit_modal_form");
-let edit_modal_close_btn= document.getElementById("edit_modal_close_btn");
-let edit_submit_btn=      document.getElementById("edit_submit_btn");
+let chat=                       document.getElementById('Chat');
+let disconnect_btn=             document.getElementById('disconnect_btn');
+let freeze_btn=                 document.getElementById('freeze_btn');
+let parent=                     document.getElementById('Parent');
+let login_modal=                document.getElementById("login_modal");
+let submit_btn=                 document.getElementById("submit_btn");
+let username_input =            document.getElementById("username_input");
+let warning_text=               document.getElementById("warning_text");
+let input_field=                document.getElementById("input_field");
+let user_edit_modal=            document.getElementById("user_edit_modal");
+let user_edit_submit_btn=       document.getElementById("user_edit_submit_btn");
+let user_edit_cancel_btn=       document.getElementById("user_edit_cancel_btn");
+let user_description_input=     document.getElementById("user_description_input");
+let input_form=                 document.getElementById("input_form");
+let game_edit_modal=            document.getElementById("game_edit_modal");
+let game_edit_modal_form=       document.getElementById("game_edit_modal_form");
+let game_edit_modal_close_btn=  document.getElementById("game_edit_modal_close_btn");
+let game_edit_submit_btn=       document.getElementById("game_edit_submit_btn");
+let game_current_max_score=     document.getElementById("game_current_max_score");
 
 const CLIENT_VERSION=     0.1;
 
@@ -45,7 +46,7 @@ let socket = io();
 //Display the Chat Message as a server_box.
 //msg: {content: html string}
 socket.on('Chat Message', (msg)=>{  
-  insert_server_box(msg.content);
+  insert_chat_box("box_server", msg.content);
 });
 
 //Update the status object.
@@ -65,200 +66,41 @@ socket.on('Login Message', (msg)=>{
   }
 });
 
+//Display the relevant Edit Modal
 socket.on('Edit Message', (msg)=>{
-
-  currently_edited_item_id = msg.id;
-
-  let html = '';
-
-  if (msg.type==="Item"){
-    html += `<div class="field">`+
-
-            `<label class="label has-text-white is-size-3">You are editing: ${msg.props.name}</lable>`+
-    
-            ` <label for="name" class="label has-text-white">Name</label>`+
-            ` <div class="control">`+
-            `   <input name="name" class="input" type="text" value="${msg.props.name}">`+
-            ` </div>`+
-
-            ` <label for="description" class="label has-text-white">Description</label>`+
-            ` <div class="control">`+
-            `   <textarea name="description" class="textarea" rows="3">${msg.props.description}</textarea>`+
-            ` </div>`+
-
-            ` <label for="is_consumable" class="label has-text-white">is_consumable</label>`+
-            ` <div class="control">`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_consumable" value="true" `+
-            `       ${msg.props.is_consumable? "checked": ""}><span class="has-text-white">True</span>`+
-            `   </label>`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_consumable" value="false" `+
-            `       ${!msg.props.is_consumable? "checked": ""}><span class="has-text-white">False</span>`+
-            `   </label>`+
-            ` </div>`+
-
-            ` <label for="is_holdable" class="label has-text-white">is_holdable</label>`+
-            ` <div class="control">`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_holdable" value="true" `+
-            `       ${msg.props.is_holdable? "checked": ""}><span class="has-text-white">True</span>`+
-            `   </label>`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_holdable" value="false" `+
-            `       ${!msg.props.is_holdable? "checked": ""}><span class="has-text-white">False</span>`+
-            `   </label>`+
-            ` </div>`+
-
-            ` <label for="is_gettable" class="label has-text-white">is_gettable</label>`+
-            ` <div class="control">`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_gettable" value="true" `+
-            `       ${msg.props.is_gettable? "checked": ""}><span class="has-text-white">True</span>`+
-            `   </label>`+
-            `   <label class="radio">`+
-            `     <input type="radio" name="is_gettable" value="false" `+
-            `       ${!msg.props.is_gettable? "checked": ""}><span class="has-text-white">False</span>`+
-            `   </label>`+
-            ` </div>`+
-
-            `  <label for="wear_slot" class="label has-text-white">Wear Slot</label>`+
-            `   <div class="control">`+
-            `    <div class="select">`+
-            `     <select name="wear_slot">`+
-            `       <option value="${msg.props.wear_slot}">${msg.props.wear_slot}</option>`+
-            `       <option value="head">head</option>`+
-            `       <option value="torso">torso</option>`+
-            `       <option value="legs">legs</option>`+
-            `       <option value="feet">feet</option>`+
-            `       <option value="null">null</option>`+
-            `     </select>`+
-            `   </div>`+
-            ` </div>`+
-
-            // ` <label for="key_code" class="label has-text-white">Key Code</label>`+
-            // ` <div class="control">`+
-            // `   <input name="key_code" class="input" type="text" value="${msg.props.key_code}">`+
-            // ` </div>`+
-
-            `  <label for="action" class="label has-text-white">Action</label>`+
-            `   <div class="control">`+
-            `    <div class="select">`+
-            `     <select name="action">`+
-            `       <option value="${msg.props.action}">${msg.props.action}</option>`+           
-            `     </select>`+
-            `   </div>`+
-            ` </div>`;            
-
-    html += `</div>`;
-                      
-  } else if (msg.type==="Room"){
-
-    html += `<div class="field">`+
-
-            `<label class="label has-text-white is-size-3">You are editing: ${msg.props.name}</lable>`+
-    
-            ` <label for="name" class="label has-text-white">Name</label>`+
-            ` <div class="control">`+
-            `   <input name="name" class="input" type="text" value="${msg.props.name}">`+
-            ` </div>`+
-
-            ` <label for="description" class="label has-text-white">Description</label>`+
-            ` <div class="control">`+
-            `   <textarea name="description" class="textarea" rows="3">${msg.props.description}</textarea>`+
-            ` </div>`+
-
-            ` <label for="lighting" class="label has-text-white">Lighting</label>`+
-            ` <div class="control">`+
-            `   <input name="lighting" class="input" type="text" value="${msg.props.lighting}">`+
-            ` </div>`;
-
-    if (!msg.props.is_corridor_room){
-      html += ` <label for="lighting" class="label has-text-white">Enable/Disable Exits</label>`+
-              ` <div class="control">`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="north" value="true" ${(msg.props.exits.north===null)? "": "checked"}>`+
-              `     North`+
-              ` </label>`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="south" value="true" ${(msg.props.exits.south===null)? "": "checked"}>`+
-              `     South`+
-              ` </label>`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="east" value="true" ${(msg.props.exits.east===null)? "": "checked"}>`+
-              `     East`+
-              ` </label>`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="west" value="true" ${(msg.props.exits.west===null)? "": "checked"}>`+
-              `     West`+
-              ` </label>`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="up" value="true" ${(msg.props.exits.up===null)? "": "checked"}>`+
-              `     Up`+
-              ` </label>`+
-              ` <label class="checkbox">`+
-              `   <input type="checkbox" name="down" value="true" ${(msg.props.exits.down===null)? "": "checked"}>`+
-              `     Down`+
-              ` </label>`+
-              ` </div>`;
-    }
-            
-    html += `</div>`;
-  } else if (msg.type==="NPC"){
-
-    html += `<div class="field">`+
-
-            `<label class="label has-text-white is-size-3">You are editing: ${msg.props.name}</lable>`+
-    
-            ` <label for="name" class="label has-text-white">Name</label>`+
-            ` <div class="control">`+
-            `   <input name="name" class="input" type="text" value="${msg.props.name}">`+
-            ` </div>`+
-
-            ` <label for="description" class="label has-text-white">Description</label>`+
-            ` <div class="control">`+
-            `   <textarea name="description" class="textarea" rows="3">${msg.props.description}</textarea>`+
-            ` </div>`;
-
-    html += `</div>`;
-  }
+  //msg = {props: props}
   
-  edit_modal_form.innerHTML= html;
-  edit_modal.classList.add('is-active');
+  if (msg.props.type==="User"){
+    //Display the Edit User fields.
+    
+    user_description_input.innerHTML = msg.props.description;
+    user_edit_modal.classList.add('is-active');
+
+  } else if (msg.props.type==="Game"){
+    game_current_max_score.innerHTML = msg.props.max_score;
+    game_edit_modal.classList.add('is-active');
+
+  } else {
+    console.error(`Socket: Edit Message: unknown type - ${msg.props.type}`);
+  }
+
 });
 
+//Display a Cmd Box with the recived cmds.
 socket.on('Cmds Box Message', (msg)=>{
-
   let list = "";
   for (const item of msg.content){
-
     list += `<li>${item}</li>`;
   }
-
-  let html = `<ul>${list}</ul>`;
-      
-  let div = document.createElement("div");
-  div.classList.add("box");
-  div.classList.add("box_cmds");    
-  div.innerHTML = html;    
-  chat.append(div);
-
-  if (!stop_chat_scroll){
-    div.scrollIntoView();  
-  }
+  insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
 });
 
+//Display a Disconnect message to the user.
 socket.on('disconnect', ()=>{
   console.log(`Connection Closed By Server.`);
 });
 
-disconnect_btn.addEventListener('click', ()=>{
-  socket.emit('Disconnect Message', {});
-  socket = null;
-  input_form.setAttribute("disabled", true);
-});
- 
-//Login Modal
+//Handle Login Modal
 //----------------------
 
 //Handle Login request
@@ -300,144 +142,144 @@ freeze_btn.addEventListener('click', ()=>{
   }
 })
 
-//Handle clicks on hyperlinks
+//Handle clicks on hyperlinks, according to the link_type
 chat.addEventListener('click', (evt)=>{
   evt.stopPropagation();
   
-  if (evt.target.dataset.element==="name"){
+  switch(evt.target.dataset.link_type){
 
-    let msg = {
-      id: evt.target.dataset.id
-    }
+    case "NAME":    
+      let msg = {
+        link_type:  evt.target.dataset.link_type,
+        id:         evt.target.dataset.id
+      }
+      socket.emit('Name Link Clicked', msg);
+      break;
 
-    socket.emit('Name Link Message', msg);
-
-  } else if (evt.target.dataset.element==="cmd_box_link"){
-    //User clicked a link in the Cmds Box
-    let div;
-
-    switch(evt.target.dataset.action){
-      case "Look":
-      case "Shot":
-      case "Get":
-      case "Hold":
-      case "Wear":
-      case "Remove":
-      case "Drop":
-      case "Consume":
-      case "Use":
-        //Create a Chat box and add it to the Chat, as feedback.
-        div = document.createElement("div");    
-        div.classList.add("box");
-        div.classList.add("box_user");    
-        div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
-        chat.append(div);
-
-        if (!stop_chat_scroll){
-          div.scrollIntoView();  
-        }
-
-        let msg = {      
-          content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
-        }  
-        socket.emit('User Input Message', msg);        
-        break;
-
-      case "Copy ID":
-        navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-          /* clipboard successfully set */
+    case "CMD_BOX_LINK":      
+      switch(evt.target.dataset.action){
+        case "Look":
+        case "Shot":
+        case "Get":
+        case "Hold":
+        case "Wear":
+        case "Remove":
+        case "Drop":
+        case "Consume":
+        case "Use":
+        case "Edit":        
           //Create a Chat box and add it to the Chat, as feedback.
           let div = document.createElement("div");    
           div.classList.add("box");
           div.classList.add("box_user");    
-          div.append(`Copied ID ${evt.target.dataset.id} to Clipboard.`);  
+          div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
           chat.append(div);
   
           if (!stop_chat_scroll){
             div.scrollIntoView();  
           }
-          
-        }, function() {
-          console.error('Copy ID failed.');
-        });
-        break;
-
-      case "Edit":
-        settings_modal.classList.add('is-active');
-        description_input.focus();
-        break;
-
-      case "Inventory":
-        let html = 
-          `Your Inventory:`+
-          `<p>&#9995; ${status_obj.holding}</p>`+
-          `<p>&#x1F3A9 ${status_obj.head}</p>`+ 
-          `<p>&#x1F455 ${status_obj.torso}</p>`+ 
-          `<p>&#x1F456 ${status_obj.legs}</p>`+ 
-          `<p>&#x1F45E ${status_obj.feet}</p>`+
-          `<p>&#x1F9F3 ${status_obj.slots}</p>`;
-
-        insert_server_box(html);
-        // let div = document.createElement("div");
-        // div.classList.add("box");
-        // div.classList.add("box_server");
-        // div.innerHTML = html;
-        // chat.append(div);
-
-        // //If the chat is not frezzed, scroll it to view the latest msg.
-        // if (!stop_chat_scroll){
-        //   div.scrollIntoView();  
-        // }
-        break;
-    }   
-
-  } else if (evt.target.dataset.element==="exit"){
-    let msg = {      
-      content: `${evt.target.dataset.actions}`
-    }
-    socket.emit('User Input Message', msg);        
-
-    //Create a Chat box and add it to the Chat, as feedback.
-    let div = document.createElement("div");
-    div.classList.add("box");
-    div.classList.add("box_user");
-    div.append(`${evt.target.dataset.actions}`);  
-    chat.append(div);
-
-    if (!stop_chat_scroll){
-      div.scrollIntoView();  
-    }
   
-  } else if (evt.target.dataset.element==="game_id"){
-    let msg = {
-      id: evt.target.dataset.id
-    }
+          let msg = {      
+            content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
+          }  
+          socket.emit('User Input Message', msg);        
+          break;
+  
+        case "Copy ID":
+          navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
+            /* clipboard successfully set */
+            //Create a Chat box and add it to the Chat, as feedback.
+            let div = document.createElement("div");    
+            div.classList.add("box");
+            div.classList.add("box_user");    
+            div.append(`Copied ID ${evt.target.dataset.id} to Clipboard.`);  
+            chat.append(div);
+    
+            if (!stop_chat_scroll){
+              div.scrollIntoView();  
+            }
+            
+          }, function() {
+            console.error('Copy ID failed.');
+          });
+          break;
+        
+        case "Inventory":
+          let html = 
+            `Your Inventory:`+
+            `<p>&#9995; ${status_obj.holding}</p>`+
+            `<p>&#x1F3A9 ${status_obj.head}</p>`+ 
+            `<p>&#x1F455 ${status_obj.torso}</p>`+ 
+            `<p>&#x1F456 ${status_obj.legs}</p>`+ 
+            `<p>&#x1F45E ${status_obj.feet}</p>`+
+            `<p>&#x1F9F3 ${status_obj.slots}</p>`;
+  
+          insert_server_box(html);         
+          break;
+      }
+      break;
 
-    socket.emit('Game ID Link Message', msg);
-    //recieve this msg in the app
-  } else {
-    input_field.focus();
+    case "EXIT":
+      msg = {      
+        content: `${evt.target.dataset.actions}`
+        };
+      socket.emit('User Input Message', msg);        
+  
+      //Create a Chat box and add it to the Chat, as feedback.
+      div = document.createElement("div");
+      div.classList.add("box");
+      div.classList.add("box_user");
+      div.append(`${evt.target.dataset.actions}`);  
+      chat.append(div);
+  
+      if (!stop_chat_scroll){
+        div.scrollIntoView();  
+      }
+      break;
+
+    default:
+      input_field.focus();
   }
+  
+  // if (evt.target.dataset.element==="name"){
+
+  //   let msg = {
+  //     id: evt.target.dataset.id
+  //   }
+
+  //   socket.emit('Name Link Message', msg);
+
+  // } else if (evt.target.dataset.element==="cmd_box_link"){
+  //   //User clicked a link in the Cmds Box
+       
+
+  // } else if (evt.target.dataset.element==="exit"){
+    
+  
+  // } else if (evt.target.dataset.element==="game"){
+    
+  //   //recieve this msg in the app
+  // } else {
+  //   input_field.focus();
+  // }
 
 });    
 
-
-
 //Close the settings modal without submitting to the server.
-settings_cancel_btn.addEventListener('click', ()=>{
-  settings_modal.classList.remove('is-active');
+user_edit_cancel_btn.addEventListener('click', ()=>{
+  user_edit_modal.classList.remove('is-active');
 })
 
-edit_modal_close_btn.addEventListener('click', ()=>{
-  edit_modal.classList.remove('is-active');
+game_edit_modal_close_btn.addEventListener('click', ()=>{
+  game_edit_modal.classList.remove('is-active');
 })
 
-edit_submit_btn.addEventListener('click', ()=>{
+//Send a Game Edit Message, and close the game edit modal.
+game_edit_submit_btn.addEventListener('click', ()=>{
 
-  let formData = new FormData(edit_modal_form);
+  let formData = new FormData(game_edit_modal_form);
 
-  let msg = {
-    id: currently_edited_item_id,
+  let msg = {    
     props: {}
   }
 
@@ -445,19 +287,19 @@ edit_submit_btn.addEventListener('click', ()=>{
     msg.props[key] = value;
   }
 
-  socket.emit('Edit Message', msg);        
-  edit_modal.classList.remove('is-active');
+  socket.emit('Game Edit Message', msg);        
+  game_edit_modal.classList.remove('is-active');
 });
 
 //Submit settings to the server.
-settings_submit_btn.addEventListener('click', ()=>{
+user_edit_submit_btn.addEventListener('click', ()=>{
 
-  if (description_input.value!==''){
+  if (user_description_input.value!==''){
     let msg = {      
-      content: {description: description_input.value}
+      content: {description: user_description_input.value}
     }
     socket.emit('Settings Message', msg);        
-    settings_modal.classList.remove('is-active');
+    user_edit_modal.classList.remove('is-active');
   }  
 })
 
@@ -510,21 +352,37 @@ username_input.addEventListener("keydown", (evt)=> {
   }
 })
 
+//Emit a disconnect message, and disable the interface.
+disconnect_btn.addEventListener('click', ()=>{
+  socket.emit('Disconnect Message', {});
+  socket = null;
+  input_form.setAttribute("disabled", true);
+});
 
 // Aux. Functions
 //-------------------
 
-//Add a server box to the Chat interface.
-function insert_server_box(html){
-  
+//Insert a Chat Box to the Chat interface.
+function insert_chat_box(type, content){
+
   let div = document.createElement("div");
   div.classList.add("box");
-  div.classList.add("box_server");
-  div.innerHTML = html;
+
+  switch(type){
+    case "cmd_box":
+      div.classList.add("box_cmds");      
+      break;
+
+    case "box_server":
+      div.classList.add("box_server");
+      break;
+  }
+
+  div.innerHTML = content;
   chat.append(div);
 
-  //If the chat is not freezed, scroll it to view the latest msg.
   if (!stop_chat_scroll){
     div.scrollIntoView();  
-  } 
+  }
+
 }

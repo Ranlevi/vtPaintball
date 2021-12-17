@@ -73,7 +73,7 @@
 
       <!-- Username Input Field -->
       <form>
-        <div class="field login_input">          
+        <div class="field user_input">          
           <div class="control">
             <input 
               id=           "username_input" 
@@ -88,48 +88,78 @@
       <!-- An empty DIV for errors and warnings -->
       <div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div> 
 
-      <div class="control login_input">
+      <div class="control user_input">
         <button id="submit_btn" class="button is-primary">Submit</button>
       </div>      
       
     </div>      
   </div>
 
-  <!-- Settings Modal, for user details and settings. -->
-  <div id="settings_modal" class="modal">
+  <!-- User Edit Modal, for user details and settings. -->
+  <div id="user_edit_modal" class="modal">
     
     <div class="modal-background"></div>
 
-    <div id="settings_modal_content" class="modal-content">            
-      <div class="login_input">
-        <label class="label has-text-white">Enter a new description for your charecter:</label>
-        <div class="control">
-          <textarea 
-            id="description_input" 
-            class="textarea" rows="3"
-            placeholder="e.g A Lumberjack: I sleep all night and work all day!">
-          </textarea>
-        </div>
-      </div>
-      
-      <div class="control login_input">
-        <button id="settings_submit_btn" class="button is-primary">Submit</button>
-        <button id="settings_cancel_btn" class="button is-danger">Cancel</button>
-      </div>     
-      
+    <div class="modal-card">
+
+      <header class="modal-card-head">
+        <p class="modal-card-title">Edit User Details</p>        
+      </header>
+
+      <section class="modal-card-body">
+        <form id="user_edit_modal_form">
+          <label class="label is-size-4">Enter a new description for your charecter:</label>
+          <div class="control">
+            <textarea 
+              id=           "user_description_input" 
+              class=        "textarea" 
+              rows=         "3">
+            </textarea>
+          </div>
+        </form>
+      </section>
+
+      <footer class="modal-card-foot">
+        <button id="user_edit_submit_btn" class="button is-success">Save changes</button>
+        <button id="user_edit_cancel_btn" class="button">Cancel</button>
+      </footer>
+
     </div>      
   </div>
 
-  <!-- Edit Modal -->
-  <div id="edit_modal" class="modal">
+  <!-- Game Edit Modal -->
+  <div id="game_edit_modal" class="modal">
     <div class="modal-background"></div>
-    <div class="modal-content">      
 
-      <form id="edit_modal_form"></form>
+    <div class="modal-card">
 
-    </div>
-    <button id="edit_modal_close_btn" class="modal-close is-large" aria-label="close"></button>
-    <button id="edit_submit_btn" type="click" class="button is-primary">Submit</button>
+      <header class="modal-card-head">
+        <p class="modal-card-title">Edit Game Parameters</p>        
+      </header>
+
+      <section class="modal-card-body">
+        <form id="game_edit_modal_form">
+          <label class="label">Max Score</label>
+          <div class="control">
+            <div class="select">
+              <select name="max_score">
+                <option id="game_current_max_score"></option>
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="10">15</option>
+              </select>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <footer class="modal-card-foot">
+        <button id="game_edit_modal_close_btn" class="button is-success">Save changes</button>
+        <button id="game_edit_submit_btn"      class="button">Cancel</button>
+      </footer>
+
+    </div>  
+
   </div>
    
   </body>

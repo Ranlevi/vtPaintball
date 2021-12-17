@@ -216,13 +216,13 @@ class StateMachine {
 }
 
 function search_for_target(world, target, user_id){
-  //search order -> body, room, holodeck
+  //search order -> body, user, room, game
   //return {id: str, location: string = body part or null if not on body}
   //or null if not found  
   let user=     world.get_instance(user_id);
   let inv_arr = user.get_all_items();
 
-    //Search for the target.
+    //Search for on the body.
     for (const obj of inv_arr){      
       let entity = world.get_instance(obj.id);
 
@@ -233,7 +233,14 @@ function search_for_target(world, target, user_id){
       }  
     }
 
-    //Target not on body.
+    //Check if user himself.
+    if (target===user.props.id || 
+        target===user.props.name.toLowerCase() ||
+        target===user.props.subtype.toLowerCase()){
+      return {id: user_id, location: "user"};
+    }
+
+    //Check if in the room.
     let room = world.get_instance(user.props.container_id);
     inv_arr = room.get_all_items();    
 
@@ -253,6 +260,11 @@ function search_for_target(world, target, user_id){
         (room.props.subtype.toLowerCase()===target) ||
         (target===room.props.id)){
       return {id: room.props.id, location: "room"};
+    }
+
+    //Check if this is a game
+    if (target===user.props.current_game_id){
+      return {id: target, location: "game"};
     }
 
     //target not found

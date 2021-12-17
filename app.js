@@ -79,8 +79,7 @@ class Game_Controller {
       socket.on('User Input Message', (msg)=>{            
         if (socket.user_id!==null){
           this.process_user_input(msg.content, socket.user_id);        
-        }
-        
+        }        
       });
     
       //Set the user's description field.
@@ -95,13 +94,24 @@ class Game_Controller {
         entity.do_edit(msg.props, socket.user_id);    
       });
 
-      socket.on('Name Link Message', (msg)=>{
-        //User clicked a name link
-        //We return a list of commands  
+      socket.on('Game Edit Message', (msg)=>{
+        //Note: we assume the user is in a game and owns it, else he
+        //would be able to edit it.
         let user = this.world.get_instance(socket.user_id);
-        let entity = this.world.get_instance(msg.id);
+        let game = this.world.get_instance(user.props.current_game_id);
+        
+        game.do_edit(msg);
+        user.send_chat_msg_to_client('Done.');
+      })
 
-        user.send_cmds_arr_to_client(entity.get_cmds_arr(socket.user_id)); 
+      //User clicked a name link
+      //We return a list of commands, to be displayed as a Cmds Box.
+      socket.on('Name Link Clicked', (msg)=>{        
+        let user=   this.world.get_instance(socket.user_id);
+        let entity= this.world.get_instance(msg.id);
+
+        let cmds_list= entity.get_cmds_arr(socket.user_id);
+        user.send_cmds_arr_to_client(cmds_list); 
       });
 
       socket.on('Game ID Link Message', (msg)=>{
@@ -355,6 +365,11 @@ class Game_Controller {
 
       case "adminsay":
         user.admin_msg_cmd(target);
+        break;
+
+      case "game":
+      case "g":
+        user.game_cmd();
         break;
 
       default:

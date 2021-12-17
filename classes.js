@@ -60,7 +60,7 @@ class Room {
   get_name(){
     
     let html = 
-      `<span class="name" data-element="name" data-id="${this.props.id}" `+
+      `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
       `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
@@ -78,7 +78,7 @@ class Room {
       
       if (obj!==null){
         exits_exists = true;
-        msg += `<span class="exit" data-element="exit" ` + 
+        msg += `<span class="exit" data-link_type="EXIT" ` + 
                 `data-actions="${direction.toUpperCase()}" >` +
                 `${direction.toUpperCase()}</span> `
       }
@@ -134,10 +134,10 @@ class Room {
 
   get_cmds_arr(clicking_user_id){
     let arr = [
-      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Look" data-id="${this.props.id}" ` + 
       `data-name="${this.props.name}">Look</span>`,
-      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Copy ID" data-id="${this.props.id}" ` + 
       `data-name="${this.props.name}">Copy ID</span>`,
     ];
@@ -262,7 +262,7 @@ class User {
     }
 
     let html = 
-      `<span class="name ${team_class}" data-element="name" data-id="${this.props.id}" `+
+      `<span class="name ${team_class}" data-link_type="NAME" data-id="${this.props.id}" `+
       `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
@@ -277,7 +277,7 @@ class User {
 
       if (game.props.is_started){
         arr.push(
-          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
           `data-action="Shot" data-id="${this.props.id}" ` + 
           `data-name="${this.props.name}">Shot</span>`
         );
@@ -285,17 +285,17 @@ class User {
     }
     
     arr.push(
-      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Look" data-id="${this.props.id}" ` + 
       `data-name="${this.props.name}">Look</span>`
     );
 
     if (clicking_user_id===this.props.id){
       arr.push(
-        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Edit" data-id="${this.props.id}" ` + 
         `data-name="${this.props.name}">Edit</span>`,
-        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Inventory" data-id="${this.props.id}" ` + 
         `data-name="${this.props.name}">Inventory</span>`
       );
@@ -830,9 +830,7 @@ class User {
     this.props.spawn_room_id = game.props.blue_spawn_room_id;
     this.send_chat_msg_to_client(`You have spawned in the blue room.`);
     this.send_chat_msg_to_client("Enter 'start' to begin the game.")
-    this.send_chat_msg_to_client(
-      `Game ID is: <span class="game_id" data-element="game_id" data-id="${this.props.owned_game_id}" `+
-      `>${this.props.owned_game_id}</span>`);
+    this.game_cmd();
     this.look_cmd();
   }
  
@@ -866,14 +864,15 @@ class User {
     this.send_msg_to_room(`teleports into the room.`);
   }
   
-  //If the entity is owned by the user, send a message to enable the edit modal.
+  //Game and User can be edited: send an edit message if the user can edit them.
   edit_cmd(target=null){
-    
+
     if (target===null){    
       this.send_chat_msg_to_client(`What do you want to edit?`);  
       return;
-    }
+    }   
 
+    let props = null;
     let result = Utils.search_for_target(this.world,target, this.props.id);
 
     if (result===null){
@@ -882,31 +881,41 @@ class User {
       return;      
     }
     
-    //Target exists
-    //Check if it's owned by the user.
+    //Target exists    
     let entity = this.world.get_instance(result.id);
+    
+    if (entity.props.id===this.props.id){
+      //The entity is the user: can edit.
+      props = {
+        type:         "User",
+        description:  this.props.description
+      }
+
+    } else if (entity.props.type==="Game"){
+
+      if (entity.props.id===this.props.owned_game_id){
+        //The user owns the game.
+        props = {
+          type:       "Game",
+          max_score:  entity.props.max_score
+        }
         
-    if (this.props.id!==entity.props.owner_id){
-      this.send_chat_msg_to_client(`You're not it's owner, you can't edit it.`);
-      return;
+      } else {
+        //The user does not own the game.
+        this.send_chat_msg_to_client(`You can only edit a game you created.`);
+        return;      
+      }
+
+    } else {
+      this.send_chat_msg_to_client(`You can't edit that.`);
+      return;      
     }
+        
+    //Send the Edit Message    
 
-    //User can edit the entity.
-
-    let msg = {
-      id:     entity.props.id,
-      type:   null,
-      props:  entity.props
+    let msg = {      
+      props:  props
     }
-
-    if (entity instanceof Room){
-      msg.type = "Room";
-    } else if (entity instanceof Item){
-      msg.type = "Item";
-    } else if (entity instanceof NPC){
-      msg.type = "NPC";
-    } 
-
     this.props.socket.emit("Edit Message", msg);
   }
 
@@ -1065,6 +1074,18 @@ class User {
     this.spwan_in_room('r0000000');
 
   }
+
+  //Send the user information about the current game.
+  game_cmd(){
+
+    if (this.props.current_game_id===null){
+      this.send_chat_msg_to_client("You're not in any game, currently.");
+      return;
+    }
+
+    let game = this.world.get_instance(this.props.current_game_id);
+    this.send_chat_msg_to_client(game.get_look_string());
+  }
   
   //Handle Messages
   //--------------------
@@ -1094,7 +1115,7 @@ class User {
     for (const part of this.BODY_PARTS){
       if (this.props[part]!==null){        
         let entity=         this.world.get_instance(this.props[part]);
-        msg.content[part]=  entity.get_name();
+        msg[part]=  entity.get_name();
       }
     }
     
@@ -1104,7 +1125,7 @@ class User {
         let entity= this.world.get_instance(id);
         html += `${entity.get_name()} `;
       }
-      msg.content.slots = html;
+      msg.slots = html;
     }
   
     this.props.socket.emit("Status Message", msg);
@@ -1154,7 +1175,7 @@ class User {
     let arr = [];    
 
     arr.push(
-      `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Copy ID" data-id="${this.props.current_game_id}" ` + 
       `">Copy ID</span>`
     );
@@ -1313,7 +1334,7 @@ class Item {
     //Returns an HTML string for the name of the entity.
     let html = 
       `<span class="name" `+
-      `data-element="name" `+
+      `data-link_type="NAME" `+
       `data-type="${this.props.type}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}">`+      
@@ -1368,7 +1389,7 @@ class Item {
 
       //Look
       arr.push(
-        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Look" data-id="${this.props.id}" ` + 
         `data-name="${this.props.name}">Look</span>`      
       );
@@ -1376,7 +1397,7 @@ class Item {
       //Get
       if (this.props.is_gettable){
         arr.push(
-          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
           `data-action="Get" data-id="${this.props.id}" ` + 
           `data-name="${this.props.name}">Get</span>`      
         );
@@ -1391,7 +1412,7 @@ class Item {
           //Item is on the user's body but not held
           ){
           arr.push(
-            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
             `data-action="Hold" data-id="${this.props.id}" ` + 
             `data-name="${this.props.name}">Hold</span>`      
           );
@@ -1412,7 +1433,7 @@ class Item {
           //User is not already wearing the item
         )){
           arr.push(
-            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
             `data-action="Wear" data-id="${this.props.id}" ` + 
             `data-name="${this.props.name}">Wear</span>`      
           );
@@ -1426,7 +1447,7 @@ class Item {
         //User is wearing the item
       ){
         arr.push(
-          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
           `data-action="Remove" data-id="${this.props.id}" ` + 
           `data-name="${this.props.name}">Remove</span>`      
         );
@@ -1435,7 +1456,7 @@ class Item {
     //Drop
     if (this.props.container_id===clicking_user.props.id){
       arr.push(
-        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Drop" data-id="${this.props.id}" ` + 
         `data-name="${this.props.name}">Drop</span>`      
       );
@@ -1452,7 +1473,7 @@ class Item {
             //Item is on the user's body
         ){
           arr.push(
-            `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
             `data-action="Consume" data-id="${this.props.id}" ` + 
             `data-name="${this.props.name}">Consume</span>`      
           );
@@ -1469,7 +1490,7 @@ class Item {
         )
       ){
         arr.push(
-          `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
+          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
           `data-action="Use" data-id="${this.props.id}" ` + 
           `data-name="${this.props.name}">Use</span>`      
         );
@@ -1639,7 +1660,7 @@ class NPC {
     let html = 
       `<span `+
       `class="pn_link" `+
-      `data-element="pn_link" `+
+      `data-link_type="NPC_NAME" `+
       `data-type="${this.props.subtype}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}" `+
@@ -1703,10 +1724,11 @@ class Game {
   constructor(world, props=null){
 
     this.world =          world;
-    this.props = {
-      owner_id:           null,
+    this.props = {      
       type:               "Game",
       id:                 Utils.id_generator.get_new_id("Game"),
+      name:               "Text Tag",
+      owner_id:           null,
       blue_spawn_room_id: null,
       red_spawn_room_id:  null,
       entities:           [],
@@ -1724,6 +1746,34 @@ class Game {
     }
 
     this.init_map();
+  }
+
+  get_name(){
+    return `<span class="name" data-link_type="NAME" data-id="${this.props.id}"`+
+            `>Game</span>`;
+  }
+
+  get_cmds_arr(clicking_user_id){
+
+    let arr = [      
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+      `data-action="Look" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Look</span>`,
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+      `data-action="Copy ID" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Copy ID</span>`,
+    ];
+
+    if (this.props.owner_id===clicking_user_id){
+      arr.push(
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+        `data-action="Edit" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Edit</span>`,
+      );
+    }    
+
+    return arr;
+
   }
 
   init_map(){
@@ -1875,6 +1925,21 @@ class Game {
 
     //remove the game itself
     this.world.remove_from_world(this.props.id);
+  }
+
+  do_edit(msg){
+    if (msg.props.max_score!==undefined){
+      this.props.max_score = parseInt(msg.props.max_score, 10);
+    }
+  }
+
+  get_look_string(){
+    
+    let html =  `<h1>${this.get_name()} Details:</h1>` +
+                `<p>Type: Red Vs. Blue</p>`+
+                `<p>First team to reach the Max Score wins!</p>`+
+                `<p>Max Score is: ${this.props.max_score}`;
+    return html;
   }
 }
 
