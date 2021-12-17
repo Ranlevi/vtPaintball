@@ -62,7 +62,7 @@ class Game_Controller {
       socket.on('Login Message', (msg)=>{
             
         //Try to find an active user with the same username.        
-        let user_id = this.world.get_user_id_by_username(msg.content.username);
+        let user_id = this.world.get_user_id_by_username(msg.username);
     
         if (user_id!==null){
           //A user with the same name exists in the game.
@@ -71,7 +71,7 @@ class Game_Controller {
 
         } else {
           //Username is not taken, player can enter.
-          socket.user_id = this.create_new_user(socket, msg.content.username);
+          socket.user_id = this.create_new_user(socket, msg.username);
         }
       });
     
@@ -83,9 +83,9 @@ class Game_Controller {
       });
     
       //Set the user's description field.
-      socket.on('Settings Message', (msg)=>{
+      socket.on('User Edit Message', (msg)=>{
         let user = this.world.get_instance(socket.user_id);
-        user.set_description(msg.content.description);
+        user.set_description(msg.description);
       });
     
       //Set the user's description field.

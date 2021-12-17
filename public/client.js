@@ -30,99 +30,115 @@ let status_obj = {
   legs:           "",
   feet:           "",
   slots:          "",  
-  room_lighting:  null,
+  room_lighting:  "CadetBlue",
 };
 
 //When index.html loads, the Login Modal appears. 
 //Focus on the username field of the Login Modal.
 username_input.focus();
 
-//Open a SOCKETIO connection.
-let socket = io();
+let socket;
 
-//Handle Messages From Server
-//------------------------------
-
-//Display the Chat Message as a server_box.
-//msg: {content: html string}
-socket.on('Chat Message', (msg)=>{  
-  insert_chat_box("box_server", msg.content);
-});
-
-//Update the status object.
-socket.on('Status Message', (msg)=>{
-  status_obj = msg;
-  chat.style.backgroundColor = status_obj.room_lighting;  
-});
-
-//Check if Login was successful. If true - remove modal. Else - display error.
-//msg: {is_login_successful: bool}
-socket.on('Login Message', (msg)=>{
+//Create a socket_io instance, and handle incoming messages
+function create_socket(){
+  let socket_io = io(); 
   
-  if (msg.is_login_successful){        
-    login_modal.classList.remove('is-active');
-  } else {
-    warning_text.innerHTML = 'A User with this name already exists in the game.';
-  }
-});
+  //Display the Chat Message as a server_box.
+  //msg: {content: html string}
+  socket_io.on('Chat Message', (msg)=>{  
+    insert_chat_box("box_server", msg.content);
+  });
 
-//Display the relevant Edit Modal
-socket.on('Edit Message', (msg)=>{
-  //msg = {props: props}
-  
-  if (msg.props.type==="User"){
-    //Display the Edit User fields.
+  //Update the status object.
+  socket_io.on('Status Message', (msg)=>{
+    status_obj = msg;
+    chat.style.backgroundColor = status_obj.room_lighting;  
+  });
+
+  //Check if Login was successful. If true - remove modal. Else - display error.
+  //msg: {is_login_successful: bool}
+  socket_io.on('Login Message', (msg)=>{
     
-    user_description_input.innerHTML = msg.props.description;
-    user_edit_modal.classList.add('is-active');
+    if (msg.is_login_successful){        
+      login_modal.classList.remove('is-active');
+    } else {
+      warning_text.innerHTML = 'A User with this name already exists in the game.';
+    }
+  });
 
-  } else if (msg.props.type==="Game"){
-    game_current_max_score.innerHTML = msg.props.max_score;
-    game_edit_modal.classList.add('is-active');
+  //Display the relevant Edit Modal
+  socket_io.on('Edit Message', (msg)=>{
+    //msg = {props: props}
+    
+    if (msg.props.type==="User"){
+      //Display the Edit User fields.
+      
+      user_description_input.innerHTML = msg.props.description;
+      user_edit_modal.classList.add('is-active');
 
-  } else {
-    console.error(`Socket: Edit Message: unknown type - ${msg.props.type}`);
-  }
+    } else if (msg.props.type==="Game"){
+      game_current_max_score.innerHTML = msg.props.max_score;
+      game_edit_modal.classList.add('is-active');
 
-});
+    } else {
+      console.error(`Socket: Edit Message: unknown type - ${msg.props.type}`);
+    }
 
-//Display a Cmd Box with the recived cmds.
-socket.on('Cmds Box Message', (msg)=>{
-  let list = "";
-  for (const item of msg.content){
-    list += `<li>${item}</li>`;
-  }
-  insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
-});
+  });
 
-//Display a Disconnect message to the user.
-socket.on('disconnect', ()=>{
-  console.log(`Connection Closed By Server.`);
-});
+  //Display a Cmd Box with the recived cmds.
+  socket_io.on('Cmds Box Message', (msg)=>{
+    let list = "";
+    for (const item of msg.content){
+      list += `<li>${item}</li>`;
+    }
+    insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+  });
+
+  //Display a Disconnect message to the user.
+  socket_io.on('disconnect', ()=>{
+    console.log(`Connection Closed By Server.`);
+    socket = null;
+    input_form.setAttribute("disabled", true);
+  });
+
+  return socket_io;
+}
 
 //Handle Login Modal
 //----------------------
 
-//Handle Login request
+//Init a socket_io connection.
+//Extract data from the Login form, and send it to the server.
 submit_btn.addEventListener('click', ()=>{  
 
-  let login_msg = {    
-    content: {
-      username: null
-    }    
+  socket = create_socket();
+
+  let login_msg = {
+    username : null    
   }
-
-  //Extract data from the form, and send it to the server via WS.
+  
   let username = username_input.value;  
-
+  
   if (username===""){
     warning_text.innerHTML = "Please enter a Name.";
   } else {
-    login_msg.content.username=username;
-    
+    login_msg.username=username;    
     socket.emit('Login Message', login_msg);    
   }  
 });
+
+//If the user presses Enter on the username input - submit it.
+username_input.addEventListener("keydown", (evt)=> {
+
+  if (evt.key==="Enter"){
+    evt.preventDefault(); 
+
+    //Emulate a 'submit btn' press.
+    let event = new Event('click');
+    submit_btn.dispatchEvent(event);
+  }    
+})
 
 //Game Controls
 //------------------
@@ -142,6 +158,16 @@ freeze_btn.addEventListener('click', ()=>{
   }
 })
 
+//Emit a disconnect message, and disable the interface.
+disconnect_btn.addEventListener('click', ()=>{
+  socket.emit('Disconnect Message', {});
+  socket = null;
+  input_form.setAttribute("disabled", true);
+});
+
+//Chat Interface
+//--------------------
+
 //Handle clicks on hyperlinks, according to the link_type
 chat.addEventListener('click', (evt)=>{
   evt.stopPropagation();
@@ -156,7 +182,8 @@ chat.addEventListener('click', (evt)=>{
       socket.emit('Name Link Clicked', msg);
       break;
 
-    case "CMD_BOX_LINK":      
+    case "CMD_BOX_LINK":    
+
       switch(evt.target.dataset.action){
         case "Look":
         case "Shot":
@@ -169,15 +196,8 @@ chat.addEventListener('click', (evt)=>{
         case "Use":
         case "Edit":        
           //Create a Chat box and add it to the Chat, as feedback.
-          let div = document.createElement("div");    
-          div.classList.add("box");
-          div.classList.add("box_user");    
-          div.append(`${evt.target.dataset.action} ${evt.target.dataset.name}`);  
-          chat.append(div);
-  
-          if (!stop_chat_scroll){
-            div.scrollIntoView();  
-          }
+          let messsage = `${evt.target.dataset.action} ${evt.target.dataset.name}`;
+          insert_chat_box('box_user', messsage);
   
           let msg = {      
             content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
@@ -187,18 +207,8 @@ chat.addEventListener('click', (evt)=>{
   
         case "Copy ID":
           navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-            /* clipboard successfully set */
-            //Create a Chat box and add it to the Chat, as feedback.
-            let div = document.createElement("div");    
-            div.classList.add("box");
-            div.classList.add("box_user");    
-            div.append(`Copied ID ${evt.target.dataset.id} to Clipboard.`);  
-            chat.append(div);
-    
-            if (!stop_chat_scroll){
-              div.scrollIntoView();  
-            }
-            
+            messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
+            insert_chat_box('box_user', messsage);            
           }, function() {
             console.error('Copy ID failed.');
           });
@@ -214,62 +224,61 @@ chat.addEventListener('click', (evt)=>{
             `<p>&#x1F45E ${status_obj.feet}</p>`+
             `<p>&#x1F9F3 ${status_obj.slots}</p>`;
   
-          insert_server_box(html);         
+            insert_chat_box('box_server', html);         
           break;
       }
       break;
 
-    case "EXIT":
-      msg = {      
+    case "CMD":
+      let message = {      
         content: `${evt.target.dataset.actions}`
         };
-      socket.emit('User Input Message', msg);        
-  
-      //Create a Chat box and add it to the Chat, as feedback.
-      div = document.createElement("div");
-      div.classList.add("box");
-      div.classList.add("box_user");
-      div.append(`${evt.target.dataset.actions}`);  
-      chat.append(div);
-  
-      if (!stop_chat_scroll){
-        div.scrollIntoView();  
-      }
-      break;
+      socket.emit('User Input Message', message);
 
-    default:
-      input_field.focus();
+      insert_chat_box('box_user', `${evt.target.dataset.actions}`);   
+      break;    
   }
+});
+
+//Handle user text input in the game i/f.
+input_field.addEventListener('submit', (evt)=> {     
+  evt.preventDefault();    
   
-  // if (evt.target.dataset.element==="name"){
-
-  //   let msg = {
-  //     id: evt.target.dataset.id
-  //   }
-
-  //   socket.emit('Name Link Message', msg);
-
-  // } else if (evt.target.dataset.element==="cmd_box_link"){
-  //   //User clicked a link in the Cmds Box
-       
-
-  // } else if (evt.target.dataset.element==="exit"){
-    
+  let msg = {    
+    content: input_form.value
+  }
+  socket.emit('User Input Message', msg);   
   
-  // } else if (evt.target.dataset.element==="game"){
-    
-  //   //recieve this msg in the app
-  // } else {
-  //   input_field.focus();
-  // }
+  insert_chat_box("box_user", input_form.value);
 
-});    
+  input_form.value = '';
+  input_form.blur(); //close soft keyboard.   
+})
 
-//Close the settings modal without submitting to the server.
+//User Edit Modal
+//------------------
+
+//Close the modal without submitting to the server.
 user_edit_cancel_btn.addEventListener('click', ()=>{
   user_edit_modal.classList.remove('is-active');
 })
 
+//Submit changes to the server.
+user_edit_submit_btn.addEventListener('click', ()=>{
+
+  if (user_description_input.value!==''){
+    let msg = {      
+      description: user_description_input.value
+    }
+    socket.emit('User Edit Message', msg);        
+    user_edit_modal.classList.remove('is-active');
+  }  
+})
+
+//Game Edit Modal
+//----------------
+
+//Close the modal without submitting to the server.
 game_edit_modal_close_btn.addEventListener('click', ()=>{
   game_edit_modal.classList.remove('is-active');
 })
@@ -291,74 +300,6 @@ game_edit_submit_btn.addEventListener('click', ()=>{
   game_edit_modal.classList.remove('is-active');
 });
 
-//Submit settings to the server.
-user_edit_submit_btn.addEventListener('click', ()=>{
-
-  if (user_description_input.value!==''){
-    let msg = {      
-      content: {description: user_description_input.value}
-    }
-    socket.emit('Settings Message', msg);        
-    user_edit_modal.classList.remove('is-active');
-  }  
-})
-
-//Handle user text input in the game i/f.
-input_field.addEventListener('submit', (evt)=> {     
-  evt.preventDefault();    
-  
-  let msg = {    
-    content: input_form.value
-  }
-  socket.emit('User Input Message', msg);          
-
-  //Create a Chat box and add it to the Chat, as feedback.
-  let div = document.createElement("div");
-  div.classList.add("box");
-  div.classList.add("box_user");
-  div.innerHTML = input_form.value;
-  chat.append(div);
-
-  if (!stop_chat_scroll){
-    div.scrollIntoView();  
-  }
-
-  input_form.value = '';
-  input_form.blur(); //close soft keyboard.   
-})
-
-username_input.addEventListener("keydown", (evt)=> {
-    
-  if (evt.key==="Enter"){
-
-    evt.preventDefault();  
-    
-    let login_msg = {    
-      content: {
-        username: null
-      }    
-    }
-  
-    //Extract data from the form, and send it to the server via WS.
-    let username = username_input.value;  
-  
-    if (username===""){
-      warning_text.innerHTML = "Please enter a Name.";
-    } else {
-      login_msg.content.username=username;
-      
-      socket.emit('Login Message', login_msg);    
-    }  
-  }
-})
-
-//Emit a disconnect message, and disable the interface.
-disconnect_btn.addEventListener('click', ()=>{
-  socket.emit('Disconnect Message', {});
-  socket = null;
-  input_form.setAttribute("disabled", true);
-});
-
 // Aux. Functions
 //-------------------
 
@@ -375,6 +316,10 @@ function insert_chat_box(type, content){
 
     case "box_server":
       div.classList.add("box_server");
+      break;
+
+    case "box_user":
+      div.classList.add("box_user");    
       break;
   }
 

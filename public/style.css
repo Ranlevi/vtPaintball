@@ -54,20 +54,18 @@ html, body {
 }
 
 .box_user {
-  align-self:       flex-end;
-  border:           1px solid red;  
-  background-color: snow;
+  align-self:       flex-end;  
+  background-color: Aquamarine;
 }
 
-.box_server {
-  border:           1px solid blue;  
-  background-color: aliceblue;
+.box_server {  
+  background-color: white;
 }
 
 .box_cmds {
-  align-self:       center;
-  border:           1px solid green;
+  align-self:       center;  
   width:            fit-content;
+  background-color: LawnGreen;
 }
 
 #modal_content{
@@ -89,9 +87,11 @@ html, body {
 }
 
 .name {
-  color:          black;
+  color:          navy;
   text-decoration:  underline;
   cursor:           pointer;
+  font-size:        large;
+  font-family:      sans-serif;
   font-weight:      600;
 }
 
@@ -125,8 +125,4 @@ html, body {
 
 .say_text {
   font-weight:      600;
-}
-
-.style1 {
-  font-weight: 600;
 }

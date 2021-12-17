@@ -71,14 +71,14 @@ class Room {
         
     let msg = `<h1>${this.get_name()}</h1>` +
               `<p>${this.props.description}</p>` + 
-              `<p><span class="style1">Exits: `;
+              `<p><span><b>Exits:</b> `;
     
     let exits_exists = false;
     for (const [direction, obj] of Object.entries(this.props.exits)){   
       
       if (obj!==null){
         exits_exists = true;
-        msg += `<span class="exit" data-link_type="EXIT" ` + 
+        msg += `<span class="exit" data-link_type="CMD" ` + 
                 `data-actions="${direction.toUpperCase()}" >` +
                 `${direction.toUpperCase()}</span> `
       }
