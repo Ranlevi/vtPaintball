@@ -1,6 +1,4 @@
-const e = require('cors');
 const Utils= require('./utils');
-// const World= require('./world');
 
 class Room {
   constructor(world, props=null){   
@@ -39,22 +37,17 @@ class Room {
     this.props.entities.push(entity_id);
   }
   
-  //try to remove the given entity from the room.
-  //Return True is successful, else False.
+  //Remove the given entity from the room.
+  //Note: assumes the entity is in the room.
   remove_entity(entity_id){    
     let ix = this.props.entities.indexOf(entity_id);
-    if (ix!==-1){
-      this.props.entities.splice(ix,1);
-      return true;
-    } else {
-      return false;
-    }    
+    this.props.entities.splice(ix,1);        
   }
   
   //Returns an array ids. 
   get_all_items(){    
     return this.props.entities;
-  }  
+  }
     
   //Returns an HTML string for the name of the room.
   get_name(){
@@ -101,42 +94,18 @@ class Room {
   }
 
   do_tick(){
-    //TBD
-  } 
+    //Called every game tick.
+    //For future implementations.
+  }   
 
-  //Modify the room's props according to props recieved from the client.
-  do_edit(props, user_id){
-        
-    this.props.name         = props.name;
-    this.props.description  = props.description;
-    this.props.lighting     = props.lighting;
-    
-    let exits = ["north", "south", "east", "west", "up", "down"];
-
-    for (const exit of exits){
-      if (props[exit]===undefined){
-        //The exit was disabled by the user (checkbox not ticked)
-        this.props.exits[exit] = null;
-      } else if (props[exit]==="true"){
-        //Exit was enabled by the user (or was already enabled)
-        //We need to check if the exit was already enabled, as to not 
-        //damage the existing connection between the two room.
-        if (this.props.exits[exit]===null){
-          //This is an exit that was not enabled before.
-          this.props.exits[exit] = {id: null, code: null};
-        }        
-      }
-    }
-
-    let user = this.world.get_instance(user_id);
-    user.send_chat_msg_to_client('Editing succesful.');
-  }
-
+  //Return an array of commands, to be displayed when a user clicks
+  //on the room's name.
   get_cmds_arr(clicking_user_id){
     let arr = [
       `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Look" data-id="${this.props.id}" ` + 
       `data-name="${this.props.name}">Look</span>`,
+
       `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Copy ID" data-id="${this.props.id}" ` + 
       `data-name="${this.props.name}">Copy ID</span>`,
@@ -153,18 +122,17 @@ class User {
 
     this.BODY_PARTS =     ["holding", "head", "torso", "legs", "feet"];
 
-    this.world=           world;
-    this.tick_counter=    0; //Provision for future ideas.
+    this.world=               world;
+    this.tick_counter=        0; //Provision for future ideas.    
 
     this.props = {
       type:               "User",
       id:                 Utils.id_generator.get_new_id("user"),
       name:               "An Unnamed User",
       description:        "A (non-NPC) human.",
-      subtype:            "Human",        
-      password:           null, //String
+      subtype:            "Human",              
       socket:             null,
-      is_admin:           false,      
+      is_admin:           false,
       container_id:       null,
       head:               null,//ID, String.
       torso:              null,
@@ -177,44 +145,50 @@ class User {
       current_game_id:    null,
       owned_game_id:      null,
       team:               null,
+      defense_multiplier: 0, //Allowed Range: 0-9
+      attack_multiplier:  0  //Allowed Range: 0-9
     }
     
     //Overwrite default props with saved props.         
     for (const [key, value] of Object.entries(props)){
       this.props[key]= value;
     }      
-  }
-
-  set_socket(socket){
-    this.props.socket = socket;
-  }
-
-  set_container_id(container_id){
-    this.props.container_id = container_id;
-  }
+  }  
 
   set_team(team_color){ //String (Blue / Red)
     this.props.team = team_color;
   }
 
+  //Returns string
   get_id(){
     return this.props.id;
   }
 
-  do_tick(){    
-    //Send a status message    
+  //Called each game tick.
+  //Send a status message to client.   
+  do_tick(){        
     this.send_status_msg_to_client();
   }   
 
   //Check if a shot hits the user, and if so, respawn
   //return true if hit, else false
   do_shot(shooter_id){
-    //Shots have 70:30 chance of hitting
+    
+    let shooter = this.world.get_instance(shooter_id);
+
+    //Computation of Hit Chance:
+    //Attack & Defense mulipliers ranges: [0,9]
+    let calculated_multiplier = 
+      shooter.props.attack_multiplier - this.props.defense_multiplier;
+      //Range: [-9, 9]
+
+    let normalized_hit_threshold = (calculated_multiplier+10)/20;
+    //This grants a norm. hit thres. of ~0.1 to 0.9;
+    
     let num = Math.random();
 
-    if (num>=0.7){
-      //Hit
-      let shooter = this.world.get_instance(shooter_id);
+    if (num>=normalized_hit_threshold){
+      //Hit. Notify game and respawn. 
       this.send_chat_msg_to_client(`You were HIT by ${shooter.get_name()}.`);
       
       let game = this.world.get_instance(this.props.current_game_id);
@@ -995,7 +969,7 @@ class User {
     let dest_room = this.world.get_instance(spawn_room_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;    
-    this.send_chat_msg_to_client(`You have spawned in the game.`);    
+    this.send_chat_msg_to_client(`You have joined the game!`);    
     this.look_cmd();
 
   }
@@ -1114,7 +1088,7 @@ class User {
         
     for (const part of this.BODY_PARTS){
       if (this.props[part]!==null){        
-        let entity=         this.world.get_instance(this.props[part]);
+        let entity= this.world.get_instance(this.props[part]);
         msg[part]=  entity.get_name();
       }
     }
@@ -1143,13 +1117,13 @@ class User {
     }
   }
 
-  send_login_msg_to_client(is_login_successful){
-    let message = {      
-      is_login_successful: is_login_successful
-    }    
+  // send_login_msg_to_client(is_login_successful){
+  //   let message = {      
+  //     is_login_successful: is_login_successful
+  //   }    
     
-    this.props.socket.emit('Login Message', message);
-  }
+  //   this.props.socket.emit('Login Message', message);
+  // }
 
   send_cmds_arr_to_client(cmds_arr){
     let msg = {
@@ -1192,14 +1166,16 @@ class User {
     this.send_chat_msg_to_client(msg);
   }
 
-  //remove him from the world.
+  //remove user from the world.
   disconnect_from_game(){
 
+    //If in game, quit it.
     if (this.props.current_game_id!==null){
       let game = this.world.get_instance(this.props.current_game_id);
       game.player_quit(this.props.id);
     }
     
+    //Remove the user from his room.
     let room = this.world.get_instance(this.props.container_id);
     room.remove_entity(this.props.id);
 
@@ -1208,6 +1184,7 @@ class User {
     this.world.remove_from_world(this.props.id); 
   }
 
+  //Updated descriptions, sends a confirmation message.
   set_description(text){
     this.props.description = text;
     this.send_chat_msg_to_client(`Description updated.`);
@@ -1735,7 +1712,7 @@ class Game {
       is_started:         false,
       blue_points:        0,
       red_points:         0,
-      max_score:          2
+      max_score:          5
     }
 
     //Overwrite the default props with the saved ones.
@@ -1769,6 +1746,9 @@ class Game {
         `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Edit" data-id="${this.props.id}" ` + 
         `data-name="${this.props.name}">Edit</span>`,
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+        `data-action="Start" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Start</span>`,
       );
     }    
 
@@ -1860,6 +1840,7 @@ class Game {
     //TBD
   }
 
+  //Calculate score. If max score reached - finish the game.
   do_hit(shooter_id, victim_id){
 
     let shooter = this.world.get_instance(shooter_id);
@@ -1890,7 +1871,7 @@ class Game {
 
     this.send_msg_to_all_players('THE GAME HAS STARTED!!');
   }
-
+  
   end_game(){
     this.props.is_started = false;
   }
@@ -1904,6 +1885,8 @@ class Game {
     }
   }
 
+  //Remove the user from the game.
+  //If no players left in the game - close it.
   player_quit(user_id){
 
     let ix = this.props.entities.indexOf(user_id);
@@ -1917,8 +1900,9 @@ class Game {
     }
   }
 
+  //remove rooms, items and the game itself from the world.
   destroy_game(){
-    //remove rooms and items from the world.
+    
     for (const id of this.props.entities){
       this.world.remove_from_world(id);
     }
@@ -1928,6 +1912,7 @@ class Game {
   }
 
   do_edit(msg){
+    
     if (msg.props.max_score!==undefined){
       this.props.max_score = parseInt(msg.props.max_score, 10);
     }
@@ -1936,9 +1921,9 @@ class Game {
   get_look_string(){
     
     let html =  `<h1>${this.get_name()} Details:</h1>` +
-                `<p>Type: Red Vs. Blue</p>`+
+                `<p><b>Type</b>: Red Vs. Blue</p>`+
                 `<p>First team to reach the Max Score wins!</p>`+
-                `<p>Max Score is: ${this.props.max_score}`;
+                `<p><b>Max Score</b> is: ${this.props.max_score}`;
     return html;
   }
 }

@@ -1,4 +1,4 @@
-vtPaintBall
+Text Tag
 ===========
 
 A text based paintball game.
@@ -23,20 +23,17 @@ When score is reached - one side wins. Users can stay in the game and restart, o
 
 There is no damage: a shot either hit or not.
 
+In-game links
+-------------
+When a user clicks an in-game link, the client needs to know what
+entity the link is associated with. For example, if the user clicks
+a room's name - we need to know what room this is, to display the
+correct commands in the cmds_box.
 
-
-
-
-Types of links:
-- Name (User, room, item, npc)
-- CMDs (direction, copy id, edit.)
-
-
-What are links in the game?
-User clicking his own name: Edit, Look, Copy Id, Inventory. (no need for button)
-User clicking another user: Look. Copy Id, Shot (in game only)
-User clicking item: Look, Use (if avaliable), Hold Get Wear (if possible), Remove (if wearing/holding), Drop (if have it).
-User clicking on room: Look, Copy ID
-User clicking on direction: move to it.
-User clicking on game id: join, Copy ID
-User clicking on 'start' or 'create': do cmds.
+To that goal, links have two types of information associated with them.
+1. Style class: for the client to style the links.
+2. Data: for association with an entity.
+  - link_type:  NAME (for entities), CMD (for commands), CMD_BOX_LINK
+  - id:         id of the clicked entity.
+  - name:       name of the clicked entity.
+  - action:     action associated with the link.

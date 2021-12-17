@@ -32,6 +32,7 @@ class World {
     }    
   }  
 
+  //Remove an instance forom the world/users Map.
   remove_from_world(item_id){  
     if (this.world.has(item_id)){
       this.world.delete(item_id);  
@@ -40,14 +41,14 @@ class World {
     }    
   }
 
-  get_user_id_by_username(username){    
-    
+  //Scans the active users for a user with the given username.
+  //Returns the ID (string) or null if none found.
+  get_user_id_by_username(username){        
     for (let inst of this.users.values()){      
       if (inst.props.name===username){
         return inst.props.id;        
       }
     }
-
     //No user with given username was found.
     return null;
   }

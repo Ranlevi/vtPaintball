@@ -159,7 +159,7 @@ freeze_btn.addEventListener('click', ()=>{
 })
 
 //Emit a disconnect message, and disable the interface.
-disconnect_btn.addEventListener('click', ()=>{
+disconnect_btn.addEventListener('click', ()=>{  
   socket.emit('Disconnect Message', {});
   socket = null;
   input_form.setAttribute("disabled", true);
@@ -174,13 +174,14 @@ chat.addEventListener('click', (evt)=>{
   
   switch(evt.target.dataset.link_type){
 
-    case "NAME":    
+    case "NAME": {   
       let msg = {
         link_type:  evt.target.dataset.link_type,
         id:         evt.target.dataset.id
       }
       socket.emit('Name Link Clicked', msg);
       break;
+    }
 
     case "CMD_BOX_LINK":    
 
@@ -194,7 +195,8 @@ chat.addEventListener('click', (evt)=>{
         case "Drop":
         case "Consume":
         case "Use":
-        case "Edit":        
+        case "Edit": {
+        
           //Create a Chat box and add it to the Chat, as feedback.
           let messsage = `${evt.target.dataset.action} ${evt.target.dataset.name}`;
           insert_chat_box('box_user', messsage);
@@ -204,17 +206,19 @@ chat.addEventListener('click', (evt)=>{
           }  
           socket.emit('User Input Message', msg);        
           break;
+        }
   
-        case "Copy ID":
+        case "Copy ID": {
           navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-            messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
+            let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
             insert_chat_box('box_user', messsage);            
           }, function() {
             console.error('Copy ID failed.');
           });
           break;
+        }
         
-        case "Inventory":
+        case "Inventory": {
           let html = 
             `Your Inventory:`+
             `<p>&#9995; ${status_obj.holding}</p>`+
@@ -226,10 +230,21 @@ chat.addEventListener('click', (evt)=>{
   
             insert_chat_box('box_server', html);         
           break;
+        }
+
+        case "Start": {
+          let messsage = `${evt.target.dataset.action}`;
+          insert_chat_box('box_user', messsage);
+          let msg = {      
+            content: `${evt.target.dataset.action}`
+          }  
+          socket.emit('User Input Message', msg); 
+          break;  
+        }  
       }
       break;
 
-    case "CMD":
+    case "CMD": {
       let message = {      
         content: `${evt.target.dataset.actions}`
         };
@@ -237,6 +252,7 @@ chat.addEventListener('click', (evt)=>{
 
       insert_chat_box('box_user', `${evt.target.dataset.actions}`);   
       break;    
+    }
   }
 });
 

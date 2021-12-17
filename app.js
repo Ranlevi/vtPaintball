@@ -6,9 +6,7 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
-add a game command, with info. Pressing the game name shows edit of the game
 write help page.
-favicon
 add report abuse to user's cmds
 */
 
@@ -17,7 +15,6 @@ const SERVER_VERSION=  0.1;
 const fs=         require('fs');
 const Classes=    require('./classes');
 const World=      require('./world');
-const Utils=      require('./utils');
 
 const express=    require('express');
 const app=        express();
@@ -49,13 +46,15 @@ class Game_Controller {
 
     this.world=                   new World.World();
     this.io=                      new Server(server);
-    this.FIRST_ROOM_ID=           "r0000000";    
+    this.FIRST_ROOM_ID=           "r0000000";
     
     //Handle Socket.IO Connections and messages.
     //-----------------------------------------
 
     this.io.on('connection', (socket) => {
       console.log('a client connected');
+
+      //Each socket is attached to a single user.
       socket.user_id = null;
     
       //Create a new user or load a new one.
@@ -66,12 +65,20 @@ class Game_Controller {
     
         if (user_id!==null){
           //A user with the same name exists in the game.
-          let message = {content: {is_login_successful: false}};    
+          let message = {is_login_successful: false};
           socket.emit('Login Message', message);         
 
         } else {
           //Username is not taken, player can enter.
           socket.user_id = this.create_new_user(socket, msg.username);
+
+          //Report successful login to client
+          let message = {is_login_successful: true};
+          socket.emit('Login Message', message);         
+
+          let user = this.world.get_instance(socket.user_id);
+          user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
+          user.look_cmd();
         }
       });
     
@@ -82,19 +89,13 @@ class Game_Controller {
         }        
       });
     
-      //Set the user's description field.
+      //Set the user's edited fields.
       socket.on('User Edit Message', (msg)=>{
         let user = this.world.get_instance(socket.user_id);
         user.set_description(msg.description);
       });
-    
-      //Set the user's description field.
-      socket.on('Edit Message', (msg)=>{
-        let entity = this.world.get_instance(msg.id);
-        entity.do_edit(msg.props, socket.user_id);    
-      });
 
-      socket.on('Game Edit Message', (msg)=>{
+      socket.on('Game Edit Message', (msg)=>{        
         //Note: we assume the user is in a game and owns it, else he
         //would be able to edit it.
         let user = this.world.get_instance(socket.user_id);
@@ -112,22 +113,12 @@ class Game_Controller {
 
         let cmds_list= entity.get_cmds_arr(socket.user_id);
         user.send_cmds_arr_to_client(cmds_list); 
-      });
-
-      socket.on('Game ID Link Message', (msg)=>{
-        let user = this.world.get_instance(socket.user_id);
-        user.send_cmds_arr_to_client(user.get_game_id_link_cmds());
-
-      });
+      });     
     
+      //Remove the user from the world.
       socket.on('Disconnect Message', () => {
-        //find the user with the socket and remove from the world.        
-        for (const user of this.world.users.values()){
-          
-          if (user.props.id===socket.user_id){ 
-            user.disconnect_from_game();
-          }
-        }
+        let user = this.world.get_instance(socket.user_id);
+        user.disconnect_from_game();
       });
     });
 
@@ -172,20 +163,19 @@ class Game_Controller {
       }      
       
     }  else {
-      console.error(`app.load_world -> world_save.json does not exist.`);
+      console.error(`app.load_world -> generic_world.json does not exist.`);
     }
     
   }
   
+  //Loads the entities.json file into world.entities_db
   load_entities_db(){
     if (fs.existsSync(`./entities.json`)){      
       this.world.entities_db = JSON.parse(fs.readFileSync("./entities.json"));      
     } else {
       console.error(`app.load_entities -> entities.js does not exist.`);
     }
-
   }
-
   
   //Timer for game loop.
   //Note: the loop technique allows for a minimum fixed length between
@@ -203,7 +193,7 @@ class Game_Controller {
     );
   }
 
-  //Iterate on all entities, and process their tick actions (or handle a fight)
+  //Iterate on all entities, and process their tick actions
   run_simulation_tick(){    
 
     this.world.world.forEach((entity) => {
@@ -384,98 +374,17 @@ class Game_Controller {
     let user_props = {
       socket:       socket,
       name:         username,      
-      container_id: null
-    }
-
-    let lobby = this.world.get_instance("r0000000");
+      container_id: this.FIRST_ROOM_ID
+    }    
     
-    let user= new Classes.User(this.world, user_props);
-    user.set_container_id("r0000000");    
+    let user= new Classes.User(this.world, user_props);    
     this.world.add_to_world(user);
-    lobby.add_entity(user.get_id());
-    
-    user.send_login_msg_to_client(true);
 
-    //Send a welcome message, and a Status message to init the health bar.
-    //Than perform a Look command on the room.
-    user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
-    user.look_cmd();
+    let lobby = this.world.get_instance(this.FIRST_ROOM_ID);
+    lobby.add_entity(user.get_id());
 
     return user.get_id();
-  }
-
-  // create_holodeck(owner_id, corridor_room_id){
-  //   //returns holodeck_entry_room_id
-  //   //create rooms, connect to the corridor room.
-
-  //   let holodeck = [];
-  //   for (let p=0;p<HOLODECK_SIDE;p++){
-  //     let plane = [];
-  //     for (let r=0;r<HOLODECK_SIDE;r++){  
-  //       let row = [];
-  //       for (let i=0;i<HOLODECK_SIDE;i++){
-  //         let props = {
-  //           owner_id: owner_id
-  //         }
-  //         let room = new Classes.Room(this.world, props);
-  //         this.world.add_to_world(room);
-  //         row.push(room);
-  //       }  
-  //       plane.push(row);
-  //     }
-  //     holodeck.push(plane);
-  //   }
-
-  //   //We now have a 3D array of room.
-  //   //Need to connect them to one another.
-  //   for (let p=0;p<HOLODECK_SIDE;p++){      
-  //     for (let r=0;r<HOLODECK_SIDE;r++){  
-  //       for (let i=0;i<HOLODECK_SIDE;i++){
-  //         let room = holodeck[p][r][i];
-          
-  //         if (i===0){
-  //           room.props.exits.south = {id: holodeck[p][r][1], code: null};
-  //         } else if (i===HOLODECK_SIDE-1){
-  //           room.props.exits.north = {id: holodeck[p][r][HOLODECK_SIDE-2], code: null};
-  //         } else {
-  //           room.props.exits.south = {id: holodeck[p][r][i+1], code: null};
-  //           room.props.exits.north = {id: holodeck[p][r][i-1], code: null};
-  //         }
-
-  //         if (r===0){
-  //           room.props.exits.east = {id: holodeck[p][1][i], code: null};
-  //         } else if (r===HOLODECK_SIDE-1){
-  //           room.props.exits.west = {id: holodeck[p][HOLODECK_SIDE-2][i], code: null};
-  //         } else {
-  //           room.props.exits.east = {id: holodeck[p][r+1][i], code: null};
-  //           room.props.exits.west = {id: holodeck[p][r-1][i], code: null};
-  //         }
-
-  //         if (p===0){
-  //           room.props.exits.up = {id: holodeck[1][r][i], code: null};
-  //         } else if (p===HOLODECK_SIDE-1){
-  //           room.props.exits.down= {id: holodeck[HOLODECK_SIDE-2][r][i], code: null};
-  //         } else {
-  //           room.props.exits.up = {id: holodeck[p+1][r][i], code: null};
-  //           room.props.exits.down= {id: holodeck[p-1][r][i], code: null};
-  //         }          
-  //       }
-
-
-  //     }
-  //   }
-
-  //   //Connect the entry room to the corrider
-  //   let center = Math.floor(HOLODECK_SIDE/2);
-  //   let entry_room = holodeck[center][0][center];
-  //   entry_room.props.exits.west = {id: corridor_room_id, code: null};
-
-  //   let corridor_room = this.world.get_instance(corridor_room_id);
-  //   corridor_room.props.exits.east = {id: entry_room.props.id, code: null};
-
-  //   return entry_room.props.id;
-  // }
-
+  }  
 }
 
 //Start Game Server
