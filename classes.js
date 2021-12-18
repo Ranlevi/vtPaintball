@@ -1,3 +1,4 @@
+const fs=         require('fs');
 const Utils= require('./utils');
 
 class Room {
@@ -21,7 +22,7 @@ class Room {
         down:             null
       },
       lighting:           "white", //CSS colors 
-      game_id:            null, //Or string 
+      current_game_id:    null, //Or string 
     }
 
     //Overwrite the default props with the custome ones from the save file.
@@ -171,7 +172,7 @@ class User {
   }     
 
   //Remove the user from the room, place in a new room. Send messages.
-  spwan_in_room(dest_id){
+  spawn_in_room(dest_id){
     //A room exists. Teleport to it.
     let origin_room = this.world.get_instance(this.props.container_id);
     this.send_msg_to_room(`disappears.`);
@@ -342,6 +343,24 @@ class User {
     //User can move to the next room.
 
     let next_room = this.world.get_instance(next_room_obj.id);
+
+    //If in an active game, and this is the opposite team's spawn room - can't enter.
+    if (this.props.current_game_id!==null){
+      //In a game.
+      let game = this.world.get_instance(this.props.current_game_id);
+
+      let opposite_team_spawn_room_id = null;
+      if (this.props.team==="Blue"){
+        opposite_team_spawn_room_id = game.props.red_spawn_room_id;
+      } else if (this.props.team==="Red"){
+        opposite_team_spawn_room_id = game.props.blue_spawn_room_id;
+      }
+
+      if (next_room.props.id===opposite_team_spawn_room_id){
+        this.send_chat_msg_to_client(`Can't enter opposite team's spawn room.`);        
+        return;
+      }
+    }
 
     //Send messages. 
     this.send_chat_msg_to_client(`You travel ${direction}.`);
@@ -602,6 +621,17 @@ class User {
 
     entity.set_container_id(this.props.id);
 
+    //Update attack & defence multiplier.
+    this.props.defense_multiplier += entity.props.defense_rating;
+    if (this.props.defense_multiplier>9){
+      this.props.defense_multiplier = 9;
+    }
+
+    this.props.attack_multiplier += entity.props.attack_rating;
+    if (this.props.attack_multiplier>9){
+      this.props.attack_multiplier = 9;
+    }
+
     //Send messages.
     this.send_chat_msg_to_client(`You wear it.`);
     this.send_msg_to_room(`wears ${entity.get_name()}`);
@@ -645,8 +675,20 @@ class User {
     //Add it to slots.
     this.props.slots.push(result.id);
 
-    //Send messages.
+    //Update the attack & defense multipliers.    
     let entity = this.world.get_instance(result.id);
+
+    this.props.defense_multiplier -= entity.props.defense_rating;
+    if (this.props.defense_multiplier<0){
+      this.props.defense_multiplier = 0;
+    }
+
+    this.props.attack_multiplier -= entity.props.attack_rating;
+    if (this.props.attack_multiplier<0){
+      this.props.attack_multiplier = 0;
+    }
+
+    //Send messages.    
     this.send_chat_msg_to_client(`You remove it and place it in your slots.`);
     this.send_msg_to_room(`removes ${entity.get_name()}`); 
   }
@@ -770,7 +812,7 @@ class User {
     //A room exists. Teleport to it.
     this.send_msg_to_room(`teleports to a new game.`);
 
-    this.spwan_in_room(this.props.spawn_room_id);
+    this.spawn_in_room(this.props.spawn_room_id);
 
     this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
     this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
@@ -904,7 +946,7 @@ class User {
 
     this.send_msg_to_room(`teleports to a game.`);
 
-    this.spwan_in_room(this.props.spawn_room_id);
+    this.spawn_in_room(this.props.spawn_room_id);
 
     this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
     this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
@@ -958,6 +1000,18 @@ class User {
 
     //Target is a user from the other team.
 
+    //Check the cooldown counter of the held item.
+    //Note: we assume the user holds something, else no shot.
+    let item = this.world.get_instance(this.props.holding);
+    
+    if (item.cooldown_counter!==0){
+      this.send_chat_msg_to_client(`Weapon Cooldown: wait ${item.cooldown_counter} more seconds.`);
+      return; 
+    }
+
+    //Weapon can be fired. Reset the cooldown countdown.
+    item.cooldown_counter===item.props.cooldown;
+
     //Computation of Hit Chance:
     //Attack & Defense mulipliers ranges: [0,9]
     let calculated_multiplier = 
@@ -966,10 +1020,9 @@ class User {
 
     let normalized_hit_threshold = (calculated_multiplier+10)/20;
     //This grants a norm. hit thres. of ~0.1 to 0.9;
-
-    let num = Math.random();
     
-    if (num>=normalized_hit_threshold){
+    let num = Math.random();    
+    if (num<=normalized_hit_threshold){
       //Hit
       this.send_chat_msg_to_client(`You hit ${entity.get_name()}!`);
       entity.send_chat_msg_to_client(`${this.get_name()} hits you!`);
@@ -1024,7 +1077,7 @@ class User {
       this.props.spawn_room_id= game.props.red_spawn_room_id;
     }
 
-    this.spwan_in_room(this.props.spawn_room_id);
+    this.spawn_in_room(this.props.spawn_room_id);
     game.send_msg_to_all_players(`${this.get_name()} has join Team ${this.props.team}.`);
 
   }
@@ -1038,17 +1091,15 @@ class User {
     }
 
     //User is in a game.
+    let game = this.world.get_instance(this.props.current_game_id);    
 
     this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");
     this.props.team= null;
     this.props.current_game_id= null;
     this.props.owned_game_id=   null;
 
-    this.spwan_in_room('r0000000');
-
-    let game = this.world.get_instance(this.props.current_game_id);
-    game.player_quit(this.props.id);    
-
+    this.spawn_in_room('r0000000');
+    game.player_quit(this.props.id);
   }
 
   //Send the user information about the current game.
@@ -1183,6 +1234,7 @@ class Item {
 
     this.world=               world;
     this.expiration_counter=  0; //For future implementations.
+    this.cooldown_counter=    0;
 
     this.props = {
       type:             "Item",
@@ -1198,7 +1250,10 @@ class Item {
       is_consumable:    false,
       is_holdable:      false,
       is_gettable:      false,
-      game_id:          null //The game the item belongs to.
+      defense_rating:   0, //Allowed Range: 0-9
+      attack_rating:    0,  //Allowed Range: 0-9
+      current_game_id:  null, //The game the item belongs to.
+      cooldown:         0 //In ticks.
     }
       
     //Overwrite the default props with the saved ones.
@@ -1274,6 +1329,15 @@ class Item {
 
   //Called every game tick.
   do_tick(){    
+
+    //Cooldown
+    if (this.cooldown_counter!==0){
+      this.cooldown_counter -= 1;
+    };
+
+    console.log(this.cooldown_counter);
+    
+
     //TODO: Expiration mechanism.
 
     //If the item is on the floor outside of it's holodeck, enable expiration.
@@ -1334,8 +1398,9 @@ class Item {
     let arr = [];
     let clicking_user = this.world.get_instance(clicking_user_id);
 
-    if (this.props.container_id===clicking_user.props.container_id){
-      //Both item and user are in the same room.
+    if (this.props.container_id===clicking_user.props.container_id ||
+        this.props.container_id===clicking_user_id){
+      //Both item and user are in the same room, or on user's body.
 
       //Look
       arr.push(
@@ -1730,42 +1795,42 @@ class Game {
   }
 
   init_map(){
-    //Temporary implementation: change later to dynamic load.
-    let props = {
-      game_id: this.props.id      
-    };
 
-    let blue_spawn_room = new Room(this.world, props);
-    this.world.add_to_world(blue_spawn_room);
-    this.props.blue_spawn_room_id = blue_spawn_room.props.id;
-    blue_spawn_room.props.name = "Blue Team Spawn";
-    blue_spawn_room.props.lighting = "blue";
-    this.props.entities.push(blue_spawn_room.props.id);
+    let path = `./pacman_map.json`;
+    
+    if (fs.existsSync(path)){      
+      let parsed_info = JSON.parse(fs.readFileSync(path));    
+      
+      this.props.blue_spawn_room_id=  parsed_info.blue_spawn_room_id;
+      this.props.red_spawn_room_id=   parsed_info.red_spawn_room_id;
 
-    let mid_room = new Room(this.world, props);
-    this.world.add_to_world(mid_room);      
-    mid_room.props.lighting = "black"; 
-    this.props.entities.push(mid_room.props.id);
+      //Spawn Rooms
+      for (const props of parsed_info.rooms){
+        let room = new Room(this.world, props);
+        room.props.current_game_id = this.props.id;
+        this.props.entities.push(room.props.id);
+        this.world.add_to_world(room);    
+      }
 
-    let red_spawn_room = new Room(this.world, props);
-    this.world.add_to_world(red_spawn_room);
-    this.props.red_spawn_room_id = red_spawn_room.props.id;
-    red_spawn_room.props.name = "Red Team Spawn";
-    red_spawn_room.props.lighting = "red";
-    this.props.entities.push(red_spawn_room.props.id);
+      //Spawn Items
+      for (const obj of parsed_info.items){
+        let props = this.world.entities_db[obj.name].props;
+        let item = new Item(this.world, props);
+        item.props.container_id=  obj.container_id;
+        item.props.is_gettable=   false; //Items can be picked up only after game starts.
 
-    //Connect the rooms
-    blue_spawn_room.props.exits.north=  {id: mid_room.props.id, code: null};
-    mid_room.props.exits.south=          {id: blue_spawn_room.props.id, code: null};
-    mid_room.props.exits.north=          {id: red_spawn_room.props.id, code: null};
-    red_spawn_room.props.exits.south=   {id: mid_room.props.id, code: null};
+        let room = this.world.get_instance(obj.container_id);
+        room.add_entity(item.props.id);
 
-    //Add a gun in the mid room.
-    props = this.world.entities_db.gun.props;
-    let gun = new Item(this.world, props);
-    this.world.add_to_world(gun);
-    gun.props.container_id = mid_room.props.id;
-    mid_room.add_entity(gun.props.id);
+        item.props.current_game_id=  this.props.id;
+        this.props.entities.push(item.props.id);
+        this.world.add_to_world(item);
+      }
+
+    }  else {
+      console.error(`classes.game.init_map -> pacman.json does not exist.`);
+    }
+
   }
 
   //Join a team according to balance.
@@ -1834,7 +1899,7 @@ class Game {
       this.end_game();
     } else {
       //Spawn the victim.
-      victim.spwan_in_room(victim.props.spawn_room_id);
+      victim.spawn_in_room(victim.props.spawn_room_id);
     }
   }
 
@@ -1846,10 +1911,25 @@ class Game {
 
       let entity = this.world.get_instance(id);
 
+      let props = this.world.entities_db["Desert Eagle"].props;
+
       if (entity.props.type==="User"){
         if (entity.props.container_id!==entity.props.spawn_room_id){
-          entity.spwan_in_room(entity.props.spawn_room_id);
+          entity.spawn_in_room(entity.props.spawn_room_id);
         }
+
+        //Give each user a weapon.        
+        let gun = new Item(this.world, props);
+        gun.props.container_id=     entity.props.container_id;
+        gun.props.current_game_id=  this.props.id;
+        entity.props.holding = gun.props.id;        
+
+        this.props.entities.push(gun.props.id);
+        this.world.add_to_world(gun);      
+
+      } else if (entity.props.type==="Item"){
+        //Enable the players to pick up the items.
+        entity.props.is_gettable = true;
       }
     }
 

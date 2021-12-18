@@ -1,18 +1,24 @@
 {
-  "gun": {    
+  "Desert Eagle": {    
     "props": {
       "type":               "Item",
-      "name":               "A Gun",      
+      "name":               "Desert Eagle",      
       "subtype":            "Gun",
-      "description":        "A big black gun.",              
-      "is_consumable":      false,      
-      "is_holdable":        true,
-      "wear_slot":          null,
+      "description":        "This is a standard hand gun.",                    
+      "is_holdable":        true,      
       "is_gettable":        true,
-      "key_code":           null,
-      "expiration_limit":   null,
-      "action":             null,
-      "game_id":            null    
+      "cooldown":           5
+    }
+  },
+  "Iron Man Suit": {    
+    "props": {
+      "type":               "Item",
+      "name":               "Iron Man Shirt",      
+      "subtype":            "Shirt",
+      "description":        "A metalic, shining, power suit. Defense Rating: 5",                          
+      "is_gettable":        true,
+      "defense_rating":     5,
+      "wear_slot":          "torso"
     }
   },
   "sign": {
@@ -20,15 +26,7 @@
       "type":               "Item",
       "name":               "A Sign",      
       "subtype":            "Sign",
-      "description":        "The sign reads: 'Welcome to vtPaintball! This is a multiplayer, text-based game. Once you enter 'create' or 'join <some ID>', you will be teleported to the game area, which is a made of many connected rooms. You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!",              
-      "is_consumable":      false,      
-      "is_holdable":        false,
-      "wear_slot":          null,
-      "is_gettable":        false,
-      "key_code":           null,
-      "expiration_limit":   null,
-      "action":             null,
-      "game_id":            null    
+      "description":        "The sign reads: 'Welcome to vtPaintball! This is a multiplayer, text-based game. Once you enter 'create' or 'join <some ID>', you will be teleported to the game area, which is a made of many connected rooms. You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!"      
     }
   }
 }

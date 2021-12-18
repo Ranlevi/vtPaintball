@@ -6,6 +6,11 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
+holding -> attack and defense multplier update.
+sounds
+gun cool down --> fix bug
+inv command
+load world -> same as init map?
 write help page.
 add report abuse to user's cmds
 */

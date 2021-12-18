@@ -1,0 +1,374 @@
+{  
+  "blue_spawn_room_id": "r0000001",
+  "red_spawn_room_id":  "r0000002",
+  "rooms": [
+    {
+      "type":         "Room",
+      "id":           "r0000001",
+      "name":         "Blue Spawn Room",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      {"id": "r0000009", "code": null},
+        "east":       {"id": "r0000003", "code": null},
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "Blue"      
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000002",
+      "name":         "Red Spawn Room",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000015", "code": null},
+        "south":      null,
+        "east":       null,
+        "west":       {"id": "r0000021", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "Red"      
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000003",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000004", "code": null},
+        "west":       {"id": "r0000001", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#2b00d4"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000004",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      {"id": "r0000011", "code": null},
+        "east":       {"id": "r0000005", "code": null},
+        "west":       {"id": "r0000003", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#5500aa"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000005",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      {"id": "r0000012", "code": null},
+        "east":       {"id": "r0000006", "code": null},
+        "west":       {"id": "r0000004", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#800080"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000006",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      {"id": "r0000013", "code": null},
+        "east":       {"id": "r0000007", "code": null},
+        "west":       {"id": "r0000005", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#aa0055"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000007",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000008", "code": null},
+        "west":       {"id": "r0000006", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#d4002b"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000008",
+      "name":         "Corner",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      {"id": "r0000015", "code": null},
+        "east":       null,
+        "west":       {"id": "r0000007", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#ff0000"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000009",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000001", "code": null},
+        "south":      {"id": "r0000016", "code": null},
+        "east":       null,
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#0000ff"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000010",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000011", "code": null},
+        "west":       {"id": "r0000009", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#2b00d4"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000011",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000004", "code": null},
+        "south":      {"id": "r0000018", "code": null},
+        "east":       null,
+        "west":       {"id": "r0000010", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#5500aa"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000012",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000005", "code": null},
+        "south":      {"id": "r0000019", "code": null},
+        "east":       null,
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#800080"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000013",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000006", "code": null},
+        "south":      {"id": "r0000020", "code": null},
+        "east":       {"id": "r0000014", "code": null},
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#aa0055"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000014",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000015", "code": null},
+        "west":       {"id": "r0000013", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#d4002b"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000015",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000008", "code": null},
+        "south":      {"id": "r0000002", "code": null},
+        "east":       null,
+        "west":       {"id": "r0000014", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#ff0000"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000016",
+      "name":         "Corner",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000009", "code": null},
+        "south":      null,
+        "east":       {"id": "r0000017", "code": null},
+        "west":       null,
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#0000ff"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000017",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000018", "code": null},
+        "west":       {"id": "r0000016", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#2b00d4"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000018",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000011", "code": null},
+        "south":      null,
+        "east":       {"id": "r0000019", "code": null},
+        "west":       {"id": "r0000017", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#5500aa"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000019",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000012", "code": null},
+        "south":      null,
+        "east":       {"id": "r0000020", "code": null},
+        "west":       {"id": "r0000018", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#800080"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000020",
+      "name":         "T-Junction",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      {"id": "r0000013", "code": null},
+        "south":      null,
+        "east":       {"id": "r0000021", "code": null},
+        "west":       {"id": "r0000019", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#aa0055"
+    },
+    {
+      "type":         "Room",
+      "id":           "r0000021",
+      "name":         "Corridor",      
+      "subtype":      "Room",
+      "description":  "",
+      "entities":     [],
+      "exits": {
+        "north":      null,
+        "south":      null,
+        "east":       {"id": "r0000002", "code": null},
+        "west":       {"id": "r0000020", "code": null},
+        "up":         null,
+        "down":       null
+      },
+      "lighting":         "#d4002b"
+    }
+  ],
+  "items": [
+    {
+      "name":         "Iron Man Suit",
+      "container_id": "r0000011"
+    },
+    {
+      "name":         "Iron Man Suit",
+      "container_id": "r0000013"
+    }
+  ]
+}
+
