@@ -74,28 +74,6 @@ function get_opposite_direction(direction){
   }
 }
 
-//Deep Copy of a given Object.
-//Returns an object.
-function deepCopyFunction(inObject){
-  let outObject, value, key;
-
-  if (typeof inObject !== "object" || inObject === null) {
-    return inObject // Return the value if inObject is not an object
-  }
-
-  // Create an array or object to hold the values
-  outObject = Array.isArray(inObject) ? [] : {}
-
-  for (key in inObject) {
-    value = inObject[key]
-
-    // Recursively (deep) copy for nested objects, including arrays
-    outObject[key] = deepCopyFunction(value)
-  }
-
-  return outObject
-}
-
 //State Machine for NPCs.
 //A machine as a current state, and a function that transition it 
 //from the current state to the next state according to given event.
@@ -275,5 +253,4 @@ function search_for_target(world, target, user_id){
 exports.id_generator=           id_generator_instance;
 exports.get_opposite_direction= get_opposite_direction;
 exports.StateMachine=           StateMachine;
-exports.deepCopyFunction=       deepCopyFunction;
 exports.search_for_target=      search_for_target;

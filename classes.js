@@ -168,42 +168,9 @@ class User {
   //Send a status message to client.   
   do_tick(){        
     this.send_status_msg_to_client();
-  }   
+  }     
 
-  //Check if a shot hits the user, and if so, respawn
-  //return true if hit, else false
-  do_shot(shooter_id){
-    
-    let shooter = this.world.get_instance(shooter_id);
-
-    //Computation of Hit Chance:
-    //Attack & Defense mulipliers ranges: [0,9]
-    let calculated_multiplier = 
-      shooter.props.attack_multiplier - this.props.defense_multiplier;
-      //Range: [-9, 9]
-
-    let normalized_hit_threshold = (calculated_multiplier+10)/20;
-    //This grants a norm. hit thres. of ~0.1 to 0.9;
-    
-    let num = Math.random();
-
-    if (num>=normalized_hit_threshold){
-      //Hit. Notify game and respawn. 
-      this.send_chat_msg_to_client(`You were HIT by ${shooter.get_name()}.`);
-      
-      let game = this.world.get_instance(this.props.current_game_id);
-      game.do_hit(shooter_id, this.props.id);
-
-      this.spwan_in_room(this.props.spawn_room_id);
-      return true;
-
-    } else {
-      //Miss
-      return false;
-    }
-
-  }
-
+  //Remove the user from the room, place in a new room. Send messages.
   spwan_in_room(dest_id){
     //A room exists. Teleport to it.
     let origin_room = this.world.get_instance(this.props.container_id);
@@ -213,7 +180,7 @@ class User {
     let dest_room = this.world.get_instance(dest_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
-    this.send_chat_msg_to_client(`Poof!`);  
+    this.send_chat_msg_to_client(`**Poof!**`);  
     this.look_cmd();
 
     //Send a message to the new room.
@@ -242,6 +209,8 @@ class User {
     return html;
   }
 
+  //A user has clicked this user's name. 
+  //Retuns an array of available cmds for the cmds_box.
   get_cmds_arr(clicking_user_id){
 
     let arr = [];
@@ -264,6 +233,7 @@ class User {
       `data-name="${this.props.name}">Look</span>`
     );
 
+    //A user can edit and inventory himself.
     if (clicking_user_id===this.props.id){
       arr.push(
         `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
@@ -319,7 +289,8 @@ class User {
     return inv_arr;
   }  
 
-  //Remove the given id from the given location.  
+  //Remove the given id from the given location.
+  //Note: assumes the item exists in the inventory.
   remove_item(id, location){
     if (location==="slots"){
       let ix = this.props.slots.indexOf(id);          
@@ -341,14 +312,6 @@ class User {
       //There's no exit in that direction.
       this.send_chat_msg_to_client(`There's no exit to ${direction}.`);
       return;
-    }
-    
-    if (this.props.current_game_id!==null){
-      let game = this.world.get_instance(this.props.current_game_id);
-      if (!game.props.is_started){
-        this.send_chat_msg_to_client(`You can only leave the room once the game has started.`);
-        return;
-      }
     }
 
     //An exit exists.    
@@ -516,7 +479,7 @@ class User {
 
     let result= Utils.search_for_target(this.world, target, this.props.id);
 
-    if (result===null || result.location==="room"){
+    if (result===null || result.location==="room" || result.location==="game"){
       this.send_chat_msg_to_client(`There's no ${target} around to hold.`);
       return;            
     }
@@ -569,12 +532,12 @@ class User {
       return;
     }
 
-    //Search for the target on the user's body.
+    //Search for the target
     let result = Utils.search_for_target(this.world, target, this.props.id);
 
-    let room = this.world.get_instance(this.props.container_id);
     
-    if (result===null || result.location==="room"){
+    
+    if (result===null || result.location==="room" || result.location==="game"){
       this.send_chat_msg_to_client(`There's no ${target} around to wear.`);
       return;            
     }
@@ -620,6 +583,8 @@ class User {
 
     //Target can be worn.
 
+    let room = this.world.get_instance(this.props.container_id);
+
     //Remove the target from its current location
     switch(result.location){
       case("in_room"):        
@@ -655,7 +620,8 @@ class User {
 
     if (result===null || 
         result.location==="room" || 
-        result.location==="in_room"){
+        result.location==="in_room" || 
+        result.location==="game"){
       this.send_chat_msg_to_client(`You don't have it on you.`);
       return;            
     }
@@ -698,7 +664,7 @@ class User {
     let result= Utils.search_for_target(this.world, target, this.props.id);
     let room=   this.world.get_instance(this.props.container_id);
 
-    if (result===null || result.location==="room"){
+    if (result===null || result.location==="room" || result.location==="game"){
       this.send_chat_msg_to_client(`There's no ${target} around.`);
       return;      
     }
@@ -706,6 +672,11 @@ class User {
     //Target exists
     //Check if it's edible
     let entity = this.world.get_instance(result.id);
+
+    if (!entity.props.is_gettable){
+      this.send_chat_msg_to_client(`You can't pick it up.`);
+      return;
+    }
 
     if (!entity.props.is_consumable){
       this.send_chat_msg_to_client(`You can't eat THAT!`);
@@ -786,56 +757,26 @@ class User {
 
     let game = new Game(this.world, props);
     this.world.add_to_world(game);
-    game.props.entities.push(this.props.id);
-    this.props.owned_game_id = game.props.id;
+
+    let obj = game.add_player(this.props.id);
+
+    this.props.spawn_room_id=   obj.spawn_room_id;
+    this.props.team=            obj.team;    
+    this.props.current_game_id= game.props.id;
+    this.props.owned_game_id =  game.props.id;
 
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
     //A room exists. Teleport to it.
-    let origin_room = this.world.get_instance(this.props.container_id);
     this.send_msg_to_room(`teleports to a new game.`);
-    origin_room.remove_entity(this.props.id);
 
-    let dest_room = this.world.get_instance(game.props.blue_spawn_room_id);
-    dest_room.add_entity(this.props.id);
-    this.props.container_id = dest_room.props.id;
-    this.props.current_game_id = game.props.id;
-    this.props.team=          "Blue";
-    this.props.spawn_room_id = game.props.blue_spawn_room_id;
-    this.send_chat_msg_to_client(`You have spawned in the blue room.`);
-    this.send_chat_msg_to_client("Enter 'start' to begin the game.")
-    this.game_cmd();
+    this.spwan_in_room(this.props.spawn_room_id);
+
+    this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
+    this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
+
     this.look_cmd();
-  }
- 
-  //Teleport the user to another room. Target is an ID.
-  teleport_cmd(target=null){
-
-    if (target===null){    
-      this.send_chat_msg_to_client(`Where do you want to teleport to?`);  
-      return;
-    }
-
-    //Target in not null. Check if a room with given ID exists.
-    let dest_room = this.world.get_instance(target);
-
-    if (dest_room===undefined){
-      this.send_chat_msg_to_client(`There's no room with that ID.`);  
-      return;
-    }
-
-    //A room exists. Teleport to it.
-    let origin_room = this.world.get_instance(this.props.container_id);
-    this.send_msg_to_room(`teleports away.`);
-    origin_room.remove_entity(this.props.id);
-
-    dest_room.add_entity(this.props.id);
-    this.props.container_id = dest_room.props.id;
-    this.send_chat_msg_to_client(`Poof!`);  
-    this.look_cmd();
-
-    //Send a message to the new room.
-    this.send_msg_to_room(`teleports into the room.`);
+    this.game_cmd();    
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -845,8 +786,7 @@ class User {
       this.send_chat_msg_to_client(`What do you want to edit?`);  
       return;
     }   
-
-    let props = null;
+    
     let result = Utils.search_for_target(this.world,target, this.props.id);
 
     if (result===null){
@@ -857,7 +797,8 @@ class User {
     
     //Target exists    
     let entity = this.world.get_instance(result.id);
-    
+
+    let props = null;
     if (entity.props.id===this.props.id){
       //The entity is the user: can edit.
       props = {
@@ -930,6 +871,7 @@ class User {
     entity.do_action(this.props.id);    
   }
 
+  //Join a game by ID (only if didn't start already.)
   join_cmd(target=null){
 
     if (target===null){    
@@ -954,24 +896,21 @@ class User {
     }
 
     //User can join the game.
-    //Add the user to the game
-    let spawn_room_id =  game.join_game(this.props.id);
-    this.props.spawn_room_id = spawn_room_id;
-    this.props.current_game_id = game.props.id;
+    let obj = game.add_player(this.props.id);
 
-    //Remove the user from the current room. 
-    //Add him to the spwan room of the game.
+    this.props.spawn_room_id=   obj.spawn_room_id;
+    this.props.team=            obj.team;    
+    this.props.current_game_id= game.props.id;
 
-    let origin_room = this.world.get_instance(this.props.container_id);
-    this.send_msg_to_room(`teleports to join a game.`);
-    origin_room.remove_entity(this.props.id);
+    this.send_msg_to_room(`teleports to a game.`);
 
-    let dest_room = this.world.get_instance(spawn_room_id);
-    dest_room.add_entity(this.props.id);
-    this.props.container_id = dest_room.props.id;    
-    this.send_chat_msg_to_client(`You have joined the game!`);    
+    this.spwan_in_room(this.props.spawn_room_id);
+
+    this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
+    this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
+
     this.look_cmd();
-
+    this.game_cmd();  
   }
 
   //If the user is holding a gun, shot the target
@@ -987,6 +926,8 @@ class User {
       return;
     }
 
+    //The user can take the shot.
+
     let result = Utils.search_for_target(this.world,target, this.props.id);
 
     if (result===null){
@@ -1000,17 +941,48 @@ class User {
       return; 
     }
 
+    //Target found.
+
     let entity = this.world.get_instance(result.id);
 
-    result = entity.do_shot(this.props.id);
-
-    if (result===true){
-      this.send_chat_msg_to_client(`You hit ${entity.get_name()}!`);
-      return;
-    } else {
-      this.send_chat_msg_to_client(`You miss!`);
-      return;
+    if (entity.props.type!=="User"){
+      this.send_chat_msg_to_client(`You can't shot that.`);
+      return; 
     }
+
+    //Target is a user.
+    if (entity.props.team===this.props.team){
+      this.send_chat_msg_to_client(`You can't shot your team mates.`);
+      return; 
+    }
+
+    //Target is a user from the other team.
+
+    //Computation of Hit Chance:
+    //Attack & Defense mulipliers ranges: [0,9]
+    let calculated_multiplier = 
+      this.props.attack_multiplier - entity.props.defense_multiplier;
+      //Range: [-9, 9]
+
+    let normalized_hit_threshold = (calculated_multiplier+10)/20;
+    //This grants a norm. hit thres. of ~0.1 to 0.9;
+
+    let num = Math.random();
+    
+    if (num>=normalized_hit_threshold){
+      //Hit
+      this.send_chat_msg_to_client(`You hit ${entity.get_name()}!`);
+      entity.send_chat_msg_to_client(`${this.get_name()} hits you!`);
+
+      let game = this.world.get_instance(this.props.current_game_id);
+      game.do_hit(this.props.id, entity.props.id);
+
+    } else {
+      //Miss
+      this.send_chat_msg_to_client('You miss!');
+      entity.send_chat_msg_to_client(`${this.get_name()} misses you!`);
+    }
+   
   }
 
   //Send a message to all the users in the game - and start it.
@@ -1032,6 +1004,32 @@ class User {
     game.start_game();
   }
 
+  //Switch the user to the other team and send messages.
+  switch_cmd(){
+
+    if (this.props.current_game_id===null){
+      this.send_chat_msg_to_client("You are not in game yet. Enter 'create' or 'join <some ID>' to play.");
+      return;
+    }
+
+    //User is in a game.
+
+    let game = this.world.get_instance(this.props.current_game_id);
+
+    if (this.props.team==="Red"){
+      this.props.team=          "Blue";
+      this.props.spawn_room_id= game.props.blue_spawn_room_id;
+    } else {
+      this.props.team=          "Red";
+      this.props.spawn_room_id= game.props.red_spawn_room_id;
+    }
+
+    this.spwan_in_room(this.props.spawn_room_id);
+    game.send_msg_to_all_players(`${this.get_name()} has join Team ${this.props.team}.`);
+
+  }
+
+  //Quit the current game and spawn in lobby.
   quit_cmd(){
 
     if (this.props.current_game_id===null){
@@ -1039,13 +1037,17 @@ class User {
       return;
     }
 
-    let game = this.world.get_instance(this.props.current_game_id);
-    game.player_quit(this.props.id);
+    //User is in a game.
 
     this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");
+    this.props.team= null;
+    this.props.current_game_id= null;
+    this.props.owned_game_id=   null;
 
-    this.props.current_game_id = null;
     this.spwan_in_room('r0000000');
+
+    let game = this.world.get_instance(this.props.current_game_id);
+    game.player_quit(this.props.id);    
 
   }
 
@@ -1105,6 +1107,7 @@ class User {
     this.props.socket.emit("Status Message", msg);
   }
 
+  //Send a message to all entities in the room (including non-users)
   send_msg_to_room(content){
     let room=     this.world.get_instance(this.props.container_id);
     let ids_arr=  room.get_all_items();
@@ -1115,16 +1118,9 @@ class User {
         entity.get_msg(this.props.id, content);
       }
     }
-  }
+  } 
 
-  // send_login_msg_to_client(is_login_successful){
-  //   let message = {      
-  //     is_login_successful: is_login_successful
-  //   }    
-    
-  //   this.props.socket.emit('Login Message', message);
-  // }
-
+  //Send an array of commands for display in a cmds box.
   send_cmds_arr_to_client(cmds_arr){
     let msg = {
       content: cmds_arr
@@ -1132,6 +1128,7 @@ class User {
     this.props.socket.emit('Cmds Box Message', msg);
   }
 
+  //An admin can send a message to all users.
   admin_msg_cmd(msg){
 
     if (!this.props.is_admin){
@@ -1141,21 +1138,9 @@ class User {
 
     //The user is an admin
     for (const user of this.world.users.values()){
-      user.send_chat_msg_to_client(msg);
+      user.get_msg(msg);
     }
-  }
-
-  get_game_id_link_cmds(){
-    let arr = [];    
-
-    arr.push(
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Copy ID" data-id="${this.props.current_game_id}" ` + 
-      `">Copy ID</span>`
-    );
-
-    return arr;  
-  }
+  } 
 
   //Recive a message from another entity.
   get_msg(sender_id, content){
@@ -1179,7 +1164,7 @@ class User {
     let room = this.world.get_instance(this.props.container_id);
     room.remove_entity(this.props.id);
 
-    this.send_chat_msg_to_client(`Disconnected! User details saved. To re-enter, refresh the page. Bye Bye!`);
+    this.send_chat_msg_to_client(`Disconnected! To re-enter, refresh the page. Bye Bye!`);
 
     this.world.remove_from_world(this.props.id); 
   }
@@ -1197,7 +1182,7 @@ class Item {
   constructor(world, props=null){
 
     this.world=               world;
-    this.expiration_counter=  0;
+    this.expiration_counter=  0; //For future implementations.
 
     this.props = {
       type:             "Item",
@@ -1213,7 +1198,7 @@ class Item {
       is_consumable:    false,
       is_holdable:      false,
       is_gettable:      false,
-      game_id:          null
+      game_id:          null //The game the item belongs to.
     }
       
     //Overwrite the default props with the saved ones.
@@ -1229,6 +1214,7 @@ class Item {
     this.props.container_id= new_container_id;
   }
 
+  //An action performed when a user does a Use cmd on the item.
   do_action(user_id){
 
     if (this.props.action!==null){
@@ -1248,6 +1234,7 @@ class Item {
     return msg;
   }
    
+  //Find the item's container, and remove it from it.
   do_disintegrate(){
     //Remove the item from its container, and the world.
 
@@ -1285,8 +1272,9 @@ class Item {
     this.world.remove_from_world(this.props.id);
   }
 
+  //Called every game tick.
   do_tick(){    
-    //Expiration mechanism.
+    //TODO: Expiration mechanism.
 
     //If the item is on the floor outside of it's holodeck, enable expiration.
     // let container = this.world.get_instance(this.props.container_id);
@@ -1303,6 +1291,7 @@ class Item {
     // }   
   }
 
+  //Recive a message from an entity.
   get_msg(sender_id, content){
     //Not implemented yet
   }
@@ -1321,6 +1310,7 @@ class Item {
     return html;
   }
 
+  //Send a message to all entities in the room.
   send_msg_to_room(content){
     //Check if the item is in a room (i.e. not on user, etc)
     //and send a message to all entities.
@@ -1336,27 +1326,10 @@ class Item {
         }
       }
     }    
-  }
+  } 
 
-  do_edit(props, user_id){
-
-    for (let [key,value] of Object.entries(props)){
-      if (value==="true"){
-        value = true;        
-      }
-
-      if (value==="false"){
-        value = false;
-      }
-
-      this.props[key] = value;
-    }
-
-    let user = this.world.get_instance(user_id);
-    user.send_chat_msg_to_client('Editing succesful.');
-
-  }
-
+  //Returns an array of cmds for the cmds box, depending on the 
+  //clicking user's identity.
   get_cmds_arr(clicking_user_id){
     let arr = [];
     let clicking_user = this.world.get_instance(clicking_user_id);
@@ -1492,6 +1465,7 @@ class NPC {
       subtype:          "NPC",
       slots:            [],
       slots_size_limit: 10,
+      current_game_id:  null,
     }
     
     //Load the subtype
@@ -1636,9 +1610,9 @@ class NPC {
   get_name(){    
     let html = 
       `<span `+
-      `class="pn_link" `+
-      `data-link_type="NPC_NAME" `+
-      `data-type="${this.props.subtype}" `+
+      `class="name" `+
+      `data-link_type="NAME" `+
+      `data-type="${this.props.type}" `+
       `data-id="${this.props.id}" `+
       `data-name="${this.props.name}" `+
       `data-actions="Look_Edit">`+
@@ -1661,25 +1635,7 @@ class NPC {
         entity.get_msg(this.props.id, content);
       }
     }    
-  }
-
-  do_edit(props, user_id){
-    
-    for (let [key,value] of Object.entries(props)){
-      if (value==="true"){
-        value = true;        
-      }
-
-      if (value==="false"){
-        value = false;
-      }
-
-      this.props[key] = value;
-    }
-
-    let user = this.world.get_instance(user_id);
-    user.send_chat_msg_to_client('Editing succesful.');
-  }
+  }  
 
   get_cmds_arr(clicking_user_id){
     let arr = [];
@@ -1725,32 +1681,49 @@ class Game {
     this.init_map();
   }
 
+  //Returns an HTML string to display in the chat.
   get_name(){
     return `<span class="name" data-link_type="NAME" data-id="${this.props.id}"`+
             `>Game</span>`;
   }
 
+  //Retuns an array of cmds for the cmds_box, depending
+  //on the clicking user's identity.
   get_cmds_arr(clicking_user_id){
 
     let arr = [      
       `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Look" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Look</span>`,
+      `data-name="${this.props.name}">Game Info</span>`,
       `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
       `data-action="Copy ID" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Copy ID</span>`,
+      `data-name="${this.props.name}">Copy Game ID</span>`,
     ];
 
+    //Only the game owner can edit or start the game.
     if (this.props.owner_id===clicking_user_id){
       arr.push(
         `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Edit" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Edit</span>`,
+        `data-name="${this.props.name}">Edit Game</span>`,
         `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
         `data-action="Start" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Start</span>`,
+        `data-name="${this.props.name}">Start Game</span>`,
       );
-    }    
+    }
+    
+    //Check if user can switch teams.
+    if (!this.props.is_started){
+      arr.push(
+        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+        `data-action="Switch" data-id="${this.props.id}" ` + 
+        `data-name="${this.props.name}">Switch Teams</span>`);
+    }
+
+    arr.push(
+      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
+      `data-action="Quit" data-id="${this.props.id}" ` + 
+      `data-name="${this.props.name}">Quit To Lobby</span>`);
 
     return arr;
 
@@ -1795,46 +1768,44 @@ class Game {
     mid_room.add_entity(gun.props.id);
   }
 
-  //Join a team according to the team parameter, or if null - in balance.
-  //Returns the spawn room id.
-  join_game(user_id, team=null){
+  //Join a team according to balance.
+  //Returns obj: {spawn_room_id: string, team: string};
+  add_player(user_id){
     this.props.entities.push(user_id);
 
-    let user = this.world.get_instance(user_id);
-    
-    if (team===null){
-      //Find the smaller team and have the user join it.
-      let num_of_blue_players = 0;
-      let num_of_red_player   = 0;
+    //Find the current number of players in each team.
+    let num_of_blue_players = 0;
+    let num_of_red_player   = 0;
 
-      for (const id of this.props.entities){
-        let entity = this.world.get_instance(id);
-        if (entity.props.type==="User"){
-          if (entity.props.team==="Blue"){
-            num_of_blue_players += 1;            
-          } else if (entity.props.team==="Red"){
-            num_of_red_player += 1;
-          }
-        }
-
-        if (num_of_blue_players>=num_of_red_player){
-          user.set_team("Red");
-          return this.props.red_spawn_room_id;
-        } else {
-          user.set_team("Blue");
-          return this.props.blue_spawn_room_id;    
+    for (const id of this.props.entities){
+      let entity = this.world.get_instance(id);
+      if (entity.props.type==="User"){
+        if (entity.props.team==="Blue"){
+          num_of_blue_players += 1;            
+        } else if (entity.props.team==="Red"){
+          num_of_red_player += 1;
         }
       }
-
-
-    } else if (team==="Blue"){
-      user.set_team("Blue");
-      return this.props.blue_spawn_room_id;
-    } else if (team==="Read"){
-      user.set_team("Red");
-      return this.props.red_spawn_room_id;
     }
-  }
+
+    //Return result
+    let obj = {
+      spawn_room_id: null, 
+      team:          ""
+    }
+
+    if (num_of_blue_players>=num_of_red_player){
+      //Join Red
+      obj.spawn_room_id=  this.props.red_spawn_room_id;
+      obj.team=           "Red";
+    } else {
+      //Join Blue
+      obj.spawn_room_id=  this.props.blue_spawn_room_id;
+      obj.team=           "Blue";
+    }
+
+    return obj;
+  }  
 
   do_tick(){
     //TBD
@@ -1861,10 +1832,29 @@ class Game {
     } else if (this.props.red_points===this.props.max_score){
       this.send_msg_to_all_players(`RED TEAM WINS!`);
       this.end_game();
+    } else {
+      //Spawn the victim.
+      victim.spwan_in_room(victim.props.spawn_room_id);
     }
   }
 
+  //Respawn all players in their spawn rooms.
+  //Reset the game and start it.
   start_game(){
+
+    for (const id of this.props.entities){
+
+      let entity = this.world.get_instance(id);
+
+      if (entity.props.type==="User"){
+        if (entity.props.container_id!==entity.props.spawn_room_id){
+          entity.spwan_in_room(entity.props.spawn_room_id);
+        }
+      }
+    }
+
+    //All users in their spawn points.
+
     this.props.is_started = true;
     this.props.blue_points = 0;
     this.props.red_points = 0;
@@ -1894,7 +1884,17 @@ class Game {
       this.props.entities.splice(ix,1);
     }
 
-    if (this.props.entities.length===0){
+    //Check how many players are left in the game.
+    let num_of_players = 0;
+    for (const id of this.props.entities){
+      let entity = this.world.get_instance(id);
+
+      if (entity.props.type==="User"){
+        num_of_players += 1;
+      }
+    }
+
+    if (num_of_players===0){
       //All player have quit the game. Close it.
       this.destroy_game();
     }
@@ -1911,6 +1911,7 @@ class Game {
     this.world.remove_from_world(this.props.id);
   }
 
+  //Update edited parameters.
   do_edit(msg){
     
     if (msg.props.max_score!==undefined){
@@ -1918,6 +1919,7 @@ class Game {
     }
   }
 
+  //Returns an HTML string for 'Look' or 'Game' commands.
   get_look_string(){
     
     let html =  `<h1>${this.get_name()} Details:</h1>` +

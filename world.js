@@ -52,7 +52,6 @@ class World {
     //No user with given username was found.
     return null;
   }
-
 }
 
 exports.World=          World;

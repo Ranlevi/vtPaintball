@@ -195,7 +195,9 @@ chat.addEventListener('click', (evt)=>{
         case "Drop":
         case "Consume":
         case "Use":
-        case "Edit": {
+        case "Edit": 
+        case "Switch": 
+        case "Quit": {
         
           //Create a Chat box and add it to the Chat, as feedback.
           let messsage = `${evt.target.dataset.action} ${evt.target.dataset.name}`;

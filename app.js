@@ -318,12 +318,7 @@ class Game_Controller {
       case "create":
       case "cr":
         user.create_cmd();
-        break;
-
-      case "teleport":
-      case "te":
-        user.teleport_cmd(target);
-        break;
+        break;      
 
       case "edit":
       case "ed":
@@ -347,6 +342,10 @@ class Game_Controller {
       case "start":
       case "st":
         user.start_cmd();
+        break;
+
+      case "switch":
+        user.switch_cmd();
         break;
 
       case "quit":
