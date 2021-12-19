@@ -387,7 +387,7 @@ class User {
     let num = Math.random();    
     if (num<=noise_threshold){
       //Made noise
-      this.make_sound(); //continue from func      
+      this.make_sound("footsteps");       
     }
 
     
@@ -1027,6 +1027,9 @@ class User {
 
     //Weapon can be fired. Reset the cooldown countdown.
     item.cooldown_counter=item.props.cooldown;
+
+    //Make a noise
+    this.make_sound('gunshot');
     
     //Computation of Hit Chance:
     //Attack & Defense mulipliers ranges: [0,9]
@@ -1238,10 +1241,7 @@ class User {
   //Recive a message from another entity.
   get_msg(sender_id, content){
     //Forward the recived message to the client.
-    let entity= this.world.get_instance(sender_id);    
-    let msg=    `${entity.get_name()} ${content}`;
-
-    this.send_chat_msg_to_client(msg);
+    this.send_chat_msg_to_client(content);
   }
 
   //remove user from the world.
@@ -1266,6 +1266,55 @@ class User {
   set_description(text){
     this.props.description = text;
     this.send_chat_msg_to_client(`Description updated.`);
+  }
+
+  make_sound(noise_type){
+    //Find the rooms around (two tiers around), check if users are there.
+    //send them a noise msg.
+    let msg;
+    if (noise_type==="gunshot"){
+      msg = `You hear footsteps coming from`;
+    } else if (noise_type==="footsteps"){
+      msg = `You hear a GUNSHOT coming from`;
+    }
+
+    let current_room = this.world.get_instance(this.props.container_id);
+
+    for (const [direction, next_room_obj] of Object.entries(current_room.props.exits)){
+      //Scan all the room's exits.
+      
+      if (next_room_obj!==null){
+        let next_room = this.world.get_instance(next_room_obj.id);
+
+        //Check if there are users in the room, and msg them.
+        for (const id of next_room.props.entities){
+          let entity = this.world.get_instance(id);
+          if (entity.props.type==="User"){
+            let opposite_dir = Utils.get_opposite_direction(direction);
+            entity.get_msg(this.props.id, `${msg} ${opposite_dir}`);
+          }
+        }
+
+        //Scan all the other exits of the room, same thing.
+        for (const [dir, next_next_room_obj] of Object.entries(next_room.props.exits)){
+
+          //Ignore the direction from which we are coming from in the loop.
+          if (dir!==Utils.get_opposite_direction(direction) && next_next_room_obj!==null){
+
+            let next_next_room = this.world.get_instance(next_next_room_obj.id);
+
+            for (const id of next_next_room.props.entities){
+              let entity = this.world.get_instance(id);
+              if (entity.props.type==="User"){
+                let opposite_dir = Utils.get_opposite_direction(dir);
+                entity.get_msg(this.props.id, `${msg} ${opposite_dir}`);
+              }
+            }
+          }
+        }
+      }
+    }
+
   }
   
 }
@@ -1772,7 +1821,8 @@ class Game {
       is_started:         false,
       blue_points:        0,
       red_points:         0,
-      max_score:          5
+      max_score:          5,
+      item_spawn_rooms:   {} // {entity_name: [room_id, room_id]}
     }
 
     //Overwrite the default props with the saved ones.
@@ -1937,7 +1987,20 @@ class Game {
       this.send_msg_to_all_players(`RED TEAM WINS!`);
       this.end_game();
     } else {
-      //Spawn the victim.
+      //Remove all things worn and in slots.
+      //Spawn the victim with the basic weapon.
+
+      for (const body_part of victim.BODY_PARTS){
+        if (victim.props[body_part]!==null){
+          let item = this.world.get_instance(victim.props[body_part]);
+          //Respawn the item in a room.
+
+          //continue here. rember to modify game init for spawn.
+
+        }
+      }      
+
+
       victim.spawn_in_room(victim.props.spawn_room_id);
     }
   }

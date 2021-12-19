@@ -8,7 +8,6 @@ and user input.
 TODO:
 when hit -> respawn items on body.(at random locations?)
 holding -> attack and defense multplier update.
-sounds
 load world -> same as init map?
 write help page.
 add report abuse to user's cmds
