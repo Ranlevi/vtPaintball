@@ -147,7 +147,8 @@ class User {
       owned_game_id:      null,
       team:               null,
       defense_multiplier: 0, //Allowed Range: 0-9
-      attack_multiplier:  0  //Allowed Range: 0-9
+      attack_multiplier:  0, //Allowed Range: 0-9
+      noise_multiplier:   5, //Allowed Range: 0-9
     }
     
     //Overwrite default props with saved props.         
@@ -260,7 +261,7 @@ class User {
 
     for (const body_part of this.BODY_PARTS){
       if (this.props[body_part]!==null){
-        let entity = World.world.get_instance(this.props[body_part]);
+        let entity = this.world.get_instance(this.props[body_part]);
         text += `${entity.get_name()} `; 
       }
     }
@@ -375,6 +376,21 @@ class User {
 
     //Send a message to the new room.
     this.send_msg_to_room(`enters from ${Utils.get_opposite_direction(direction)}.`);
+
+    //Check if the user made noise when entering the new room.
+    //Computation of Noise Chance:
+    //Noise muliplier ranges: [0,9]
+    
+    let noise_threshold = (this.props.noise_multiplier+1)/10;
+    //This grants a norm. hit thres. of ~0.1 to 0.9;
+    
+    let num = Math.random();    
+    if (num<=noise_threshold){
+      //Made noise
+      this.make_sound(); //continue from func      
+    }
+
+    
   }
 
   //search for a target on the user's body or in the room.
@@ -1010,8 +1026,8 @@ class User {
     }
 
     //Weapon can be fired. Reset the cooldown countdown.
-    item.cooldown_counter===item.props.cooldown;
-
+    item.cooldown_counter=item.props.cooldown;
+    
     //Computation of Hit Chance:
     //Attack & Defense mulipliers ranges: [0,9]
     let calculated_multiplier = 
@@ -1113,6 +1129,38 @@ class User {
     let game = this.world.get_instance(this.props.current_game_id);
     this.send_chat_msg_to_client(game.get_look_string());
   }
+
+  //Display the inventory in the client.
+  inventory_cmd(){
+
+    let holding=  (this.props.holding===null)? "Nothing": this.world.get_instance(this.props.holding).get_name();
+    let head=     (this.props.head===null)?    "Nothing": this.world.get_instance(this.props.head).get_name();
+    let torso=    (this.props.torso===null)?   "Nothing": this.world.get_instance(this.props.torso).get_name();
+    let legs=     (this.props.legs===null)?    "Nothing": this.world.get_instance(this.props.legs).get_name();  
+    let feet=     (this.props.feet===null)?    "Nothing": this.world.get_instance(this.props.feet).get_name();  
+
+    let slots = "Nothing";
+
+    if (this.props.slots.length!==0){
+      let html = '';
+      for (const id of this.props.slots){
+        let entity= this.world.get_instance(id);
+        html += `${entity.get_name()} `;
+      }
+      slots = html;
+    }
+
+    let html = 
+      `Your Inventory:`+
+      `<p>&#9995; ${holding}</p>`+
+      `<p>&#x1F3A9 ${head}</p>`+ 
+      `<p>&#x1F455 ${torso}</p>`+ 
+      `<p>&#x1F456 ${legs}</p>`+ 
+      `<p>&#x1F45E ${feet}</p>`+
+      `<p>&#x1F9F3 ${slots}</p>`;
+
+    this.send_chat_msg_to_client(html);
+  }
   
   //Handle Messages
   //--------------------
@@ -1128,32 +1176,26 @@ class User {
   //Send a status msg to the client.
   send_status_msg_to_client(){
 
-    let msg = {                    
-      holding:      'Nothing.',        
-      head:         'Nothing.',
-      torso:        'Nothing.',
-      legs:         'Nothing.',
-      feet:         'Nothing.',        
-      slots:        'Nothing.',      
+    let msg = {                          
       room_lighting: this.world.get_instance(this.props.container_id).props.lighting
 
     }   
         
-    for (const part of this.BODY_PARTS){
-      if (this.props[part]!==null){        
-        let entity= this.world.get_instance(this.props[part]);
-        msg[part]=  entity.get_name();
-      }
-    }
+    // for (const part of this.BODY_PARTS){
+    //   if (this.props[part]!==null){        
+    //     let entity= this.world.get_instance(this.props[part]);
+    //     msg[part]=  entity.get_name();
+    //   }
+    // }
     
-    if (this.props.slots.length!==0){
-      let html = '';
-      for (const id of this.props.slots){
-        let entity= this.world.get_instance(id);
-        html += `${entity.get_name()} `;
-      }
-      msg.slots = html;
-    }
+    // if (this.props.slots.length!==0){
+    //   let html = '';
+    //   for (const id of this.props.slots){
+    //     let entity= this.world.get_instance(id);
+    //     html += `${entity.get_name()} `;
+    //   }
+    //   msg.slots = html;
+    // }
   
     this.props.socket.emit("Status Message", msg);
   }
@@ -1334,9 +1376,6 @@ class Item {
     if (this.cooldown_counter!==0){
       this.cooldown_counter -= 1;
     };
-
-    console.log(this.cooldown_counter);
-    
 
     //TODO: Expiration mechanism.
 
@@ -1922,7 +1961,7 @@ class Game {
         let gun = new Item(this.world, props);
         gun.props.container_id=     entity.props.container_id;
         gun.props.current_game_id=  this.props.id;
-        entity.props.holding = gun.props.id;        
+        entity.props.holding = gun.props.id;
 
         this.props.entities.push(gun.props.id);
         this.world.add_to_world(gun);      

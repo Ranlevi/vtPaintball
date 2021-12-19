@@ -6,10 +6,9 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
+when hit -> respawn items on body.(at random locations?)
 holding -> attack and defense multplier update.
 sounds
-gun cool down --> fix bug
-inv command
 load world -> same as init map?
 write help page.
 add report abuse to user's cmds
@@ -364,6 +363,12 @@ class Game_Controller {
       case "game":
       case "g":
         user.game_cmd();
+        break;
+
+      case "inventory":
+      case "inv":
+      case "i":
+        user.inventory_cmd();
         break;
 
       default:

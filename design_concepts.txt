@@ -37,3 +37,9 @@ To that goal, links have two types of information associated with them.
   - id:         id of the clicked entity.
   - name:       name of the clicked entity.
   - action:     action associated with the link.
+
+  sounds
+  Player have a chance to emit sound when moving.
+  Guns always make sound.
+  Sound travels to immediate adjacent rooms (if exit exists between them) and then another room.
+  User gets a message: 'noises from NORTH.' (direction of exit)
