@@ -766,7 +766,7 @@ class User {
 
     //Send messages.
     this.send_chat_msg_to_client(`You say: <span class="say_text">${target}</span`);
-    this.send_msg_to_room(`says: ${target}`);
+    this.send_msg_to_room(`${this.get_name()} says: ${target}`);
   }
 
   //Say something to a specific user.
@@ -792,7 +792,7 @@ class User {
     }
     
     this.send_chat_msg_to_client(`You tell ${user.get_name()}: ${content}`);
-    user.get_msg(this.props.id, `tells you: ${content}`);
+    user.get_msg(this.props.id, `${this.get_name()} tells you: ${content}`);
   }
 
   //Emote something that will be seen by all the room.
@@ -834,7 +834,8 @@ class User {
     this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
 
     this.look_cmd();
-    this.game_cmd();    
+    this.game_cmd();
+    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD" data-actions="Copy ID">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD" data-actions="start">Start</span> when ready to start the game.`);
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -1893,28 +1894,15 @@ class Game {
       this.props.blue_spawn_room_id=  parsed_info.blue_spawn_room_id;
       this.props.red_spawn_room_id=   parsed_info.red_spawn_room_id;
 
+      this.props.item_spawn_rooms= parsed_info.item_spawn_rooms;
+
       //Spawn Rooms
       for (const props of parsed_info.rooms){
         let room = new Room(this.world, props);
         room.props.current_game_id = this.props.id;
         this.props.entities.push(room.props.id);
         this.world.add_to_world(room);    
-      }
-
-      //Spawn Items
-      for (const obj of parsed_info.items){
-        let props = this.world.entities_db[obj.name].props;
-        let item = new Item(this.world, props);
-        item.props.container_id=  obj.container_id;
-        item.props.is_gettable=   false; //Items can be picked up only after game starts.
-
-        let room = this.world.get_instance(obj.container_id);
-        room.add_entity(item.props.id);
-
-        item.props.current_game_id=  this.props.id;
-        this.props.entities.push(item.props.id);
-        this.world.add_to_world(item);
-      }
+      }     
 
     }  else {
       console.error(`classes.game.init_map -> pacman.json does not exist.`);
@@ -1988,15 +1976,18 @@ class Game {
       this.end_game();
     } else {
       //Remove all things worn and in slots.
-      //Spawn the victim with the basic weapon.
 
       for (const body_part of victim.BODY_PARTS){
         if (victim.props[body_part]!==null){
           let item = this.world.get_instance(victim.props[body_part]);
           //Respawn the item in a room.
+          let spawn_rooms_arr= this.item_spawn_rooms[item.props.name];
+          let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
 
-          //continue here. rember to modify game init for spawn.
+          item.props.container_id = spawn_room_id;
 
+          let spawn_room = this.world.get_instance(spawn_room_id);
+          spawn_room.add_entity();
         }
       }      
 
@@ -2013,29 +2004,42 @@ class Game {
 
       let entity = this.world.get_instance(id);
 
-      let props = this.world.entities_db["Desert Eagle"].props;
-
       if (entity.props.type==="User"){
+        //Spawn users in their spawn rooms.
         if (entity.props.container_id!==entity.props.spawn_room_id){
-          entity.spawn_in_room(entity.props.spawn_room_id);
+          entity.spawn_in_room(entity.props.spawn_room_id);          
         }
 
-        //Give each user a weapon.        
-        let gun = new Item(this.world, props);
-        gun.props.container_id=     entity.props.container_id;
-        gun.props.current_game_id=  this.props.id;
-        entity.props.holding = gun.props.id;
-
-        this.props.entities.push(gun.props.id);
-        this.world.add_to_world(gun);      
+        //Remove all items on the user's body.
+        for (const body_part of entity.BODY_PARTS){
+          if (entity.props[body_part]!==null){
+            this.world.remove_from_world(entity.props[body_part]);
+            entity.props[body_part]=null;
+          }
+        }        
 
       } else if (entity.props.type==="Item"){
-        //Enable the players to pick up the items.
-        entity.props.is_gettable = true;
+        //Remove existing items from the world.
+        this.world.remove_from_world(entity.props.id);        
       }
     }
+    
+    //Spawn items    
+    for (const [item_name, spawn_room_arr] of Object.entries(this.props.item_spawn_rooms)){
+      //Spawn all the items in all their rooms.
+      for (const room_id of spawn_room_arr){        
+        let props = this.world.entities_db[item_name].props;
+        let item = new Item(this.world, props);
+        item.props.container_id=  room_id;       
 
-    //All users in their spawn points.
+        let room = this.world.get_instance(room_id);
+        room.add_entity(item.props.id);
+        
+        item.props.current_game_id=  this.props.id;
+        this.props.entities.push(item.props.id);
+        this.world.add_to_world(item);
+      }      
+    }    
 
     this.props.is_started = true;
     this.props.blue_points = 0;

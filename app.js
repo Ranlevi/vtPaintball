@@ -6,7 +6,8 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
-when hit -> respawn items on body.(at random locations?)
+focus on input when not in mobile
+input cmds history/autocomplete
 holding -> attack and defense multplier update.
 load world -> same as init map?
 write help page.

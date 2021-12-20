@@ -360,15 +360,9 @@
       "lighting":         "#d4002b"
     }
   ],
-  "items": [
-    {
-      "name":         "Iron Man Suit",
-      "container_id": "r0000011"
-    },
-    {
-      "name":         "Iron Man Suit",
-      "container_id": "r0000013"
-    }
-  ]
+  "item_spawn_rooms":{
+    "Iron Man Suit": ["r0000011", "r0000013"],
+    "Desert Eagle":  ["r0000001", "r0000002"]
+  } 
 }
 
