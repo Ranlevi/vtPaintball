@@ -54,8 +54,12 @@ class Room {
   get_name(){
     
     let html = 
-      `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
-      `data-name="${this.props.name}">${this.props.name}</span>`;
+      `<a class="name" data-link_type="NAME" data-id="${this.props.id}" `+
+      `data-name="${this.props.name}">${this.props.name}</a>`;
+    
+    // let html = 
+    //   `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
+    //   `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
   }
@@ -388,9 +392,7 @@ class User {
     if (num<=noise_threshold){
       //Made noise
       this.make_sound("footsteps");       
-    }
-
-    
+    }    
   }
 
   //search for a target on the user's body or in the room.
@@ -554,6 +556,9 @@ class User {
     //Place it in the user's hands.
     this.props.holding = result.id;
 
+    //Update defense & attack multipliers.
+    this.update_thresholds();
+
     //Send messgaes
     this.send_chat_msg_to_client(`You hold it.`);
     this.send_msg_to_room(`holds ${entity.get_name()}.`);
@@ -568,9 +573,7 @@ class User {
     }
 
     //Search for the target
-    let result = Utils.search_for_target(this.world, target, this.props.id);
-
-    
+    let result = Utils.search_for_target(this.world, target, this.props.id);    
     
     if (result===null || result.location==="room" || result.location==="game"){
       this.send_chat_msg_to_client(`There's no ${target} around to wear.`);
@@ -638,19 +641,37 @@ class User {
     entity.set_container_id(this.props.id);
 
     //Update attack & defence multiplier.
-    this.props.defense_multiplier += entity.props.defense_rating;
-    if (this.props.defense_multiplier>9){
-      this.props.defense_multiplier = 9;
-    }
-
-    this.props.attack_multiplier += entity.props.attack_rating;
-    if (this.props.attack_multiplier>9){
-      this.props.attack_multiplier = 9;
-    }
+    this.update_thresholds();
 
     //Send messages.
     this.send_chat_msg_to_client(`You wear it.`);
     this.send_msg_to_room(`wears ${entity.get_name()}`);
+  }
+
+  update_thresholds(){
+    //Scan the user's items and update all the thresholds.
+    //TDOD: update noise threshold as well (need to add noise mulityplier prop to items)
+
+    for (const body_part of this.BODY_PARTS){
+      let id = this.props[body_part];
+
+      if (id!==null){
+        let entity = this.world.get_instance(id);
+
+        //Update attack & defence multiplier.
+        this.props.defense_multiplier += entity.props.defense_rating;
+        if (this.props.defense_multiplier>9){
+          this.props.defense_multiplier = 9;
+        }
+
+        this.props.attack_multiplier += entity.props.attack_rating;
+        if (this.props.attack_multiplier>9){
+          this.props.attack_multiplier = 9;
+        }
+      }
+    }
+
+    
   }
 
   //get a target from the wearing or holding slots and place it in the slots.
@@ -835,7 +856,7 @@ class User {
 
     this.look_cmd();
     this.game_cmd();
-    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD" data-actions="Copy ID">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD" data-actions="start">Start</span> when ready to start the game.`);
+    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD_BOX_LINK" data-action="Copy ID" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD">Start</span> when ready to start the game.`);
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -1274,9 +1295,9 @@ class User {
     //send them a noise msg.
     let msg;
     if (noise_type==="gunshot"){
-      msg = `You hear footsteps coming from`;
+      msg = `You hear GUNSHOT coming from`;
     } else if (noise_type==="footsteps"){
-      msg = `You hear a GUNSHOT coming from`;
+      msg = `You hear a footsteps coming from`;
     }
 
     let current_room = this.world.get_instance(this.props.container_id);
@@ -1292,7 +1313,7 @@ class User {
           let entity = this.world.get_instance(id);
           if (entity.props.type==="User"){
             let opposite_dir = Utils.get_opposite_direction(direction);
-            entity.get_msg(this.props.id, `${msg} ${opposite_dir}`);
+            entity.get_msg(this.props.id, `${msg}: ${opposite_dir}.`);
           }
         }
 

@@ -165,7 +165,7 @@ disconnect_btn.addEventListener('click', ()=>{
 //Handle clicks on hyperlinks, according to the link_type
 chat.addEventListener('click', (evt)=>{
   evt.stopPropagation();
-  
+    
   switch(evt.target.dataset.link_type){
 
     case "NAME": {   
@@ -178,7 +178,7 @@ chat.addEventListener('click', (evt)=>{
     }
 
     case "CMD_BOX_LINK":    
-
+    
       switch(evt.target.dataset.action){
         case "Look":
         case "Shot":
@@ -214,20 +214,6 @@ chat.addEventListener('click', (evt)=>{
           break;
         }
         
-        // case "Inventory": {
-        //   let html = 
-        //     `Your Inventory:`+
-        //     `<p>&#9995; ${status_obj.holding}</p>`+
-        //     `<p>&#x1F3A9 ${status_obj.head}</p>`+ 
-        //     `<p>&#x1F455 ${status_obj.torso}</p>`+ 
-        //     `<p>&#x1F456 ${status_obj.legs}</p>`+ 
-        //     `<p>&#x1F45E ${status_obj.feet}</p>`+
-        //     `<p>&#x1F9F3 ${status_obj.slots}</p>`;
-  
-        //     insert_chat_box('box_server', html);         
-        //   break;
-        // }
-
         case "Start": 
         case "Inventory": {
           let messsage = `${evt.target.dataset.action}`;

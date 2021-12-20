@@ -8,8 +8,6 @@ and user input.
 TODO:
 focus on input when not in mobile
 input cmds history/autocomplete
-holding -> attack and defense multplier update.
-load world -> same as init map?
 write help page.
 add report abuse to user's cmds
 */
@@ -143,28 +141,26 @@ class Game_Controller {
     let path = `./generic_world.json`;
     
     if (fs.existsSync(path)){      
-      let parsed_info = JSON.parse(fs.readFileSync(path));           
+      let parsed_info = JSON.parse(fs.readFileSync(path));  
+      
+      for (const props of parsed_info.rooms){
+        let room = new Classes.Room(this.world, props);        
+        this.world.add_to_world(room);    
+      }
 
-      for (const entity_props of parsed_info.entities){
-        switch(entity_props.type){
-          case "Room":
-            let room = new Classes.Room(this.world, entity_props);
-            this.world.add_to_world(room);            
-            break;
+      //Spawn items    
+      for (const [item_name, spawn_room_arr] of Object.entries(parsed_info.item_spawn_rooms)){
+        //Spawn all the items in all their rooms.
+        for (const room_id of spawn_room_arr){        
+          let props = this.world.entities_db[item_name].props;
+          let item = new Classes.Item(this.world, props);
+          item.props.container_id=  room_id;       
 
-          case "Item":
-            let item = new Classes.Item(this.world, entity_props);
-            this.world.add_to_world(item);
-            break;
-
-          case "NPC":
-            let npc = new Classes.NPC(this.world, entity_props);
-            this.world.add_to_world(npc);
-
-          default:
-            console.error(`app.js -> load_world(): unknown type: ${entity_props.type}`);
-        }
-      }      
+          let room = this.world.get_instance(room_id);
+          room.add_entity(item.props.id);        
+          this.world.add_to_world(item);
+        }      
+      }
       
     }  else {
       console.error(`app.load_world -> generic_world.json does not exist.`);
