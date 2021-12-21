@@ -6,6 +6,9 @@ Handles serving the Client to users, user login
 and user input.
 
 TODO:
+remove non-active players after a while
+sending create two time in a row?
+boxes width on mobile
 focus on input when not in mobile
 input cmds history/autocomplete
 write help page.

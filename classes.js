@@ -54,12 +54,8 @@ class Room {
   get_name(){
     
     let html = 
-      `<a class="name" data-link_type="NAME" data-id="${this.props.id}" `+
-      `data-name="${this.props.name}">${this.props.name}</a>`;
-    
-    // let html = 
-    //   `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
-    //   `data-name="${this.props.name}">${this.props.name}</span>`;
+      `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
+      `data-name="${this.props.name}">${this.props.name}</span>`;
 
     return html;
   }

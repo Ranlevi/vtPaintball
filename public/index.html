@@ -16,6 +16,16 @@
     <!-- For console debug on mobile browsers -->
     <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script> -->
     <!-- <script>eruda.init();</script> -->    
+
+    <script>
+      function dispatch_event(element_id){
+        let event = new Event('click');
+        let element = document.getElementById(element_id);        
+        element.dispatchEvent(event);
+      }
+    </script>
+
+    <!-- <a href="javascript:void(0);test()">Click Me</a> -->
     
     <!-- Game Area -->
    <div id="Parent">

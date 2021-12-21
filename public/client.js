@@ -164,8 +164,8 @@ disconnect_btn.addEventListener('click', ()=>{
 
 //Handle clicks on hyperlinks, according to the link_type
 chat.addEventListener('click', (evt)=>{
-  evt.stopPropagation();
-    
+  evt.evt.preventDefault();
+      
   switch(evt.target.dataset.link_type){
 
     case "NAME": {   
