@@ -5,11 +5,15 @@ Entry point for the server.
 Handles serving the Client to users, user login
 and user input.
 
+Note: must be https for clipboard to work!
+
 TODO:
+add id to game info
 remove non-active players after a while
-boxes width on mobile
 input cmds history/autocomplete
 write help page.
+tests
+logs
 add report abuse to user's cmds
 */
 

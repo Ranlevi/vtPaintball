@@ -64,7 +64,7 @@ html, body {
 
 .box_cmds {
   align-self:       center;  
-  width:            fit-content;
+  max-width:        50%;
   background-color: LawnGreen;
 }
 
@@ -121,6 +121,7 @@ html, body {
   color:          blue;
   text-decoration:  underline;
   cursor:           pointer;
+  display:          inline-block;
 }
 
 .say_text {
