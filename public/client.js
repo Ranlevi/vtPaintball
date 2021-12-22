@@ -18,6 +18,8 @@ let game_edit_modal_close_btn=  document.getElementById("game_edit_modal_close_b
 let game_edit_submit_btn=       document.getElementById("game_edit_submit_btn");
 let game_current_max_score=     document.getElementById("game_current_max_score");
 
+const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+
 const CLIENT_VERSION=     0.1;
 
 let stop_chat_scroll=         false;
@@ -119,7 +121,9 @@ submit_btn.addEventListener('click', ()=>{
   } else {
     login_msg.username=username;    
     socket.emit('Login Message', login_msg);    
-  }  
+  }
+  
+  
 });
 
 //If the user presses Enter on the username input - submit it.
@@ -164,8 +168,8 @@ disconnect_btn.addEventListener('click', ()=>{
 
 //Handle clicks on hyperlinks, according to the link_type
 chat.addEventListener('click', (evt)=>{
-  evt.evt.preventDefault();
-      
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
+
   switch(evt.target.dataset.link_type){
 
     case "NAME": {   
@@ -229,11 +233,11 @@ chat.addEventListener('click', (evt)=>{
 
     case "CMD": {
       let message = {      
-        content: `${evt.target.dataset.actions}`
+        content: `${evt.target.dataset.action}`
         };
       socket.emit('User Input Message', message);
 
-      insert_chat_box('box_user', `${evt.target.dataset.actions}`);   
+      insert_chat_box('box_user', `${evt.target.dataset.action}`);   
       break;    
     }
   }
@@ -327,6 +331,11 @@ function insert_chat_box(type, content){
 
   if (!stop_chat_scroll){
     div.scrollIntoView();  
+  }
+
+  //On desktop, focus on the input 
+  if (!isMobile){
+    input_form.focus();    
   }
 
 }

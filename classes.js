@@ -176,7 +176,7 @@ class User {
   spawn_in_room(dest_id){
     //A room exists. Teleport to it.
     let origin_room = this.world.get_instance(this.props.container_id);
-    this.send_msg_to_room(`disappears.`);
+    this.send_msg_to_room(`${this.get_name()} disappears.`);
     origin_room.remove_entity(this.props.id);
     
     let dest_room = this.world.get_instance(dest_id);
@@ -186,7 +186,7 @@ class User {
     this.look_cmd();
 
     //Send a message to the new room.
-    this.send_msg_to_room(`appears in the room.`);
+    this.send_msg_to_room(`${this.get_name()} appears in the room.`);
   }
 
   //Aux. Methods.
@@ -825,6 +825,11 @@ class User {
 
   //Create a game, with the user as the owner.
   create_cmd(){
+
+    if (this.props.current_game_id!==null){
+      this.send_chat_msg_to_client("You're already in a game.");
+      return;
+    }
     
     let props = {
       owner_id: this.props.id
@@ -843,7 +848,7 @@ class User {
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
     //A room exists. Teleport to it.
-    this.send_msg_to_room(`teleports to a new game.`);
+    this.send_msg_to_room(`${this.get_name()} teleports to a new game.`);
 
     this.spawn_in_room(this.props.spawn_room_id);
 
@@ -852,7 +857,7 @@ class User {
 
     this.look_cmd();
     this.game_cmd();
-    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD_BOX_LINK" data-action="Copy ID" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD">Start</span> when ready to start the game.`);
+    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD_BOX_LINK" data-action="Copy ID" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD" data-action="Start">Start</span> when ready to start the game.`);
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -978,7 +983,7 @@ class User {
     this.props.team=            obj.team;    
     this.props.current_game_id= game.props.id;
 
-    this.send_msg_to_room(`teleports to a game.`);
+    this.send_msg_to_room(`${this.get_name()} teleports to a game.`);
 
     this.spawn_in_room(this.props.spawn_room_id);
 
@@ -1080,6 +1085,11 @@ class User {
 
     if (this.props.current_game_id===null){
       this.send_chat_msg_to_client("You are not in game yet. Enter 'create' or 'join <some ID>' to play.");
+      return;
+    }
+
+    if (this.props.owned_game_id!==null){
+      this.send_chat_msg_to_client("Looks like you already started a game!");
       return;
     }
 
@@ -1252,7 +1262,7 @@ class User {
 
     //The user is an admin
     for (const user of this.world.users.values()){
-      user.get_msg(msg);
+      user.get_msg(this.props.id, msg);
     }
   } 
 
