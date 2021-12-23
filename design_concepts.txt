@@ -26,9 +26,12 @@ There is no damage: a shot either hit or not.
 In-game links
 -------------
 Any word can become a link with a link class.
-Say click on Look. How do we know what is the target?
-ID is enough. Do we need a userbox feedback? 
-No if we make sure everything is clickable.
+Say click on Look. 
+How do we know what is the target? ID is enough. 
+Do we need a userbox feedback? Not if we make sure everything is clickable.
+What about a command? innerHTML is enough with ID. 
+How to prevent player from naming as a cmd? reseverd list.
+
 
 
 

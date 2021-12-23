@@ -170,77 +170,28 @@ disconnect_btn.addEventListener('click', ()=>{
 chat.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
 
-  switch(evt.target.dataset.link_type){
-
-    case "NAME": {   
-      let msg = {
-        link_type:  evt.target.dataset.link_type,
-        id:         evt.target.dataset.id
-      }
-      socket.emit('Name Link Clicked', msg);
-      break;
-    }
-
-    case "CMD_BOX_LINK":    
-    
-      switch(evt.target.dataset.action){
-        case "Look":
-        case "Shot":
-        case "Get":
-        case "Hold":
-        case "Wear":
-        case "Remove":
-        case "Drop":
-        case "Consume":
-        case "Use":
-        case "Edit": 
-        case "Switch": 
-        case "Quit": {
-        
-          //Create a Chat box and add it to the Chat, as feedback.
-          let messsage = `${evt.target.dataset.action} ${evt.target.dataset.name}`;
-          insert_chat_box('box_user', messsage);
-  
-          let msg = {      
-            content: `${evt.target.dataset.action} ${evt.target.dataset.id}`
-          }  
-          socket.emit('User Input Message', msg);        
-          break;
-        }
-  
-        case "Copy ID": {
-          navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-            let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
-            insert_chat_box('box_user', messsage);            
-          }, function() {
-            console.error('Copy ID failed.');
-          });
-          break;
-        }
-        
-        case "Start": 
-        case "Inventory": {
-          let messsage = `${evt.target.dataset.action}`;
-          insert_chat_box('box_user', messsage);
-          let msg = {      
-            content: `${evt.target.dataset.action}`
-          }  
-          socket.emit('User Input Message', msg); 
-          break;  
-        }  
-      }
-      break;
-
-    case "CMD": {
-      let message = {      
-        content: `${evt.target.dataset.action}`
-        };
-      socket.emit('User Input Message', message);
-
-      insert_chat_box('box_user', `${evt.target.dataset.action}`);   
-      break;    
-    }
+  if (evt.target.classList[0]!=="link"){
+    //User clicked on a non-link text
+    return;
   }
+
+  if (evt.target.innerHTML==="Copy ID" || evt.target.innerHTML==="Copy"){
+    navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
+      let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
+      insert_chat_box('box_user', messsage);            
+    }, function() {
+      console.error('Copy ID failed.');
+    });
+    return;
+  }
+  
+  //Send a message to server.
+  let msg = {
+    id:     evt.target.dataset.id,
+    target: evt.target.innerHTML
+  };
+  
+  socket.emit('Link Clicked', msg);
 });
 
 //Handle user text input in the game i/f.

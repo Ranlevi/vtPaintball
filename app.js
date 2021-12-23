@@ -8,6 +8,10 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+a way to list all players? so we can tell them.
+join cmd to insert the join to the input field.
+When only Look is availabe, do it without cmd box.
+directions need to be avaiable all the time. maybe disalbed/enable on availabiltiy.
 add id to game info
 remove non-active players after a while
 input cmds history/autocomplete
@@ -110,17 +114,47 @@ class Game_Controller {
         
         game.do_edit(msg);
         user.send_chat_msg_to_client('Done.');
-      })
+      })     
+      
+      socket.on('Link Clicked', (msg)=>{
 
-      //User clicked a name link
-      //We return a list of commands, to be displayed as a Cmds Box.
-      socket.on('Name Link Clicked', (msg)=>{        
         let user=   this.world.get_instance(socket.user_id);
-        let entity= this.world.get_instance(msg.id);
 
-        let cmds_list= entity.get_cmds_arr(socket.user_id);
-        user.send_cmds_arr_to_client(cmds_list); 
-      });     
+        switch(msg.target){
+          case "Look":
+          case "Get":  
+          case "Hold":
+          case "wear":
+          case "Remove":
+          case "Drop":
+          case "Consume":
+          case "Use":          
+          case "Edit":
+          case "Inventory":
+            this.process_user_input(`${msg.target} ${msg.id}`, socket.user_id);
+            break;
+          
+          case "NORTH":
+          case "SOUTH":
+          case "EAST":
+          case "WEST":
+          case "UP":
+          case "DOWN":          
+          case "Create":
+          case "Start":
+          case "Switch Teams":
+          case "Quit To Lobby":          
+            this.process_user_input(msg.target, socket.user_id);
+            break;
+
+          default:
+            //This is a name, not a command.
+            let entity= this.world.get_instance(msg.id);
+            let cmds_list= entity.get_cmds_arr(socket.user_id);
+            user.send_cmds_arr_to_client(cmds_list);         
+
+        }
+      });
     
       //Remove the user from the world.
       socket.on('Disconnect Message', () => {

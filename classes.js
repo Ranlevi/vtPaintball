@@ -53,10 +53,7 @@ class Room {
   //Returns an HTML string for the name of the room.
   get_name(){
     
-    let html = 
-      `<span class="name" data-link_type="NAME" data-id="${this.props.id}" `+
-      `data-name="${this.props.name}">${this.props.name}</span>`;
-
+    let html = `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
     return html;
   }
 
@@ -71,10 +68,8 @@ class Room {
     for (const [direction, obj] of Object.entries(this.props.exits)){   
       
       if (obj!==null){
-        exits_exists = true;
-        msg += `<span class="exit" data-link_type="CMD" ` + 
-                `data-actions="${direction.toUpperCase()}" >` +
-                `${direction.toUpperCase()}</span> `
+        exits_exists = true;        
+        msg += `<span class="link">${direction.toUpperCase()}</span> `
       }
     }
     
@@ -103,13 +98,8 @@ class Room {
   //on the room's name.
   get_cmds_arr(clicking_user_id){
     let arr = [
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Look" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Look</span>`,
-
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Copy ID" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Copy ID</span>`,
+      `<span class="link" data-id="${this.props.id}">Look</span>`,
+      `<span class="link" data-id="${this.props.id}">Copy ID</span>`,
     ];
 
     return arr;
@@ -204,11 +194,7 @@ class User {
       team_class = "red_team";
     }
 
-    let html = 
-      `<span class="name ${team_class}" data-link_type="NAME" data-id="${this.props.id}" `+
-      `data-name="${this.props.name}">${this.props.name}</span>`;
-
-    return html;
+    return `<span class="link ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //A user has clicked this user's name. 
@@ -221,29 +207,19 @@ class User {
       let game = this.world.get_instance(this.props.current_game_id);
 
       if (game.props.is_started){
-        arr.push(
-          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-          `data-action="Shot" data-id="${this.props.id}" ` + 
-          `data-name="${this.props.name}">Shot</span>`
-        );
+        arr.push(`<span class="link" data-id="${this.props.id}">Shot</span>`);
       }
     }
     
     arr.push(
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Look" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Look</span>`
+      `<span class="link" data-id="${this.props.id}">Look</span>`
     );
 
     //A user can edit and inventory himself.
     if (clicking_user_id===this.props.id){
       arr.push(
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Edit" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Edit</span>`,
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Inventory" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Inventory</span>`
+        `<span class="link" data-id="${this.props.id}">Edit</span>`,
+        `<span class="link" data-id="${this.props.id}">Inventory</span>`
       );
     }
 
@@ -854,10 +830,9 @@ class User {
 
     this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
     this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
-
-    this.look_cmd();
+    
     this.game_cmd();
-    this.send_chat_msg_to_client(`<span class="name" data-link_type="CMD_BOX_LINK" data-action="Copy ID" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. Enter <span class="name" data-link_type="CMD" data-action="Start">Start</span> when ready to start the game.`);
+    this.send_chat_msg_to_client(`<span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. <span class="link">Start</span> the game when you're ready.`);
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -1480,16 +1455,7 @@ class Item {
 
   get_name(){
     //Returns an HTML string for the name of the entity.
-    let html = 
-      `<span class="name" `+
-      `data-link_type="NAME" `+
-      `data-type="${this.props.type}" `+
-      `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}">`+      
-      `${this.props.name}`+
-      `</span>`;
-
-    return html;
+    return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //Send a message to all entities in the room.
@@ -1521,19 +1487,11 @@ class Item {
       //Both item and user are in the same room, or on user's body.
 
       //Look
-      arr.push(
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Look" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Look</span>`      
-      );
+      arr.push(`<span class="link" data-id="${this.props.id}">Look</span>`);
 
       //Get
       if (this.props.is_gettable){
-        arr.push(
-          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-          `data-action="Get" data-id="${this.props.id}" ` + 
-          `data-name="${this.props.name}">Get</span>`      
-        );
+        arr.push(`<span class="link" data-id="${this.props.id}">Get</span>`);
       }
     }
 
@@ -1544,11 +1502,7 @@ class Item {
           (this.props.container_id===clicking_user.props.id && clicking_user.props.holding!==this.props.id)
           //Item is on the user's body but not held
           ){
-          arr.push(
-            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-            `data-action="Hold" data-id="${this.props.id}" ` + 
-            `data-name="${this.props.name}">Hold</span>`      
-          );
+          arr.push(`<span class="link" data-id="${this.props.id}">Hold</span>`);
         }
     }
 
@@ -1565,11 +1519,7 @@ class Item {
           clicking_user.props[this.props.wear_slot]!==this.props.id
           //User is not already wearing the item
         )){
-          arr.push(
-            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-            `data-action="Wear" data-id="${this.props.id}" ` + 
-            `data-name="${this.props.name}">Wear</span>`      
-          );
+          arr.push(`<span class="link" data-id="${this.props.id}">Wear</span>`);
       }
     }
 
@@ -1579,20 +1529,12 @@ class Item {
         clicking_user.props[this.props.wear_slot]===this.props.id
         //User is wearing the item
       ){
-        arr.push(
-          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-          `data-action="Remove" data-id="${this.props.id}" ` + 
-          `data-name="${this.props.name}">Remove</span>`      
-        );
+        arr.push(`<span class="link" data-id="${this.props.id}">Remove</span>`);
       }   
 
     //Drop
     if (this.props.container_id===clicking_user.props.id){
-      arr.push(
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Drop" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Drop</span>`      
-      );
+      arr.push(`<span class="link" data-id="${this.props.id}">Drop</span>`);
     }
 
     //Consume
@@ -1605,11 +1547,7 @@ class Item {
         ) || this.props.container_id===clicking_user.props.id
             //Item is on the user's body
         ){
-          arr.push(
-            `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-            `data-action="Consume" data-id="${this.props.id}" ` + 
-            `data-name="${this.props.name}">Consume</span>`      
-          );
+          arr.push(`<span class="link" data-id="${this.props.id}">Consume</span>`);
       }
     }
 
@@ -1622,11 +1560,7 @@ class Item {
          //Item is on the user's body
         )
       ){
-        arr.push(
-          `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-          `data-action="Use" data-id="${this.props.id}" ` + 
-          `data-name="${this.props.name}">Use</span>`      
-        );
+        arr.push(`<span class="link" data-id="${this.props.id}">Use</span>`);
     }
 
     return arr;
@@ -1791,18 +1725,7 @@ class NPC {
 
   //Returns an HTML string for the name of the entity.
   get_name(){    
-    let html = 
-      `<span `+
-      `class="name" `+
-      `data-link_type="NAME" `+
-      `data-type="${this.props.type}" `+
-      `data-id="${this.props.id}" `+
-      `data-name="${this.props.name}" `+
-      `data-actions="Look_Edit">`+
-      `${this.props.name}`+
-      `</span>`;
-
-    return html;
+    return `<span class="link" data-id="${this.props.id}">Look</span>`;
   }
 
   ///Send a message to all entities in the room.
@@ -1867,8 +1790,7 @@ class Game {
 
   //Returns an HTML string to display in the chat.
   get_name(){
-    return `<span class="name" data-link_type="NAME" data-id="${this.props.id}"`+
-            `>Game</span>`;
+    return `<span class="link" data-id="${this.props.id}">Game</span>`;
   }
 
   //Retuns an array of cmds for the cmds_box, depending
@@ -1876,38 +1798,26 @@ class Game {
   get_cmds_arr(clicking_user_id){
 
     let arr = [      
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Look" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Game Info</span>`,
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Copy ID" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Copy Game ID</span>`,
+      `Game <span class="link" data-id="${this.props.id}">Info</span>`,
+      `<span class="link" data-id="${this.props.id}">Copy ID</span>`,
     ];
 
     //Only the game owner can edit or start the game.
     if (this.props.owner_id===clicking_user_id){
       arr.push(
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Edit" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Edit Game</span>`,
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Start" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Start Game</span>`,
+        `<span class="link" data-id="${this.props.id}">Edit</span>`,
+        `<span class="link" data-id="${this.props.id}">Start</span>`,
       );
     }
     
     //Check if user can switch teams.
     if (!this.props.is_started){
       arr.push(
-        `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-        `data-action="Switch" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Switch Teams</span>`);
+        `<span class="link" data-id="${this.props.id}">Switch Teams</span>`);
     }
 
     arr.push(
-      `<span class="cmd_box_link" data-link_type="CMD_BOX_LINK" ` + 
-      `data-action="Quit" data-id="${this.props.id}" ` + 
-      `data-name="${this.props.name}">Quit To Lobby</span>`);
+      `<span class="link" data-id="${this.props.id}">Quit To Lobby</span>`);
 
     return arr;
 
