@@ -1083,22 +1083,24 @@ class User {
   //Send a message to all the users in the game - and start it.
   start_cmd(){
 
+    //Check if user is in a game.
     if (this.props.current_game_id===null){
       this.send_chat_msg_to_client("You are not in game yet. Enter 'create' or 'join <some ID>' to play.");
       return;
     }
-
-    if (this.props.owned_game_id!==null){
-      this.send_chat_msg_to_client("Looks like you already started a game!");
-      return;
-    }
-
+   
     let game = this.world.get_instance(this.props.current_game_id);
     
     if (game.props.owner_id!==this.props.id){
       this.send_chat_msg_to_client("Only the user who created the game can start it.");
       return;
     }
+    
+    if (game.props.is_started){
+      this.send_chat_msg_to_client("Looks like you already started a game!");
+      return;
+    }
+
 
     //User can start the game.
     game.start_game();

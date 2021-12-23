@@ -25,6 +25,14 @@ There is no damage: a shot either hit or not.
 
 In-game links
 -------------
+Any word can become a link with a link class.
+Say click on Look. How do we know what is the target?
+ID is enough. Do we need a userbox feedback? 
+No if we make sure everything is clickable.
+
+
+
+
 When a user clicks an in-game link, the client needs to know what
 entity the link is associated with. For example, if the user clicks
 a room's name - we need to know what room this is, to display the
