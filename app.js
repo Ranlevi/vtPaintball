@@ -8,7 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-a way to list all players? so we can tell them (tell x cmd to input)
+join all modals?
 join cmd to insert the join to the input field.
 When only Look is availabe, do it without cmd box.
 add id to game info
@@ -91,6 +91,18 @@ class Game_Controller {
           user.look_cmd();
         }
       });
+
+      socket.on('Message From Client', (msg)=>{
+
+        let user = this.world.get_instance(socket.user_id);
+
+        switch(msg.type){
+          case "Say":
+            user.say_cmd(msg.content);
+            break;
+
+        }
+      })
     
       //Send text inputs for processing.
       socket.on('User Input Message', (msg)=>{            
@@ -117,7 +129,7 @@ class Game_Controller {
       
       socket.on('Link Clicked', (msg)=>{
 
-        let user=   this.world.get_instance(socket.user_id);
+        // let user=   this.world.get_instance(socket.user_id);
 
         switch(msg.target){
           case "Look":

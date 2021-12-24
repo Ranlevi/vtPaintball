@@ -139,6 +139,20 @@ class Room {
     }
     return obj;
   }
+
+  name_clicked(clicking_user_id){    
+
+    let clicking_user = this.world.get_instance(clicking_user_id);
+
+    if (clicking_user.props.container_id===this.props.id){
+      //Only cmd is look
+      clicking_user.look_cmd(this.props.id);
+    } else {
+      //Clicking User not in the same room.
+      clicking_user.send_chat_msg_to_client(`You're not in the room anymore.`);      
+    }
+    
+  }
   
 }
 
@@ -787,16 +801,16 @@ class User {
   }
 
   //Say something that will be heard by all entities in the room.
-  say_cmd(target=null){
+  say_cmd(content=null){
 
-    if (target===null){    
+    if (content===null){    
       this.send_chat_msg_to_client(`What do you want to say?`);  
       return;
     }
 
     //Send messages.
-    this.send_chat_msg_to_client(`You say: <span class="say_text">${target}</span`);
-    this.send_msg_to_room(`${this.get_name()} says: ${target}`);
+    this.send_chat_msg_to_client(`You say: <span class="say_text">${content}</span`);
+    this.send_msg_to_room(`${this.get_name()} says: ${content}`);
   }
 
   //Say something to a specific user.
@@ -1365,7 +1379,42 @@ class User {
     }
 
   }
-  
+
+  name_clicked(clicking_user_id){
+
+    let availabe_cmds = [];
+
+    let clicking_user = this.world.get_instance(clicking_user_id);
+
+    if (clicking_user.props.container_id===this.props.container_id){
+
+      //Shot has to be the 1st cmd.
+      if (clicking_user_id!==this.props.id){
+        availabe_cmds.push('Shot');  
+      }
+
+      availabe_cmds.push('Look');
+
+      if (clicking_user_id===this.props.id){
+        availabe_cmds.push('Say');
+        availabe_cmds.push('Edit User');
+        availabe_cmds.push('Inventory');
+        availabe_cmds.push('Create A New Game');
+        availabe_cmds.push('Join A Game');
+      }
+
+      if (clicking_user_id!==this.props.id){
+        availabe_cmds.push(`Tell ${clicking_user.props.name}`);  
+      }
+    }
+
+    let cmds_arr = [];
+      for (const cmd of availabe_cmds){
+        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+      }
+    
+      clicking_user.send_cmds_arr_to_client(cmds_arr);          
+  }
 }
 
 class Item { 

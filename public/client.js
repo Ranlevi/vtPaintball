@@ -2,10 +2,6 @@ let chat=                       document.getElementById('Chat');
 let disconnect_btn=             document.getElementById('disconnect_btn');
 let freeze_btn=                 document.getElementById('freeze_btn');
 let parent=                     document.getElementById('Parent');
-let login_modal=                document.getElementById("login_modal");
-let submit_btn=                 document.getElementById("submit_btn");
-let username_input =            document.getElementById("username_input");
-let warning_text=               document.getElementById("warning_text");
 let input_field=                document.getElementById("input_field");
 let user_edit_modal=            document.getElementById("user_edit_modal");
 let user_edit_submit_btn=       document.getElementById("user_edit_submit_btn");
@@ -24,6 +20,18 @@ let perm_link_west=             document.getElementById("perm_link_west");
 let perm_link_up=               document.getElementById("perm_link_up");
 let perm_link_down=             document.getElementById("perm_link_down");
 let perm_links_container=       document.getElementById("perm_links_container");
+let comm_modal=                 document.getElementById("comm_modal");
+let comm_moda_label=            document.getElementById("comm_moda_label");
+let comm_modal_input=           document.getElementById("comm_modal_input");
+let comm_modal_submit_btn=      document.getElementById("comm_modal_submit_btn");
+let comm_modal_modal_close_btn= document.getElementById("comm_modal_modal_close_btn");
+
+let modal=              document.getElementById('modal');
+let modal_title=        document.getElementById('modal_title');
+let modal_content=      document.getElementById('modal_content');
+let modal_form=         document.getElementById('modal_form');
+let modal_submit_btn=   document.getElementById("modal_submit_btn");
+let modal_cancel_btn=   document.getElementById("modal_cancel_btn");
 
 
 const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
@@ -39,6 +47,34 @@ let status_obj = {
 
 //When index.html loads, the Login Modal appears. 
 //Focus on the username field of the Login Modal.
+modal_title.innerHTML = "Login";
+
+modal_content.innerHTML = 
+  `<div class="has-text-white has-text-centered">Welcome to</div>` +
+  `<div class="has-text-danger-dark is-size-2 has-text-centered">Text Tag</div>` +
+  `<div class="has-text-white has-text-centered">A textual, mobile-friendly, multiplayer</div>` +
+  `<div class="has-text-white has-text-centered">Lastertag game!</div>` +
+  `<div class="has-text-white has-text-centered">` +
+  `(<a class="has-text-primary" href="/help" target="_blank">More Info.</a>)` +
+  `</div>` +
+  `<div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>` +
+  `<div class="block"></div>` +
+  `<div class="has-text-white has-text-centered">Enter your username:</div>`+
+  `<div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div>`;
+
+modal_form.innerHTML = 
+  `<div class="field user_input">`+
+  ` <div class="control">`+
+  `   <input `+
+  `     id=           "username_input"`+
+  `     autocomplete= "off"`+ 
+  `     class=        "input"`+ 
+  `     type=         "text"`+ 
+  `     placeholder=  "e.g Morpheus, Neo...">`+
+  `  </div>`+
+  `</div>`;
+
+let username_input = document.getElementById("username_input");
 username_input.focus();
 
 let socket;
@@ -46,6 +82,17 @@ let socket;
 //Create a socket_io instance, and handle incoming messages
 function create_socket(){
   let socket_io = io(); 
+
+  socket_io.on('Message From Server', (msg)=>{
+
+    switch(msg.type){
+      case "Login Reply": //continue here
+        break;
+    }
+
+  });
+  }
+
   
   //Display the Chat Message as a server_box.
   //msg: {content: html string}
@@ -177,6 +224,37 @@ function create_socket(){
 
   return socket_io;
 }
+
+
+modal_submit_btn.addEventListener('click', ()=>{
+
+  //Check the content of the modal.
+  switch(modal_title.innerHTML){
+    case ("Login"):
+      //Create a WS socket, send a login msg.
+      //Note: The modal will be closed when a reply msg will arrive.
+      socket = create_socket();
+      let msg = {
+        type: "Login",
+        content: {
+          username : null
+        }
+      }
+
+      let username_input = document.getElementById("username_input");
+
+      if (username_input.value===""){
+        let warning_text = document.getElementById("warning_text");
+        warning_text.innerHTML = "Please enter a Name.";
+      }
+
+      msg.content.username = username_input.value;
+      socket.emit('Message From Client', msg);
+      break;    
+  }
+  
+
+})
 
 //Handle Login Modal
 //----------------------
@@ -311,6 +389,13 @@ chat.addEventListener('click', (evt)=>{
     });
     return;
   }
+
+  if (evt.target.innerHTML==="Say"){
+    comm_moda_label.innerHTML= "Say to everybody in the room:";
+    comm_modal.classList.add('is-active');
+    comm_modal_input.focus();
+    return;
+  }
   
   //Send a message to server.
   let msg = {
@@ -334,6 +419,22 @@ input_field.addEventListener('submit', (evt)=> {
 
   input_form.value = '';
   input_form.blur(); //close soft keyboard.   
+})
+
+//Comm Modal
+//-----------
+comm_modal_modal_close_btn.addEventListener('click', ()=>{
+  comm_modal.classList.remove('is-active');   
+})
+
+comm_modal_submit_btn.addEventListener('click', ()=>{
+  let msg = {
+    type:     "Say",
+    content:  comm_modal_input.value
+  }
+  socket.emit('Message From Client', msg);
+  comm_modal.classList.remove('is-active');   
+  comm_modal_input.value = "";
 })
 
 //User Edit Modal

@@ -18,93 +18,59 @@
     <!-- <script>eruda.init();</script> -->    
    
     <!-- Game Area -->
-   <div id="Parent">
-     <!-- Chat Window -->
-    <div id="Chat" class="is-align-self-stretch"></div>
+    <div id="Parent">
 
-    <div class="perm_links_container" id="perm_links_container">
-      <div class="perm_links_off"  id="perm_link_north">NORTH</div>
-      <div class="perm_links_off" id="perm_link_south">SOUTH</div>
-      <div class="perm_links_off" id="perm_link_east">EAST</div>
-      <div class="perm_links_off" id="perm_link_west">WEST</div>
-      <div class="perm_links_off" id="perm_link_up">UP</div>
-      <div class="perm_links_off" id="perm_link_down">DOWN</div>
+      <!-- Buttons and more -->
+      <div id="Dashboard">            
+
+        <div id="freeze_btn" class="icon is-large has-text-success">        
+          <i class="mdi mdi-24px mdi-hand-back-left"></i>
+        </div>
+      
+        <div id="disconnect_btn" class="icon is-large">
+          <i class="mdi mdi-24px mdi-lan-disconnect"></i>        
+        </div>
+      </div>
+
+      <!-- Chat Window -->
+      <div id="Chat" class="is-align-self-stretch"></div>
+
+      <div class="perm_links_container" id="perm_links_container">
+        <div class="perm_links_off" id="perm_link_north">NORTH</div>
+        <div class="perm_links_off" id="perm_link_south">SOUTH</div>
+        <div class="perm_links_off" id="perm_link_east">EAST</div>
+        <div class="perm_links_off" id="perm_link_west">WEST</div>
+        <div class="perm_links_off" id="perm_link_up">UP</div>
+        <div class="perm_links_off" id="perm_link_down">DOWN</div>
+      </div>              
+        
     </div>
 
-    <!-- Input Field -->
-    <div id="Input" class="has-background-light">
-      
-      <div class="control">        
-        <form id="input_field">            
-          <input
-            id=           "input_form"             
-            class=        "input" 
-            autocomplete= "off"
-            type=         "text" 
-            rows=         "1" 
-            placeholder=  "Text input">
-          </input>          
-        </form>
+    <!-- Modal -->
+    <div id="modal" class="modal">
+
+      <div class="modal-background"></div>
+
+      <div class="modal-card">
+
+        <header class="modal-card-head">
+          <p class="modal-card-title" id="modal_title"></p>        
+        </header>
+
+        <section class="modal-card-body">
+          <p id="modal_content"></p>
+          <form id="modal_form"></form>
+        </section>
+
+        <footer class="modal-card-foot">
+          <button id="modal_submit_btn" class="button is-success">Submit</button>
+          <button id="modal_cancel_btn" class="button">Cancel</button>
+        </footer>
+
       </div>
-      
-    </div> 
 
-    
-              
-    <!-- Buttons and more -->
-    <div id="Dashboard">            
-
-      <div id="freeze_btn" class="icon is-large has-text-success">        
-        <i class="mdi mdi-24px mdi-hand-back-left"></i>
-      </div>
-      
-      <div id="disconnect_btn" class="icon is-large">
-        <i class="mdi mdi-24px mdi-lan-disconnect"></i>        
-      </div>
-    </div>    
-   </div>
-   
-   <!-- Login Modal -->
-   <div id="login_modal" class="modal is-active">
-
-    <div class="modal-background"></div>
-
-    <div id="modal_content" class="modal-content">
-      
-      <div class="has-text-white has-text-centered">Welcome to</div>
-      <div class="has-text-danger-dark is-size-2 has-text-centered">Text Tag</div>
-      <div class="has-text-white has-text-centered">A textual, mobile-friendly, multiplayer</div>
-      <div class="has-text-white has-text-centered">Lastertag game!</div>
-      <div class="has-text-white has-text-centered">
-        (<a class="has-text-primary" href="/help" target="_blank">More Info.</a>)
-      </div>
-      <div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>
-      <div class="block"></div>
-      <div class="has-text-white has-text-centered">Enter your username:</div>
-
-      <!-- Username Input Field -->
-      <form>
-        <div class="field user_input">          
-          <div class="control">
-            <input 
-              id=           "username_input" 
-              autocomplete= "off" 
-              class=        "input" 
-              type=         "text" 
-              placeholder=  "e.g Morpheus, Neo...">
-          </div>
-        </div>
-      </form>
-
-      <!-- An empty DIV for errors and warnings -->
-      <div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div> 
-
-      <div class="control user_input">
-        <button id="submit_btn" class="button is-primary">Submit</button>
-      </div>      
-      
-    </div>      
-  </div>
+    </div>  
+  
 
   <!-- User Edit Modal, for user details and settings. -->
   <div id="user_edit_modal" class="modal">
@@ -167,6 +133,39 @@
       <footer class="modal-card-foot">
         <button id="game_edit_submit_btn"       class="button is-success">Save changes</button>
         <button id="game_edit_modal_close_btn"  class="button">Cancel</button>
+      </footer>
+
+    </div>  
+
+  </div>
+
+  <!-- Comm Modal -->
+  <div id="comm_modal" class="modal">
+    <div class="modal-background"></div>
+
+    <div class="modal-card">
+
+      <header class="modal-card-head">
+        <p class="modal-card-title">In Game Communication</p>        
+      </header>
+
+      <section class="modal-card-body">        
+        <form id="comm_modal_form">
+          <label class="label" id="comm_moda_label"></label>
+          <div class="control">
+            <div class="control">
+              <textarea 
+                id=           "comm_modal_input" 
+                class=        "textarea" 
+                rows=         "3"></textarea>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <footer class="modal-card-foot">
+        <button id="comm_modal_submit_btn"       class="button is-success">Send</button>
+        <button id="comm_modal_modal_close_btn"  class="button">Cancel</button>
       </footer>
 
     </div>  
