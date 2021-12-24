@@ -60,23 +60,45 @@ class Room {
   //Returns a Look Command message (String)
   get_look_string(){   
         
-    let msg = `<h1>${this.get_name()}</h1>` +
-              `<p>${this.props.description}</p>` + 
-              `<p><span><b>Exits:</b> `;
-    
-    let exits_exists = false;
-    for (const [direction, obj] of Object.entries(this.props.exits)){   
-      
+    let msg = `${this.get_name()} `;
+
+    let exits_html = '';    
+    for (const [direction, obj] of Object.entries(this.props.exits)){         
       if (obj!==null){
-        exits_exists = true;        
-        msg += `<span class="link">${direction.toUpperCase()}</span> `
+        switch(direction){
+          case "north":
+            exits_html += ' N';
+            break;
+
+          case "south":
+            exits_html += ' S';
+            break;
+
+          case "east":
+            exits_html += ' E';
+            break;
+          
+          case "west":
+            exits_html += ' W';
+            break;
+
+          case "up":
+            exits_html += ' U';
+            break;
+
+          case "down":
+            exits_html += ' D';
+            break;
+        }              
       }
     }
-    
-    if (!exits_exists){
-      msg += "None.</span></p>"
+
+    if (exits_html!==''){
+      exits_html = `[` + exits_html + ' ]';        
     }
 
+    msg += exits_html;              
+    msg += `<p>${this.props.description}</p>`;
     msg += '<p>In the room: ';
     
     for (const entity_id of this.props.entities){

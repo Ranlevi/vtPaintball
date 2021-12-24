@@ -11,7 +11,6 @@ TODO:
 a way to list all players? so we can tell them.
 join cmd to insert the join to the input field.
 When only Look is availabe, do it without cmd box.
-directions need to be avaiable all the time. maybe disalbed/enable on availabiltiy.
 add id to game info
 remove non-active players after a while
 input cmds history/autocomplete
