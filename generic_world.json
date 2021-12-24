@@ -5,7 +5,7 @@
       "id":           "r0000000",
       "name":         "Game Lobby",      
       "subtype":      "Room",
-      "description":  "This is the Lobby. Enter <span class=\"link\">Create</span> to start a Text Tag game, or <span><b>Join <span><i>some_ID</i></span></b></span> to join an existing game. A <span><b>Sign</b></span> is hanging off one of the wall - you can enter <span><b>Look sign</b></span> to read it.",
+      "description":  "This is where players can rest and talk between games.",
       "entities":     [],
       "exits": {
         "north":      null,

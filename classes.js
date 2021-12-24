@@ -1609,6 +1609,68 @@ class Item {
 
     return arr;
   }
+
+  //Process a click on the item's name in the client.
+  //Note: we show the user the cmds available, but that does 
+  //not mean they can be used (e.g. holding when already holding something else.)
+  name_clicked(clicking_user_id){
+
+    let clicking_user = this.world.get_instance(clicking_user_id);
+
+    let availabe_cmds = [];
+
+    if (this.props.container_id===clicking_user.props.container_id ||
+        this.props.container_id===clicking_user_id){
+      //Both item and user are in the same room, or on user's body.
+      availabe_cmds.push('Look');
+      
+      if (this.props.is_gettable){
+        availabe_cmds.push('Get');        
+      }
+
+      if (this.props.is_holdable){
+        availabe_cmds.push('Hold');        
+      }
+
+      if (this.props.wear_slot!==null){
+        availabe_cmds.push('Wear');        
+      }
+
+      if (clicking_user.props.holding===this.props.id ||
+          clicking_user.props[this.props.wear_slot]===this.props.id){
+          //User is wearing or holding the item.
+        availabe_cmds.push('Remove');        
+      }
+      
+      if (this.props.container_id===clicking_user.props.id){
+        availabe_cmds.push('Drop');
+      }
+
+      if (this.props.is_consumable){
+        availabe_cmds.push('Consume');
+      }
+      
+      if (this.props.action!==null){
+        availabe_cmds.push('Consume');
+      }
+      
+    }
+    
+    if (availabe_cmds.length===0){
+      //Can only happen if the item is in a different room from the user.
+      clicking_user.send_chat_msg_to_client('This item is in another room.');
+    } else if (availabe_cmds.length===1){
+      //If only one cmd exists - it must be Look.
+      clicking_user.look_cmd(this.props.id);
+    } else {
+      //Send the user an array of available cmds.
+      let cmds_arr = [];
+      for (const cmd of availabe_cmds){
+        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+      }
+      clicking_user.send_cmds_arr_to_client(cmds_arr);
+    }
+  }
   
 }
 

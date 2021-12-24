@@ -8,7 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-a way to list all players? so we can tell them.
+a way to list all players? so we can tell them (tell x cmd to input)
 join cmd to insert the join to the input field.
 When only Look is availabe, do it without cmd box.
 add id to game info
@@ -149,8 +149,9 @@ class Game_Controller {
           default:
             //This is a name, not a command.
             let entity= this.world.get_instance(msg.id);
-            let cmds_list= entity.get_cmds_arr(socket.user_id);
-            user.send_cmds_arr_to_client(cmds_list);         
+            entity.name_clicked(socket.user_id);
+            // let cmds_list= entity.get_cmds_arr(socket.user_id);
+            // user.send_cmds_arr_to_client(cmds_list);         
 
         }
       });
