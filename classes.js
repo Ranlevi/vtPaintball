@@ -104,6 +104,19 @@ class Room {
 
     return arr;
   }
+
+  //Returns an object with the state of exits.
+  get_exits_state(){
+    let obj = {
+      north:  (this.props.exits.north===null? false:true),
+      south:  (this.props.exits.south===null? false:true),
+      east:   (this.props.exits.east===null? false:true),
+      west:   (this.props.exits.west===null? false:true),
+      up:     (this.props.exits.up===null? false:true),
+      down:   (this.props.exits.down===null? false:true),
+    }
+    return obj;
+  }
   
 }
 
@@ -172,7 +185,8 @@ class User {
     let dest_room = this.world.get_instance(dest_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
-    this.send_chat_msg_to_client(`**Poof!**`);  
+    this.send_chat_msg_to_client(`**Poof!**`);
+    this.send_exits_msg_to_client();
     this.look_cmd();
 
     //Send a message to the new room.
@@ -348,6 +362,7 @@ class User {
     next_room.add_entity(this.props.id);
 
     this.props.container_id= next_room_obj.id;
+    this.send_exits_msg_to_client();
     this.look_cmd();
 
     //Send a message to the new room.
@@ -1227,6 +1242,13 @@ class User {
       content: cmds_arr
     }
     this.props.socket.emit('Cmds Box Message', msg);
+  }
+
+  //Get the exits from the current room and send them.
+  send_exits_msg_to_client(){
+    let room = this.world.get_instance(this.props.container_id);
+    let msg  = room.get_exits_state();
+    this.props.socket.emit('Exits Message', msg);
   }
 
   //An admin can send a message to all users.

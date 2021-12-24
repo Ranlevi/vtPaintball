@@ -17,6 +17,14 @@ let game_edit_modal_form=       document.getElementById("game_edit_modal_form");
 let game_edit_modal_close_btn=  document.getElementById("game_edit_modal_close_btn");
 let game_edit_submit_btn=       document.getElementById("game_edit_submit_btn");
 let game_current_max_score=     document.getElementById("game_current_max_score");
+let perm_link_north=            document.getElementById("perm_link_north");
+let perm_link_south=            document.getElementById("perm_link_south");
+let perm_link_east=             document.getElementById("perm_link_east");
+let perm_link_west=             document.getElementById("perm_link_west");
+let perm_link_up=               document.getElementById("perm_link_up");
+let perm_link_down=             document.getElementById("perm_link_down");
+let perm_links_container=       document.getElementById("perm_links_container");
+
 
 const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
 
@@ -44,6 +52,75 @@ function create_socket(){
   socket_io.on('Chat Message', (msg)=>{  
     insert_chat_box("box_server", msg.content);
   });
+
+  socket_io.on('Exits Message', (msg)=>{
+    //{perm_link_north: bol...}
+    for (const [key, value] of Object.entries(msg)){
+      switch(key){
+        case "north":
+          if (value===true){
+            perm_link_north.classList.remove("perm_links_off");
+            perm_link_north.classList.add("perm_links_on")
+          } else {
+            perm_link_north.classList.remove("perm_links_on");
+            perm_link_north.classList.add("perm_links_off")
+          }
+        break;
+
+        case "south":
+          if (value===true){
+            perm_link_south.classList.remove("perm_links_off");
+            perm_link_south.classList.add("perm_links_on")
+          } else {
+            perm_link_south.classList.remove("perm_links_on");
+            perm_link_south.classList.add("perm_links_off")
+          }
+        break;
+
+        case "east":
+          if (value===true){
+            perm_link_east.classList.remove("perm_links_off");
+            perm_link_east.classList.add("perm_links_on")
+          } else {
+            perm_link_east.classList.remove("perm_links_on");
+            perm_link_east.classList.add("perm_links_off")
+          }
+        break;
+
+        case "west":
+          if (value===true){
+            perm_link_west.classList.remove("perm_links_off");
+            perm_link_west.classList.add("perm_links_on")
+          } else {
+            perm_link_west.classList.remove("perm_links_on");
+            perm_link_west.classList.add("perm_links_off")
+          }
+        break;
+
+        case "up":
+          if (value===true){
+            perm_link_up.classList.remove("perm_links_off");
+            perm_link_up.classList.add("perm_links_on")
+          } else {
+            perm_link_up.classList.remove("perm_links_on");
+            perm_link_up.classList.add("perm_links_off")
+          }
+        break;
+
+        case "down":
+          if (value===true){
+            perm_link_down.classList.remove("perm_links_off");
+            perm_link_down.classList.add("perm_links_on")
+          } else {
+            perm_link_down.classList.remove("perm_links_on");
+            perm_link_down.classList.add("perm_links_off")
+          }
+        break;
+      }
+    }
+
+    
+  })
 
   //Update the status object.
   socket_io.on('Status Message', (msg)=>{
@@ -162,6 +239,56 @@ disconnect_btn.addEventListener('click', ()=>{
   socket = null;
   input_form.setAttribute("disabled", true);
 });
+
+perm_links_container.addEventListener('click', (evt)=>{
+  
+  let clicked_exit = null;
+  switch(evt.target.id){
+    case "perm_link_north":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'North';
+      }
+      break;
+
+    case "perm_link_south":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'South';
+      }
+      break;
+
+    case "perm_link_east":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'East';
+      }
+      break;
+
+    case "perm_link_west":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'West';
+      }
+      break;
+
+    case "perm_link_up":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'Up';
+      }
+      break;
+
+    case "perm_link_down":
+      if (evt.target.classList[0]==="perm_links_on"){
+        clicked_exit = 'Down';
+      }
+      break;    
+  }
+
+  if (clicked_exit!==null){
+    let msg = {    
+      content: clicked_exit
+    }
+    socket.emit('User Input Message', msg); 
+  }  
+  
+})
 
 //Chat Interface
 //--------------------

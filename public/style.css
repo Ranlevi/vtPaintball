@@ -111,3 +111,26 @@ html, body {
   cursor:           pointer;
   display:          inline-block;
 }
+
+.perm_links_container {
+  height:           fit-content;
+  width:            100%;
+  border:           solid;
+  display:          flex;
+  justify-content:  space-around;  
+}
+
+.perm_links_off {
+  color: lightgray;
+}
+
+.perm_links_on {
+  color: black;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px CadetBlue;
+  cursor:           pointer;
+}
+
+.perm_links_on:active {
+  text-shadow: 1px 1px 2px red;
+}
