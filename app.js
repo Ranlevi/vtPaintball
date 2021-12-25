@@ -8,7 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-join all modals?
+invite mechanism?
 join cmd to insert the join to the input field.
 When only Look is availabe, do it without cmd box.
 add id to game info
@@ -65,42 +65,113 @@ class Game_Controller {
       console.log('a client connected');
 
       //Each socket is attached to a single user.
-      socket.user_id = null;
-    
-      //Create a new user or load a new one.
-      socket.on('Login Message', (msg)=>{
-            
-        //Try to find an active user with the same username.        
-        let user_id = this.world.get_user_id_by_username(msg.username);
-    
-        if (user_id!==null){
-          //A user with the same name exists in the game.
-          let message = {is_login_successful: false};
-          socket.emit('Login Message', message);         
+      socket.user_id = null;       
 
-        } else {
-          //Username is not taken, player can enter.
-          socket.user_id = this.create_new_user(socket, msg.username);
-
-          //Report successful login to client
-          let message = {is_login_successful: true};
-          socket.emit('Login Message', message);         
-
-          let user = this.world.get_instance(socket.user_id);
-          user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
-          user.look_cmd();
-        }
-      });
-
-      socket.on('Message From Client', (msg)=>{
-
-        let user = this.world.get_instance(socket.user_id);
+      socket.on('Message From Client', (msg)=>{        
 
         switch(msg.type){
-          case "Say":
+          case "Say":{
             user.say_cmd(msg.content);
             break;
+          }
 
+          case "Login":{
+            //Try to find an active user with the same username.        
+            let user_id = this.world.get_user_id_by_username(msg.content.username);
+            let reply_msg = {
+              type: "Login Reply",
+              content: {
+                is_login_successful: null
+              }
+            }          
+    
+            if (user_id!==null){
+              //A user with the same name exists in the game.
+              reply_msg.content.is_login_successful = false;                            
+              socket.emit('Message From Server', reply_msg);         
+
+            } else {
+              //Username is not taken, player can enter.
+              //Attach the user_id to the socket, and return a Login Message.
+              socket.user_id = this.create_new_user(socket, msg.content.username);
+              reply_msg.content.is_login_successful = true;                    
+              socket.emit('Message From Server', reply_msg);         
+
+              let user = this.world.get_instance(socket.user_id);
+              user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
+              user.look_cmd();
+            }
+            break;
+          }
+
+          case "Disconnect":{
+            //Remove the user from the world.
+            let user = this.world.get_instance(socket.user_id);
+            user.disconnect_from_game();
+            break;
+          }
+
+          case "Command":{
+            //The user clicked a command link.
+            let user = this.world.get_instance(socket.user_id);
+
+            switch(msg.content.cmd){
+              case "North":
+              case "South":
+              case "East":
+              case "West":
+              case "Up":
+              case "Down":{
+                user.move_cmd(msg.content.content);
+                break;
+              }
+
+              case "Look":{
+                user.look_cmd(msg.content.id);                
+                break;
+              }
+
+              case "Inventory":{
+                user.inventory_cmd();
+                break;
+              }
+
+              case "Create A New Game":{
+                user.create_cmd();
+                break;
+              }              
+            }
+
+            break;
+          }
+
+          case "Name Clicked":{
+            let entity = this.world.get_instance(msg.content.id);
+            entity.name_clicked(socket.user_id);
+            break;
+          }
+
+          case "Edit User":{
+            let user = this.world.get_instance(socket.user_id);
+            user.set_description(msg.content.description);            
+            break;
+          }
+
+          case "Join Game":{
+            let user = this.world.get_instance(socket.user_id);
+            user.join_cmd(msg.content.game_id);
+            break;
+          }
+
+          case "Edit Game":{
+            //Note: we assume the user is in a game and owns it, else he
+            //would be able to edit it.
+            let user = this.world.get_instance(socket.user_id);
+            let game = this.world.get_instance(user.props.current_game_id);        
+            game.do_edit(msg);
+            user.send_chat_msg_to_client('Done.');
+            break;
+          }
         }
       })
     
@@ -111,11 +182,7 @@ class Game_Controller {
         }        
       });
     
-      //Set the user's edited fields.
-      socket.on('User Edit Message', (msg)=>{
-        let user = this.world.get_instance(socket.user_id);
-        user.set_description(msg.description);
-      });
+      
 
       socket.on('Game Edit Message', (msg)=>{        
         //Note: we assume the user is in a game and owns it, else he
@@ -166,13 +233,8 @@ class Game_Controller {
             // user.send_cmds_arr_to_client(cmds_list);         
 
         }
-      });
-    
-      //Remove the user from the world.
-      socket.on('Disconnect Message', () => {
-        let user = this.world.get_instance(socket.user_id);
-        user.disconnect_from_game();
-      });
+      });    
+     
     });
 
     this.init_game();

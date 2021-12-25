@@ -208,7 +208,7 @@ class User {
   //Called each game tick.
   //Send a status message to client.   
   do_tick(){        
-    this.send_status_msg_to_client();
+    // this.send_status_msg_to_client();
   }     
 
   //Remove the user from the room, place in a new room. Send messages.
@@ -399,6 +399,7 @@ class User {
 
     this.props.container_id= next_room_obj.id;
     this.send_exits_msg_to_client();
+    this.send_change_bg_msg_to_client(next_room.props.room_lighting);
     this.look_cmd();
 
     //Send a message to the new room.
@@ -422,6 +423,7 @@ class User {
   //target can be an id, a subtype or a name.
   //returns a string message.   
   look_cmd(target=null){    
+    
     let room= this.world.get_instance(this.props.container_id);   
 
     if (target===null){
@@ -1226,38 +1228,22 @@ class User {
 
   //Send text that will be displayed in the Chat.
   send_chat_msg_to_client(content){
-    let message = {      
-      content: content
+    let message = {
+      type:     "Chat Message",
+      content:  content
     }    
-    this.props.socket.emit('Chat Message', message);
+    this.props.socket.emit('Message From Server', message);
   }
 
-  //Send a status msg to the client.
-  send_status_msg_to_client(){
-
-    let msg = {                          
-      room_lighting: this.world.get_instance(this.props.container_id).props.lighting
-
-    }   
-        
-    // for (const part of this.BODY_PARTS){
-    //   if (this.props[part]!==null){        
-    //     let entity= this.world.get_instance(this.props[part]);
-    //     msg[part]=  entity.get_name();
-    //   }
-    // }
-    
-    // if (this.props.slots.length!==0){
-    //   let html = '';
-    //   for (const id of this.props.slots){
-    //     let entity= this.world.get_instance(id);
-    //     html += `${entity.get_name()} `;
-    //   }
-    //   msg.slots = html;
-    // }
-  
-    this.props.socket.emit("Status Message", msg);
-  }
+  send_change_bg_msg_to_client(background){
+    let msg = {
+      type: "Change Background",
+      content: {
+        background: background
+      }
+    }
+    this.props.socket.emit("Message From Server", msg);
+  }  
 
   //Send a message to all entities in the room (including non-users)
   send_msg_to_room(content){
@@ -1283,8 +1269,11 @@ class User {
   //Get the exits from the current room and send them.
   send_exits_msg_to_client(){
     let room = this.world.get_instance(this.props.container_id);
-    let msg  = room.get_exits_state();
-    this.props.socket.emit('Exits Message', msg);
+    let msg = {
+      type:     "Exits Message",
+      content:  room.get_exits_state()
+    }    
+    this.props.socket.emit('Message From Server', msg);
   }
 
   //An admin can send a message to all users.

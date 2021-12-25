@@ -54,3 +54,9 @@ To that goal, links have two types of information associated with them.
   Guns always make sound.
   Sound travels to immediate adjacent rooms (if exit exists between them) and then another room.
   User gets a message: 'noises from NORTH.' (direction of exit)
+
+
+
+When the game starts, the user sees a login modal.
+The user fills the username. A Login message is sent to the server,
+and a login reply message is recived with the result.

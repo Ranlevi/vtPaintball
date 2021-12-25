@@ -2,17 +2,7 @@ let chat=                       document.getElementById('Chat');
 let disconnect_btn=             document.getElementById('disconnect_btn');
 let freeze_btn=                 document.getElementById('freeze_btn');
 let parent=                     document.getElementById('Parent');
-let input_field=                document.getElementById("input_field");
-let user_edit_modal=            document.getElementById("user_edit_modal");
-let user_edit_submit_btn=       document.getElementById("user_edit_submit_btn");
-let user_edit_cancel_btn=       document.getElementById("user_edit_cancel_btn");
-let user_description_input=     document.getElementById("user_description_input");
-let input_form=                 document.getElementById("input_form");
-let game_edit_modal=            document.getElementById("game_edit_modal");
-let game_edit_modal_form=       document.getElementById("game_edit_modal_form");
-let game_edit_modal_close_btn=  document.getElementById("game_edit_modal_close_btn");
-let game_edit_submit_btn=       document.getElementById("game_edit_submit_btn");
-let game_current_max_score=     document.getElementById("game_current_max_score");
+
 let perm_link_north=            document.getElementById("perm_link_north");
 let perm_link_south=            document.getElementById("perm_link_south");
 let perm_link_east=             document.getElementById("perm_link_east");
@@ -20,11 +10,6 @@ let perm_link_west=             document.getElementById("perm_link_west");
 let perm_link_up=               document.getElementById("perm_link_up");
 let perm_link_down=             document.getElementById("perm_link_down");
 let perm_links_container=       document.getElementById("perm_links_container");
-let comm_modal=                 document.getElementById("comm_modal");
-let comm_moda_label=            document.getElementById("comm_moda_label");
-let comm_modal_input=           document.getElementById("comm_modal_input");
-let comm_modal_submit_btn=      document.getElementById("comm_modal_submit_btn");
-let comm_modal_modal_close_btn= document.getElementById("comm_modal_modal_close_btn");
 
 let modal=              document.getElementById('modal');
 let modal_title=        document.getElementById('modal_title');
@@ -33,51 +18,130 @@ let modal_form=         document.getElementById('modal_form');
 let modal_submit_btn=   document.getElementById("modal_submit_btn");
 let modal_cancel_btn=   document.getElementById("modal_cancel_btn");
 
-
-const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
-
 const CLIENT_VERSION=     0.1;
 
+//Mobile Check on init.
+// const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+
+//Global Variables
 let stop_chat_scroll=         false;
 let currently_edited_item_id= null;
+let socket;
 
-let status_obj = {  
-  room_lighting:  "CadetBlue",
-};
+//Initialize the client.
+init();
 
 //When index.html loads, the Login Modal appears. 
 //Focus on the username field of the Login Modal.
-modal_title.innerHTML = "Login";
+function init(){
+  
+  modal_title.innerHTML = "Login";
 
-modal_content.innerHTML = 
-  `<div class="has-text-white has-text-centered">Welcome to</div>` +
-  `<div class="has-text-danger-dark is-size-2 has-text-centered">Text Tag</div>` +
-  `<div class="has-text-white has-text-centered">A textual, mobile-friendly, multiplayer</div>` +
-  `<div class="has-text-white has-text-centered">Lastertag game!</div>` +
-  `<div class="has-text-white has-text-centered">` +
-  `(<a class="has-text-primary" href="/help" target="_blank">More Info.</a>)` +
-  `</div>` +
-  `<div class="has-text-white is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>` +
-  `<div class="block"></div>` +
-  `<div class="has-text-white has-text-centered">Enter your username:</div>`+
-  `<div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div>`;
+  modal_content.innerHTML = 
+    `<div class="has-text-centered">Welcome to</div>` +
+    `<div class="has-text-danger-dark is-size-2 has-text-centered">Text Tag</div>` +
+    `<div class="has-text-centered">A textual, mobile-friendly, multiplayer</div>` +
+    `<div class="has-text-centered">Lastertag game!</div>` +
+    `<div class="has-text-centered">` +
+    `(<a class="has-text-primary" href="/help" target="_blank">More Info.</a>)` +
+    `</div>` +
+    `<div class="is-italic is-size-7 has-text-centered">(Version: 0.1 Alpha)</div>` +
+    `<div class="block"></div>` +
+    `<div class="has-text-centered">Enter your username:</div>`+
+    `<div id="warning_text" class="has-text-warning has-text-centered is-size-6"></div>`;
 
-modal_form.innerHTML = 
-  `<div class="field user_input">`+
-  ` <div class="control">`+
-  `   <input `+
-  `     id=           "username_input"`+
-  `     autocomplete= "off"`+ 
-  `     class=        "input"`+ 
-  `     type=         "text"`+ 
-  `     placeholder=  "e.g Morpheus, Neo...">`+
-  `  </div>`+
-  `</div>`;
+  modal_form.innerHTML =   
+    ` <div class="control">`+
+    `   <input `+
+    `     id=           "username_input"`+    
+    `     autocomplete= "off"`+ 
+    `     class=        "input"`+ 
+    `     type=         "text"`+ 
+    `     placeholder=  "e.g Morpheus, Neo...">`+
+    `  </div>`;
+  
+  modal.classList.add('is-active');
 
-let username_input = document.getElementById("username_input");
-username_input.focus();
+  let username_input = document.getElementById("username_input");
+  username_input.focus();
+}
 
-let socket;
+function load_comm_modal(){
+  modal_title.innerHTML = "Say";
+
+  modal_form.innerHTML =   
+    `<label class="label" id="comm_moda_label"></label>`+
+    `<div class="control">`+    
+    ` <textarea `+
+    `   id=           "comm_modal_input"`+
+    `   class=        "textarea"`+
+    `   rows=         "3"></textarea>`+    
+    `</div>`;
+  
+  modal.classList.add('is-active');
+
+  let comm_modal_input = document.getElementById("comm_modal_input");
+  comm_modal_input.focus();
+}
+
+function load_edit_modal(){
+
+  modal_title.innerHTML = "Edit User";
+
+  modal_form.innerHTML =   
+    `<label class="label">Enter a new description for your charecter:</label>`+    
+    `<div class="control">`+
+    ` <textarea `+
+    `   id=           "user_description_input"`+
+    `   class=        "textarea"`+
+    `   rows=         "3"></textarea>`+
+    `</div>`;    
+  
+  modal.classList.add('is-active');
+
+  let user_description_input = document.getElementById("user_description_input");
+  user_description_input.focus();
+
+}
+
+function load_join_game_modal(){
+  modal_title.innerHTML = "Join Game";
+
+  modal_form.innerHTML =   
+    `<label class="label">Enter the Game ID:</label>`+    
+    `<div class="control">`+    
+    `   <input `+
+    `     id=           "game_id_input"`+    
+    `     autocomplete= "off"`+ 
+    `     class=        "input"`+ 
+    `     type=         "text"`+ 
+    `     placeholder=  "e.g. gXXXXXXX">`+
+    `  </div>`;   
+  
+  modal.classList.add('is-active');
+
+  let game_id_input = document.getElementById("game_id_input");
+  game_id_input.focus();
+}
+
+function load_edit_game_modal(){
+  modal_title.innerHTML = "Edit Game";
+
+  modal_form.innerHTML =   
+    `<label class="label">Max Score</label>`+
+    `<div class="control">`+
+      `<div class="select">`+
+        `<select name="max_score">`+
+          `<option id="game_current_max_score"></option>`+
+          `<option value="5">5</option>`+
+          `<option value="10">10</option>`+
+          `<option value="10">15</option>`+
+        `</select>`+
+      `</div>`+
+    `</div>`;
+  
+  modal.classList.add('is-active');  
+}
 
 //Create a socket_io instance, and handle incoming messages
 function create_socket(){
@@ -86,125 +150,106 @@ function create_socket(){
   socket_io.on('Message From Server', (msg)=>{
 
     switch(msg.type){
-      case "Login Reply": //continue here
-        break;
-    }
-
-  });
-  }
-
-  
-  //Display the Chat Message as a server_box.
-  //msg: {content: html string}
-  socket_io.on('Chat Message', (msg)=>{  
-    insert_chat_box("box_server", msg.content);
-  });
-
-  socket_io.on('Exits Message', (msg)=>{
-    //{perm_link_north: bol...}
-    for (const [key, value] of Object.entries(msg)){
-      switch(key){
-        case "north":
-          if (value===true){
-            perm_link_north.classList.remove("perm_links_off");
-            perm_link_north.classList.add("perm_links_on")
-          } else {
-            perm_link_north.classList.remove("perm_links_on");
-            perm_link_north.classList.add("perm_links_off")
-          }
-        break;
-
-        case "south":
-          if (value===true){
-            perm_link_south.classList.remove("perm_links_off");
-            perm_link_south.classList.add("perm_links_on")
-          } else {
-            perm_link_south.classList.remove("perm_links_on");
-            perm_link_south.classList.add("perm_links_off")
-          }
-        break;
-
-        case "east":
-          if (value===true){
-            perm_link_east.classList.remove("perm_links_off");
-            perm_link_east.classList.add("perm_links_on")
-          } else {
-            perm_link_east.classList.remove("perm_links_on");
-            perm_link_east.classList.add("perm_links_off")
-          }
-        break;
-
-        case "west":
-          if (value===true){
-            perm_link_west.classList.remove("perm_links_off");
-            perm_link_west.classList.add("perm_links_on")
-          } else {
-            perm_link_west.classList.remove("perm_links_on");
-            perm_link_west.classList.add("perm_links_off")
-          }
-        break;
-
-        case "up":
-          if (value===true){
-            perm_link_up.classList.remove("perm_links_off");
-            perm_link_up.classList.add("perm_links_on")
-          } else {
-            perm_link_up.classList.remove("perm_links_on");
-            perm_link_up.classList.add("perm_links_off")
-          }
-        break;
-
-        case "down":
-          if (value===true){
-            perm_link_down.classList.remove("perm_links_off");
-            perm_link_down.classList.add("perm_links_on")
-          } else {
-            perm_link_down.classList.remove("perm_links_on");
-            perm_link_down.classList.add("perm_links_off")
-          }
+      case "Login Reply":{ 
+        if (msg.content.is_login_successful){
+          modal.classList.remove('is-active');  
+        } else {
+          let warning_text = document.getElementById("warning_text");
+          warning_text.innerHTML = 'A User with this name already exists in the game.';
+        }
         break;
       }
-    }
 
-    
-  })
+      case "Chat Message":{
+        insert_chat_box("box_server", msg.content);
+        break;
+      }
 
-  //Update the status object.
-  socket_io.on('Status Message', (msg)=>{
-    status_obj = msg;
-    chat.style.backgroundColor = status_obj.room_lighting;  
-  });
+      case "Change Background":{
+        chat.style.backgroundColor = msg.content.background;
+        break;
+      }
 
-  //Check if Login was successful. If true - remove modal. Else - display error.
-  //msg: {is_login_successful: bool}
-  socket_io.on('Login Message', (msg)=>{
-    
-    if (msg.is_login_successful){        
-      login_modal.classList.remove('is-active');
-    } else {
-      warning_text.innerHTML = 'A User with this name already exists in the game.';
-    }
-  });
+      case "Exits Message":{
+        //{perm_link_north: bol...}
+        for (const [key, value] of Object.entries(msg.content)){
+          switch(key){
+            case "north":{
+              if (value===true){
+                perm_link_north.classList.remove("perm_links_off");
+                perm_link_north.classList.add("perm_links_on")
+              } else {
+                perm_link_north.classList.remove("perm_links_on");
+                perm_link_north.classList.add("perm_links_off")
+              }
+              break;
+            }      
 
-  //Display the relevant Edit Modal
-  socket_io.on('Edit Message', (msg)=>{
-    //msg = {props: props}
-    
-    if (msg.props.type==="User"){
-      //Display the Edit User fields.
-      
-      user_description_input.innerHTML = msg.props.description;
-      user_edit_modal.classList.add('is-active');
+            case "south":{
+              if (value===true){
+                perm_link_south.classList.remove("perm_links_off");
+                perm_link_south.classList.add("perm_links_on")
+              } else {
+                perm_link_south.classList.remove("perm_links_on");
+                perm_link_south.classList.add("perm_links_off")
+              }
+              break;
+            }
 
-    } else if (msg.props.type==="Game"){
-      game_current_max_score.innerHTML = msg.props.max_score;
-      game_edit_modal.classList.add('is-active');
+            case "east":{
+              if (value===true){
+                perm_link_east.classList.remove("perm_links_off");
+                perm_link_east.classList.add("perm_links_on")
+              } else {
+                perm_link_east.classList.remove("perm_links_on");
+                perm_link_east.classList.add("perm_links_off")
+              }
+              break;
+            }
 
-    } else {
-      console.error(`Socket: Edit Message: unknown type - ${msg.props.type}`);
-    }
+            case "west":{
+              if (value===true){
+                perm_link_west.classList.remove("perm_links_off");
+                perm_link_west.classList.add("perm_links_on")
+              } else {
+                perm_link_west.classList.remove("perm_links_on");
+                perm_link_west.classList.add("perm_links_off")
+              }
+              break;
+            }
 
-  });
+            case "up":{
+              if (value===true){
+                perm_link_up.classList.remove("perm_links_off");
+                perm_link_up.classList.add("perm_links_on")
+              } else {
+                perm_link_up.classList.remove("perm_links_on");
+                perm_link_up.classList.add("perm_links_off")
+              }
+              break;
+            }
+
+            case "down":{
+              if (value===true){
+                perm_link_down.classList.remove("perm_links_off");
+                perm_link_down.classList.add("perm_links_on")
+              } else {
+                perm_link_down.classList.remove("perm_links_on");
+                perm_link_down.classList.add("perm_links_off")
+              }
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+    }  
+   
+  }); 
+  
+
+
 
   //Display a Cmd Box with the recived cmds.
   socket_io.on('Cmds Box Message', (msg)=>{
@@ -219,18 +264,29 @@ function create_socket(){
   socket_io.on('disconnect', ()=>{
     console.log(`Connection Closed By Server.`);
     socket = null;
-    input_form.setAttribute("disabled", true);
+    // input_form.setAttribute("disabled", true);
   });
 
   return socket_io;
 }
 
+//When the user presses enter on the modal form, 
+//Emulate a 'modal_submit_btn' press 
+modal_form.addEventListener('submit', (evt)=>{
+  
+  evt.preventDefault();      
+  let event = new Event('click');
+  modal_submit_btn.dispatchEvent(event);
+  }    
+) 
 
+//Handle form submisstions.
 modal_submit_btn.addEventListener('click', ()=>{
 
   //Check the content of the modal.
   switch(modal_title.innerHTML){
-    case ("Login"):
+
+    case ("Login"):{
       //Create a WS socket, send a login msg.
       //Note: The modal will be closed when a reply msg will arrive.
       socket = create_socket();
@@ -250,47 +306,62 @@ modal_submit_btn.addEventListener('click', ()=>{
 
       msg.content.username = username_input.value;
       socket.emit('Message From Client', msg);
-      break;    
+      break;
+    }
+
+    case "Say":{
+      break;
+    }
+
+    case "Edit User":{
+      let user_description_input = document.getElementById("user_description_input");
+      let msg = {
+        type: "Edit User",
+        content: {
+          description: user_description_input.value
+        }
+      }      
+      socket.emit('Message From Client', msg);      
+      break;
+    }
+
+    case "Join Game":{
+      let game_id_input = document.getElementById("game_id_input");
+      let msg = {
+        type: "Join Game",
+        content: {
+          game_id: game_id_input.value
+        }
+      }
+      console.log(msg);
+      socket.emit('Message From Client', msg); 
+      break;
+    }
+
+    case "Edit Game":{
+      let formData = new FormData(modal_form);
+
+      let msg = {
+        type: "Edit Game",
+        content: {
+          props: {}
+        }        
+      }
+
+      for (const [key, value] of formData.entries()){
+        msg.content.props[key] = value;
+      }
+
+      socket.emit('Message From Client', msg);
+      break;
+    }
   }
-  
 
-})
-
-//Handle Login Modal
-//----------------------
-
-//Init a socket_io connection.
-//Extract data from the Login form, and send it to the server.
-submit_btn.addEventListener('click', ()=>{  
-
-  socket = create_socket();
-
-  let login_msg = {
-    username : null    
-  }
-  
-  let username = username_input.value;  
-  
-  if (username===""){
-    warning_text.innerHTML = "Please enter a Name.";
-  } else {
-    login_msg.username=username;    
-    socket.emit('Login Message', login_msg);    
-  }
-  
-  
-});
-
-//If the user presses Enter on the username input - submit it.
-username_input.addEventListener("keydown", (evt)=> {
-
-  if (evt.key==="Enter"){
-    evt.preventDefault(); 
-
-    //Emulate a 'submit btn' press.
-    let event = new Event('click');
-    submit_btn.dispatchEvent(event);
-  }    
+  //Clear the modal.
+  modal_title.innerHTML = '';
+  modal_content.innerHTML = ``;
+  modal_form.innerHTML =  '';
+  modal.classList.remove('is-active');
 })
 
 //Game Controls
@@ -312,10 +383,15 @@ freeze_btn.addEventListener('click', ()=>{
 })
 
 //Emit a disconnect message, and disable the interface.
-disconnect_btn.addEventListener('click', ()=>{  
-  socket.emit('Disconnect Message', {});
-  socket = null;
-  input_form.setAttribute("disabled", true);
+disconnect_btn.addEventListener('click', ()=>{
+
+  let msg = {
+    type:   "Disconnect",
+    content: null
+  }
+
+  socket.emit('Message From Client', msg);
+  socket = null;  
 });
 
 perm_links_container.addEventListener('click', (evt)=>{
@@ -360,10 +436,14 @@ perm_links_container.addEventListener('click', (evt)=>{
   }
 
   if (clicked_exit!==null){
-    let msg = {    
-      content: clicked_exit
+    let msg = {
+      type:    "Command",
+      content: {
+        id:   null,
+        cmd:  clicked_exit
+      }      
     }
-    socket.emit('User Input Message', msg); 
+    socket.emit('Message From Client', msg); 
   }  
   
 })
@@ -371,7 +451,7 @@ perm_links_container.addEventListener('click', (evt)=>{
 //Chat Interface
 //--------------------
 
-//Handle clicks on hyperlinks, according to the link_type
+//Handle clicks on hyperlinks
 chat.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
 
@@ -380,107 +460,71 @@ chat.addEventListener('click', (evt)=>{
     return;
   }
 
-  if (evt.target.innerHTML==="Copy ID" || evt.target.innerHTML==="Copy"){
-    navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
-      let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
-      insert_chat_box('box_user', messsage);            
-    }, function() {
-      console.error('Copy ID failed.');
-    });
-    return;
-  }
+  switch(evt.target.innerHTML){
 
-  if (evt.target.innerHTML==="Say"){
-    comm_moda_label.innerHTML= "Say to everybody in the room:";
-    comm_modal.classList.add('is-active');
-    comm_modal_input.focus();
-    return;
-  }
-  
-  //Send a message to server.
-  let msg = {
-    id:     evt.target.dataset.id,
-    target: evt.target.innerHTML
-  };
-  
-  socket.emit('Link Clicked', msg);
-});
-
-//Handle user text input in the game i/f.
-input_field.addEventListener('submit', (evt)=> {     
-  evt.preventDefault();    
-  
-  let msg = {    
-    content: input_form.value
-  }
-  socket.emit('User Input Message', msg);   
-  
-  insert_chat_box("box_user", input_form.value);
-
-  input_form.value = '';
-  input_form.blur(); //close soft keyboard.   
-})
-
-//Comm Modal
-//-----------
-comm_modal_modal_close_btn.addEventListener('click', ()=>{
-  comm_modal.classList.remove('is-active');   
-})
-
-comm_modal_submit_btn.addEventListener('click', ()=>{
-  let msg = {
-    type:     "Say",
-    content:  comm_modal_input.value
-  }
-  socket.emit('Message From Client', msg);
-  comm_modal.classList.remove('is-active');   
-  comm_modal_input.value = "";
-})
-
-//User Edit Modal
-//------------------
-
-//Close the modal without submitting to the server.
-user_edit_cancel_btn.addEventListener('click', ()=>{
-  user_edit_modal.classList.remove('is-active');
-})
-
-//Submit changes to the server.
-user_edit_submit_btn.addEventListener('click', ()=>{
-
-  if (user_description_input.value!==''){
-    let msg = {      
-      description: user_description_input.value
+    case "Say":{
+      //Enable the Comm Modal.
+      load_comm_modal();
+      break;
     }
-    socket.emit('User Edit Message', msg);        
-    user_edit_modal.classList.remove('is-active');
-  }  
-})
 
-//Game Edit Modal
-//----------------
+    case "Edit User":{
+      load_edit_modal();
+      break;
+    }
 
-//Close the modal without submitting to the server.
-game_edit_modal_close_btn.addEventListener('click', ()=>{
-  game_edit_modal.classList.remove('is-active');
-})
+    case "Join A Game":{
+      load_join_game_modal();
+      break;
+    }
 
-//Send a Game Edit Message, and close the game edit modal.
-game_edit_submit_btn.addEventListener('click', ()=>{
+    case "Edit Game":{
+      load_edit_game_modal();
+      break;
+    }
 
-  let formData = new FormData(game_edit_modal_form);
+    case "Copy ID":
+    case "Copy":{
+      navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
+        let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
+        insert_chat_box('box_server', messsage);            
+      }, function() {
+        console.error('Copy ID failed.');
+      });
+      break;
+    }
 
-  let msg = {    
-    props: {}
+    case "Look":
+    case "Inventory":
+    case "Create A New Game":{
+      let msg = {
+        type:    "Command",
+        content: {
+          id:   evt.target.dataset.id,
+          cmd:  evt.target.innerHTML
+        }      
+      }
+      socket.emit('Message From Client', msg); 
+      break;
+    }
+
+    default:{
+      //Any other link clicked.
+      let msg = {
+        type: "Name Clicked",
+        content: {
+          id:     evt.target.dataset.id,
+          target: evt.target.innerHTML        
+        }
+      }
+      socket.emit('Message From Client', msg); 
+    }
+            
+
   }
 
-  for (const [key, value] of formData.entries()){
-    msg.props[key] = value;
-  }
-
-  socket.emit('Game Edit Message', msg);        
-  game_edit_modal.classList.remove('is-active');
 });
+
 
 // Aux. Functions
 //-------------------
@@ -513,8 +557,8 @@ function insert_chat_box(type, content){
   }
 
   //On desktop, focus on the input 
-  if (!isMobile){
-    input_form.focus();    
-  }
+  // if (!isMobile){
+  //   input_form.focus();    
+  // }
 
 }
