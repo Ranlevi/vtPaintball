@@ -34,6 +34,8 @@ class Room {
   }
     
   //Inventory Manipulation Methods
+  //-------------------------------
+
   add_entity(entity_id){
     this.props.entities.push(entity_id);
   }
@@ -49,12 +51,13 @@ class Room {
   get_all_items(){    
     return this.props.entities;
   }
+
+  //Misc Methods
+  //--------------------
     
   //Returns an HTML string for the name of the room.
-  get_name(){
-    
-    let html = `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
-    return html;
+  get_name(){    
+    return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;    
   }
 
   //Returns a Look Command message (String)
@@ -118,16 +121,16 @@ class Room {
 
   //Return an array of commands, to be displayed when a user clicks
   //on the room's name.
-  get_cmds_arr(clicking_user_id){
-    let arr = [
-      `<span class="link" data-id="${this.props.id}">Look</span>`,
-      `<span class="link" data-id="${this.props.id}">Copy ID</span>`,
-    ];
+  // get_cmds_arr(clicking_user_id){
+  //   let arr = [
+  //     `<span class="link" data-id="${this.props.id}">Look</span>`,
+  //     `<span class="link" data-id="${this.props.id}">Copy ID</span>`,
+  //   ];
 
-    return arr;
-  }
+  //   return arr;
+  // }
 
-  //Returns an object with the state of exits.
+  //Returns an object with the state of exits (exists===true)
   get_exits_state(){
     let obj = {
       north:  (this.props.exits.north===null? false:true),
@@ -140,6 +143,7 @@ class Room {
     return obj;
   }
 
+  //Action when a user clicks on the room's name.
   name_clicked(clicking_user_id){    
 
     let clicking_user = this.world.get_instance(clicking_user_id);
@@ -196,20 +200,12 @@ class User {
     }      
   }  
 
+  //Game Methods
+  //------------
+
   set_team(team_color){ //String (Blue / Red)
     this.props.team = team_color;
   }
-
-  //Returns string
-  get_id(){
-    return this.props.id;
-  }
-
-  //Called each game tick.
-  //Send a status message to client.   
-  do_tick(){        
-    // this.send_status_msg_to_client();
-  }     
 
   //Remove the user from the room, place in a new room. Send messages.
   spawn_in_room(dest_id){
@@ -221,16 +217,29 @@ class User {
     let dest_room = this.world.get_instance(dest_id);
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
+
     this.send_chat_msg_to_client(`**Poof!**`);
     this.send_exits_msg_to_client();
+    this.send_change_bg_msg_to_client(dest_room.props.background);
     this.look_cmd();
 
     //Send a message to the new room.
     this.send_msg_to_room(`${this.get_name()} appears in the room.`);
   }
 
-  //Aux. Methods.
+  //Misc Methods
   //--------------
+
+  //Returns string
+  get_id(){
+    return this.props.id;
+  }
+
+  //Called each game tick.
+  //Send a status message to client.   
+  do_tick(){        
+    // this.send_status_msg_to_client();
+  }     
   
   //Returns an HTML string for the name of the entity.
   get_name(){    
@@ -249,32 +258,32 @@ class User {
 
   //A user has clicked this user's name. 
   //Retuns an array of available cmds for the cmds_box.
-  get_cmds_arr(clicking_user_id){
+  // get_cmds_arr(clicking_user_id){
 
-    let arr = [];
+  //   let arr = [];
 
-    if (this.props.current_game_id!==null && this.props.id!==clicking_user_id){
-      let game = this.world.get_instance(this.props.current_game_id);
+  //   if (this.props.current_game_id!==null && this.props.id!==clicking_user_id){
+  //     let game = this.world.get_instance(this.props.current_game_id);
 
-      if (game.props.is_started){
-        arr.push(`<span class="link" data-id="${this.props.id}">Shot</span>`);
-      }
-    }
+  //     if (game.props.is_started){
+  //       arr.push(`<span class="link" data-id="${this.props.id}">Shot</span>`);
+  //     }
+  //   }
     
-    arr.push(
-      `<span class="link" data-id="${this.props.id}">Look</span>`
-    );
+  //   arr.push(
+  //     `<span class="link" data-id="${this.props.id}">Look</span>`
+  //   );
 
-    //A user can edit and inventory himself.
-    if (clicking_user_id===this.props.id){
-      arr.push(
-        `<span class="link" data-id="${this.props.id}">Edit</span>`,
-        `<span class="link" data-id="${this.props.id}">Inventory</span>`
-      );
-    }
+  //   //A user can edit and inventory himself.
+  //   if (clicking_user_id===this.props.id){
+  //     arr.push(
+  //       `<span class="link" data-id="${this.props.id}">Edit</span>`,
+  //       `<span class="link" data-id="${this.props.id}">Inventory</span>`
+  //     );
+  //   }
 
-    return arr;
-  }
+  //   return arr;
+  // }
 
   //Return a String message with what other see when they look at the user.
   get_look_string(){    
@@ -317,6 +326,24 @@ class User {
     return inv_arr;
   }  
 
+  //Find the slot the item is in, and remote it.
+  //Note: we assume the item is on the body.
+  remove_item_from_body(item_id){
+
+    //Try the body slots
+    for (const body_part of this.BODY_PARTS){
+      if (this.props[body_part]===item_id){
+        this.props[body_part] = null;
+        return;
+      }
+    }
+
+    //If we're here - the item was not found.
+    //It must be in the slots.
+    let ix = this.props.slots.indexOf(item_id);          
+    this.props.slots.splice(ix,1);
+  }
+
   //Remove the given id from the given location.
   //Note: assumes the item exists in the inventory.
   remove_item(id, location){
@@ -331,9 +358,11 @@ class User {
   //Handle Client Commands.
   //-----------------------------
 
-  move_cmd(direction){
+  move_cmd(dir){
+    
+    let direction = dir.toLowerCase();
 
-    let current_room=   this.world.get_instance(this.props.container_id);
+    let current_room=   this.world.get_instance(this.props.container_id);    
     let next_room_obj=  current_room.props.exits[direction]; //null or {"id": str, "code": str/null}
   
     if (next_room_obj===null){
@@ -422,63 +451,51 @@ class User {
   //search for a target on the user's body or in the room.
   //target can be an id, a subtype or a name.
   //returns a string message.   
-  look_cmd(target=null){    
+  look_cmd(target_id=null){    
     
     let room= this.world.get_instance(this.props.container_id);   
 
-    if (target===null){
+    if (target_id===null){
       //Look at the room the user is in.
       this.send_chat_msg_to_client(room.get_look_string());      
       return;
     }
 
     //Target is not null. Search for it.       
-    let result = Utils.search_for_target(this.world, target, this.props.id);   
+    // let result = Utils.search_for_target(this.world, target, this.props.id);   
     
-    if (result===null){
-      this.send_chat_msg_to_client(`There is no such thing around.`);
-        return;            
-    }
+    // if (result===null){
+    //   this.send_chat_msg_to_client(`There is no such thing around.`);
+    //     return;            
+    // }
 
     //Target was found.
-    let entity = this.world.get_instance(result.id);
+    let entity = this.world.get_instance(target_id);
     this.send_chat_msg_to_client(entity.get_look_string());
   }
 
   //Pick an item from the room, and place it in a slot.
-  get_cmd(target=null){    
-
-    if (target===null){   
-      this.send_chat_msg_to_client(`What do you want to get?`);   
-      return;
-    }
-
-    //Target is not null. Search in the room.
+  get_cmd(target_id){
+    
+    let target=   this.world.get_instance(target_id);
     let room=     this.world.get_instance(this.props.container_id);
-    let result=   Utils.search_for_target(this.world, target, this.props.id);
-
-
-    if (this.BODY_PARTS.includes(result.location)){
+    
+    if (target.props.container_id===this.props.id){
+      //Target is not on body.
       this.send_chat_msg_to_client(`You already have it.`);
       return;
     }
+
+    if (target.props.container_id!==this.props.container_id){
+      //Target is not in the same room as the user
+      this.send_chat_msg_to_client(`It's not in the same room as you you.`);
+      return;
+    }
     
-    if (result===null || result.location!=="in_room"){
-      this.send_chat_msg_to_client(`There's no ${target} in the room with you.`);
-      return;
-    }
-
-    //Target found.
+    //Target found in the same room as the user.
     //Check if gettable
-    let entity = this.world.get_instance(result.id);
-
-    if (entity instanceof Room || entity instanceof User){
-      this.send_chat_msg_to_client(`How do you want to pick THAT up?`);
-      return;
-    }
-
-    //Target is an Item or an NPC    
-    if (!entity.props.is_gettable){
+        
+    if (!target.props.is_gettable){
       this.send_chat_msg_to_client(`You can't pick it up.`);
       return;
     }    
@@ -491,52 +508,55 @@ class User {
 
     //The user can carry the item.
     //Remove it from the room, place it in the player's slots.
-    room.remove_entity(entity.props.id);
-    this.props.slots.push(entity.props.id);    
-    entity.set_container_id(this.props.id);
+    room.remove_entity(target.props.id);
+    this.props.slots.push(target.props.id);    
+    target.set_container_id(this.props.id);
 
     //Notify client and room
     this.send_chat_msg_to_client('You pick it up and place it in your slots.');
-    this.send_msg_to_room(`gets ${entity.get_name()}`);
+    this.send_msg_to_room(`gets ${target.get_name()}`);
   }
 
-  //search for target on body and drop the target to the room.
-  drop_cmd(target=null){    
-
-    if (target===null){      
-      this.send_chat_msg_to_client(`What do you want to drop?`);
-      return;
-    }
-
-    let result=   Utils.search_for_target(this.world, target, this.props.id);
-
-    if (result===null || !(["holding", "head", "torso", "legs", "feet", "slots"].includes(result.location))){
-      //target not found on the user's body.
-      this.send_chat_msg_to_client(`You don't have it on you.`);
-      return;
-    }
-
-    //Target found, remove it from the user's body.
-    this.remove_item(result.id, result.location);
+  //drop the target to the room.
+  //Note: we assume the target is on the user's body.
+  drop_cmd(target_id){     
+    
+    this.remove_item_from_body(target_id);
 
     //Place it in the room.
     let room = this.world.get_instance(this.props.container_id);
-    room.add_entity(result.id);
+    room.add_entity(target_id);
 
-    let entity = this.world.get_instance(result.id);
+    let entity = this.world.get_instance(target_id);
     entity.set_container_id(room.props.id);
 
     //Send messages.
     this.send_chat_msg_to_client('You drop it to the floor.');
-    this.send_msg_to_room(`drops ${entity.get_name}.`);    
+    this.send_msg_to_room(`drops ${entity.get_name()}.`);    
   }
 
   //Search for target on body and room, and hold it.
-  hold_cmd(target=null){    
+  hold_cmd(target_id){    
     
-    if (target===null){
-      this.send_chat_msg_to_client(`What do you want to hold?`);      
-      return;
+    let entity = this.world.get_instance(target_id);
+
+    if (entity.props.container_id!==this.props.id) //continue here.
+
+    if (entity.props.container_id===this.props.id){
+      //Target is on the user's body.
+      if (this.props.holding===target_id){
+        //User is already holding the item.
+        this.send_chat_msg_to_client(`You're already holding it!`);
+        return;  
+      } else {
+        //Remove the item from it's current location and hold it.
+        this.remove_item_from_body(target_id);
+        this.props.holding = target_id;
+      }
+
+    } else if (entity.props.container_id===this.props.container_id){
+      //Target is in the same room as the user
+
     }
 
     let result= Utils.search_for_target(this.world, target, this.props.id);

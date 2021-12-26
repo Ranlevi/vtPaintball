@@ -8,6 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+add Look to permlinks (might be useful)
 invite mechanism?
 add id to game info
 give the game 'charecter'. funny? scary? 
@@ -55,12 +56,14 @@ class Game_Controller {
     this.world=                   new World.World();
     this.io=                      new Server(server);
     this.FIRST_ROOM_ID=           "r0000000";
+
+    this.init_game();
     
     //Handle Socket.IO Connections and messages.
     //-----------------------------------------
 
     this.io.on('connection', (socket) => {
-      console.log('a client connected');
+      console.log('a client connected');      
 
       //Each socket is attached to a single user.
       socket.user_id = null;       
@@ -102,7 +105,7 @@ class Game_Controller {
               socket.user_id = this.create_new_user(socket, msg.content.username);
               reply_msg.content.is_login_successful = true;                    
               socket.emit('Message From Server', reply_msg);         
-
+              
               let user = this.world.get_instance(socket.user_id);
               user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
               user.look_cmd();
@@ -120,7 +123,7 @@ class Game_Controller {
           case "Command":{
             //The user clicked a command link.
             let user = this.world.get_instance(socket.user_id);
-
+            
             switch(msg.content.cmd){
               case "North":
               case "South":
@@ -128,7 +131,7 @@ class Game_Controller {
               case "West":
               case "Up":
               case "Down":{
-                user.move_cmd(msg.content.content);
+                user.move_cmd(msg.content.cmd);
                 break;
               }
 
@@ -145,7 +148,17 @@ class Game_Controller {
               case "Create A New Game":{
                 user.create_cmd();
                 break;
-              }              
+              }  
+              
+              case "Start":{
+                user.start_cmd();
+                break;
+              }
+
+              case "Get":{
+                user.get_cmd(msg.content.id);
+                break;
+              }
             }
             break;
           }
@@ -179,8 +192,6 @@ class Game_Controller {
           }
         }
       });    
-      
-      this.init_game();
     });
   }
 
@@ -265,8 +276,6 @@ class Game_Controller {
   //Create a new user, spawned at spawn room, and associate the socket with it.
   //Returns the ID of the created user (String)
   create_new_user(socket, username){
-
-    console.log(this.world.users);//debug here- why player gone??
     
     let user_props = {
       socket:       socket,
@@ -275,11 +284,11 @@ class Game_Controller {
     }    
     
     let user= new Classes.User(this.world, user_props);    
-    this.world.add_to_world(user);
+    this.world.add_to_world(user);    
 
-    let lobby = this.world.get_instance(this.FIRST_ROOM_ID);
+    let lobby = this.world.get_instance(this.FIRST_ROOM_ID);    
     lobby.add_entity(user.get_id());
-
+    
     return user.get_id();
   }  
 }

@@ -202,7 +202,7 @@ function create_socket(){
       }
 
       case "Exits Message":{
-        //{perm_link_north: bol...}
+        //{perm_link_north: bol...}        
         for (const [key, value] of Object.entries(msg.content)){
           switch(key){
             case "north":{
@@ -562,6 +562,8 @@ chat.addEventListener('click', (evt)=>{
 
     case "Look":
     case "Inventory":
+    case "Start":
+    case "Get":
     case "Create A New Game":{
       let msg = {
         type:    "Command",
