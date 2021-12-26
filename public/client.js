@@ -60,13 +60,15 @@ function init(){
     `     placeholder=  "e.g Morpheus, Neo...">`+
     `  </div>`;
   
+  modal_cancel_btn.setAttribute('disabled', true);
   modal.classList.add('is-active');
 
   let username_input = document.getElementById("username_input");
   username_input.focus();
 }
 
-function load_comm_modal(){
+//Appears when the 'say' command is clicked.
+function load_say_modal(){
   modal_title.innerHTML = "Say";
 
   modal_form.innerHTML =   
@@ -84,6 +86,29 @@ function load_comm_modal(){
   comm_modal_input.focus();
 }
 
+//Appears when the 'tell' command is clicked.
+function load_tell_modal(target_id){
+  modal_title.innerHTML = "Tell";
+
+  modal_form.innerHTML =   
+    `<label class="label">Write You Message Here:</label>`+
+    `<div class="control">`+    
+    ` <textarea `+
+    `   id=           "tell_modal_input"`+
+       `dataset-id=   ${target_id}`+
+    `   class=        "textarea"`+
+    `   rows=         "3"></textarea>`+  
+        
+    `</div>`;
+  
+  modal.classList.add('is-active');
+
+  let tell_modal_input = document.getElementById("tell_modal_input");
+  tell_modal_input.focus();
+
+}
+
+//Appears when the 'edit' (user) command is clicked.
 function load_edit_modal(){
 
   modal_title.innerHTML = "Edit User";
@@ -104,6 +129,7 @@ function load_edit_modal(){
 
 }
 
+//Appears when the 'join game' command is clicked.
 function load_join_game_modal(){
   modal_title.innerHTML = "Join Game";
 
@@ -124,6 +150,7 @@ function load_join_game_modal(){
   game_id_input.focus();
 }
 
+//Appears when the 'edit game' command is clicked.
 function load_edit_game_modal(){
   modal_title.innerHTML = "Edit Game";
 
@@ -144,15 +171,19 @@ function load_edit_game_modal(){
 }
 
 //Create a socket_io instance, and handle incoming messages
+//this happens after a Login Reply (success) is recived.
 function create_socket(){
   let socket_io = io(); 
 
   socket_io.on('Message From Server', (msg)=>{
 
     switch(msg.type){
+
       case "Login Reply":{ 
         if (msg.content.is_login_successful){
-          modal.classList.remove('is-active');  
+          modal.classList.remove('is-active'); 
+          modal_cancel_btn.removeAttribute('disabled');
+
         } else {
           let warning_text = document.getElementById("warning_text");
           warning_text.innerHTML = 'A User with this name already exists in the game.';
@@ -281,7 +312,7 @@ modal_form.addEventListener('submit', (evt)=>{
 ) 
 
 //Handle form submisstions.
-modal_submit_btn.addEventListener('click', ()=>{
+modal_submit_btn.addEventListener('click', (evt)=>{
 
   //Check the content of the modal.
   switch(modal_title.innerHTML){
@@ -310,6 +341,11 @@ modal_submit_btn.addEventListener('click', ()=>{
     }
 
     case "Say":{
+      let msg = {
+        type: "Say",
+        content: comm_modal_input.value
+      }
+      socket.emit('Message From Client', msg);
       break;
     }
 
@@ -355,12 +391,36 @@ modal_submit_btn.addEventListener('click', ()=>{
       socket.emit('Message From Client', msg);
       break;
     }
-  }
 
-  //Clear the modal.
-  modal_title.innerHTML = '';
-  modal_content.innerHTML = ``;
-  modal_form.innerHTML =  '';
+    case "Tell":{
+      let msg = {
+        type: "Tell",
+        content: {
+          target_id: evt.target.dataset.id,
+          message:   tell_modal_input.value
+        }
+      }
+      socket.emit('Message From Client', msg);
+      break;
+    }
+  }
+  
+  //When the Submit btn is pressed, we want the modal
+  //to do away - except for the Login modal, who will go away
+  //only after a successful login message from the server.
+  if (modal_title.innerHTML!=="Login"){
+    //Clear the modal.
+    modal_title.innerHTML = '';
+    modal_content.innerHTML = ``;
+    modal_form.innerHTML =  '';
+    modal.classList.remove('is-active');
+  }
+  
+})
+
+//Close the modal without submission/
+//Note: we don't clear the modal, in case the user clicked 'cancel' by mistake.
+modal_cancel_btn.addEventListener('click', (evt)=>{
   modal.classList.remove('is-active');
 })
 
@@ -394,6 +454,7 @@ disconnect_btn.addEventListener('click', ()=>{
   socket = null;  
 });
 
+//Handle clicks on the Exits Perm Links.
 perm_links_container.addEventListener('click', (evt)=>{
   
   let clicked_exit = null;
@@ -464,7 +525,12 @@ chat.addEventListener('click', (evt)=>{
 
     case "Say":{
       //Enable the Comm Modal.
-      load_comm_modal();
+      load_say_modal();
+      break;
+    }
+
+    case "Tell":{
+      load_tell_modal(evt.target.dataset.id);
       break;
     }
 
@@ -519,8 +585,6 @@ chat.addEventListener('click', (evt)=>{
       }
       socket.emit('Message From Client', msg); 
     }
-            
-
   }
 
 });
@@ -542,10 +606,6 @@ function insert_chat_box(type, content){
 
     case "box_server":
       div.classList.add("box_server");
-      break;
-
-    case "box_user":
-      div.classList.add("box_user");    
       break;
   }
 

@@ -9,11 +9,9 @@ Note: must be https for clipboard to work!
 
 TODO:
 invite mechanism?
-join cmd to insert the join to the input field.
-When only Look is availabe, do it without cmd box.
 add id to game info
+give the game 'charecter'. funny? scary? 
 remove non-active players after a while
-input cmds history/autocomplete
 write help page.
 tests
 logs
@@ -70,20 +68,28 @@ class Game_Controller {
       socket.on('Message From Client', (msg)=>{        
 
         switch(msg.type){
+
           case "Say":{
             user.say_cmd(msg.content);
             break;
           }
 
+          case "Tell":{
+            user.tell_cmd(msg.content.target_id, msg.content.message);
+            break;
+          }
+
           case "Login":{
             //Try to find an active user with the same username.        
-            let user_id = this.world.get_user_id_by_username(msg.content.username);
+            
             let reply_msg = {
               type: "Login Reply",
               content: {
                 is_login_successful: null
               }
-            }          
+            }
+            
+            let user_id = this.world.get_user_id_by_username(msg.content.username);
     
             if (user_id!==null){
               //A user with the same name exists in the game.
@@ -141,7 +147,6 @@ class Game_Controller {
                 break;
               }              
             }
-
             break;
           }
 
@@ -173,71 +178,10 @@ class Game_Controller {
             break;
           }
         }
-      })
-    
-      //Send text inputs for processing.
-      socket.on('User Input Message', (msg)=>{            
-        if (socket.user_id!==null){
-          this.process_user_input(msg.content, socket.user_id);        
-        }        
-      });
-    
-      
-
-      socket.on('Game Edit Message', (msg)=>{        
-        //Note: we assume the user is in a game and owns it, else he
-        //would be able to edit it.
-        let user = this.world.get_instance(socket.user_id);
-        let game = this.world.get_instance(user.props.current_game_id);
-        
-        game.do_edit(msg);
-        user.send_chat_msg_to_client('Done.');
-      })     
-      
-      socket.on('Link Clicked', (msg)=>{
-
-        // let user=   this.world.get_instance(socket.user_id);
-
-        switch(msg.target){
-          case "Look":
-          case "Get":  
-          case "Hold":
-          case "wear":
-          case "Remove":
-          case "Drop":
-          case "Consume":
-          case "Use":          
-          case "Edit":
-          case "Inventory":
-            this.process_user_input(`${msg.target} ${msg.id}`, socket.user_id);
-            break;
-          
-          case "NORTH":
-          case "SOUTH":
-          case "EAST":
-          case "WEST":
-          case "UP":
-          case "DOWN":          
-          case "Create":
-          case "Start":
-          case "Switch Teams":
-          case "Quit To Lobby":          
-            this.process_user_input(msg.target, socket.user_id);
-            break;
-
-          default:
-            //This is a name, not a command.
-            let entity= this.world.get_instance(msg.id);
-            entity.name_clicked(socket.user_id);
-            // let cmds_list= entity.get_cmds_arr(socket.user_id);
-            // user.send_cmds_arr_to_client(cmds_list);         
-
-        }
       });    
-     
+      
+      this.init_game();
     });
-
-    this.init_game();
   }
 
   //Runs when the server is created. 
@@ -317,177 +261,12 @@ class Game_Controller {
       user.do_tick();      
     });
   }
-    
-  //Takes the text recived via the webSockets interface,
-  //and the user_id who sent it. Parses the text, and calls the required 
-  //command method from Use.
-  process_user_input(text, user_id){    
-    
-    if (text==='') return;//Ignore empty messages.
-  
-    //All input text is changed to lower case, and split by
-    //white spaces.
-    let normalized_text=  text.trim().toLowerCase();  
-    let re=               /\s+/g; //search for all white spaces.
-    let input_arr =       normalized_text.split(re);
-    
-    //Assume the first word is always a Command, and everything that
-    //comes after that is a target.
-    let cmd = input_arr[0];
-    let target;
-    if (input_arr.length===1){
-      target= null;
-    } else {
-      target = input_arr.slice(1).join(' ');
-    } 
-    
-    let user = this.world.get_instance(user_id);    
-    
-    switch(cmd){
-      case 'look':
-      case 'l':
-        user.look_cmd(target);
-        break;
-
-      case 'north':
-      case 'n':
-        user.move_cmd('north');
-        break;
-
-      case 'south':
-      case 's':
-        user.move_cmd('south');
-        break;
-
-      case 'east':
-      case 'e':
-        user.move_cmd('east');
-        break;
-      
-      case 'west':
-      case 'w':
-        user.move_cmd('west');
-        break;
-
-      case 'up':
-      case 'u':
-        user.move_cmd('up');
-        break;
-
-      case 'down':
-      case 'd':
-        user.move_cmd('down');
-        break;
-
-      case 'get':
-      case 'g':
-        user.get_cmd(target);
-        break;
-
-      case 'drop':
-      case 'dr':
-        user.drop_cmd(target);
-        break;
-
-      case 'hold':
-      case 'h':
-        user.hold_cmd(target);
-        break;
-
-      case 'wear':
-      case 'we':
-        user.wear_cmd(target);
-        break;
-
-      case "remove":
-      case "r":
-        user.remove_cmd(target);
-        break;      
-
-      case "consume":
-      case "c":      
-        user.consume_cmd(target);      
-        break;
-
-      case "say":
-      case "sa":
-        user.say_cmd(target);
-        break;
-
-      case "emote":
-      case "em":
-        user.emote_cmd(target);
-        break;
-
-      case "tell":
-      case "'":
-      case "t":
-        //Assumes the 2nd word is the username to send a message to.
-        let username = input_arr[1];
-        let content = input_arr.slice(2).join(' ');
-        user.tell_cmd(username, content);
-        break;
-
-      case "create":
-      case "cr":
-        user.create_cmd();
-        break;      
-
-      case "edit":
-      case "ed":
-        user.edit_cmd(target);
-        break;
-
-      case "use":
-        user.use_cmd(target);
-        break;
-
-      case "join":
-      case "j":
-        user.join_cmd(target);
-        break;
-
-      case "shot":
-      case "sh":
-        user.shot_cmd(target);
-        break;
-
-      case "start":
-      case "st":
-        user.start_cmd();
-        break;
-
-      case "switch":
-        user.switch_cmd();
-        break;
-
-      case "quit":
-        user.quit_cmd();
-        break;
-
-      case "adminsay":
-        user.admin_msg_cmd(target);
-        break;
-
-      case "game":
-      case "g":
-        user.game_cmd();
-        break;
-
-      case "inventory":
-      case "inv":
-      case "i":
-        user.inventory_cmd();
-        break;
-
-      default:
-        user.send_chat_msg_to_client(`Unknown command: ${text}`);        
-    }  
-  }  
 
   //Create a new user, spawned at spawn room, and associate the socket with it.
   //Returns the ID of the created user (String)
   create_new_user(socket, username){
+
+    console.log(this.world.users);//debug here- why player gone??
     
     let user_props = {
       socket:       socket,

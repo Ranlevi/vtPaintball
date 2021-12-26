@@ -21,7 +21,7 @@ class Room {
         up:               null,
         down:             null
       },
-      lighting:           "white", //CSS colors 
+      background:         "white", //CSS colors 
       current_game_id:    null, //Or string 
     }
 
@@ -399,7 +399,7 @@ class User {
 
     this.props.container_id= next_room_obj.id;
     this.send_exits_msg_to_client();
-    this.send_change_bg_msg_to_client(next_room.props.room_lighting);
+    this.send_change_bg_msg_to_client(next_room.props.background);
     this.look_cmd();
 
     //Send a message to the new room.
@@ -816,22 +816,20 @@ class User {
   }
 
   //Say something to a specific user.
-  tell_cmd(username, content=null){    
+  tell_cmd(target_id, content=null){    
 
-    if (username===undefined){
+    if (target_id===undefined){
       this.send_chat_msg_to_client(`Who do you want to talk to?`);
       return;
     }
 
-    let user_id = this.world.get_user_id_by_username(username);
+    let user = this.world.get_instance(target_id);    
 
-    if (user_id===null){
+    if (user===undefined){
       this.send_chat_msg_to_client('No User by this name is online.');
       return;
     }
     
-    let user = this.world.get_instance(user_id);
-
     if (content===''){
       this.send_chat_msg_to_client(`What do you want to tell ${user.get_name()}?`);
       return;
@@ -1393,7 +1391,7 @@ class User {
       }
 
       if (clicking_user_id!==this.props.id){
-        availabe_cmds.push(`Tell ${clicking_user.props.name}`);  
+        availabe_cmds.push(`Tell`);  
       }
     }
 

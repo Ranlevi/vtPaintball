@@ -15,8 +15,7 @@
         "up":         null,
         "down":       null
       },
-      "lighting":         "CadetBlue",
-      "owner_id":         "u0000000"      
+      "background":        "CadetBlue"      
     }
   ],
   "item_spawn_rooms": {

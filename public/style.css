@@ -19,23 +19,23 @@ html, body {
   display:          flex;
   flex-direction:   column;
   overflow-y:       scroll;
-  background-color: white;
+  background-color: cadetblue;
   transition:       background-color 1s linear;
 }
 
-#Input {    
+/* #Input {    
   max-height:       10%;
   border-left:      solid;
   border-right:     solid;
   width:            100%;
-}
+} */
 
 #Dashboard {  
   height:           3rem;
   width:            100%;
   border:           solid;
   display:          flex;
-  justify-content:  space-around  
+  justify-content:  space-around;
 }
 
 #dashboard_text {
@@ -53,10 +53,10 @@ html, body {
   padding:          0.5rem;
 }
 
-.box_user {
+/* .box_user {
   align-self:       flex-end;  
   background-color: Aquamarine;
-}
+} */
 
 .box_server {  
   background-color: white;
@@ -80,11 +80,11 @@ html, body {
   margin-right:     auto;
 }
 
-#edit_modal_form {
+/* #edit_modal_form {
   max-width:        90%;
   margin-left:      auto;
   margin-right:     auto; 
-}
+} */
 
 .game_id {
   color:          darkgreen;
