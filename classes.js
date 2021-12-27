@@ -307,6 +307,7 @@ class User {
     return msg;
   }
 
+  
   update_thresholds(){
     //Scan the user's items and update all the thresholds.
     //TDOD: update noise threshold as well (need to add noise mulityplier prop to items)
@@ -1008,9 +1009,7 @@ class User {
    
   }
 
-  //continue here
-
-  //Send a message to all the users in the game - and start it.
+  //Check if the user can start a game - and start it.
   start_cmd(){
 
     //Check if user is in a game.
@@ -1147,6 +1146,14 @@ class User {
     this.props.socket.emit("Message From Server", msg);
   }  
 
+  //Send an array of commands for display in a cmds box.
+  send_cmds_arr_to_client(cmds_arr){
+    let msg = {
+      content: cmds_arr
+    }
+    this.props.socket.emit('Cmds Box Message', msg);
+  }
+
   //Send a message to all entities in the room (including non-users)
   send_msg_to_room(content){
     let room=     this.world.get_instance(this.props.container_id);
@@ -1160,14 +1167,6 @@ class User {
     }
   } 
 
-  //Send an array of commands for display in a cmds box.
-  send_cmds_arr_to_client(cmds_arr){
-    let msg = {
-      content: cmds_arr
-    }
-    this.props.socket.emit('Cmds Box Message', msg);
-  }
-
   //Get the exits from the current room and send them.
   send_exits_msg_to_client(){
     let room = this.world.get_instance(this.props.container_id);
@@ -1176,6 +1175,18 @@ class User {
       content:  room.get_exits_state()
     }    
     this.props.socket.emit('Message From Server', msg);
+  }
+
+  //Send the user details to the client.
+  send_user_details_to_client(){
+    let msg = {
+      type:     "User Details",
+      content:  {
+        description: this.props.description
+      }
+    }    
+    this.props.socket.emit('Message From Server', msg);    
+
   }
 
   //An admin can send a message to all users.
@@ -1277,27 +1288,33 @@ class User {
 
     let clicking_user = this.world.get_instance(clicking_user_id);
 
-    if (clicking_user.props.container_id===this.props.container_id){
+    if (clicking_user_id===this.props.id){
+      //The user clicked his own name.
+      availabe_cmds.push('Look');
+      availabe_cmds.push('Say');
+      availabe_cmds.push('Emote');
+      availabe_cmds.push('Edit User');
+      availabe_cmds.push('Inventory');
 
-      //Shot has to be the 1st cmd.
-      if (clicking_user_id!==this.props.id){
-        availabe_cmds.push('Shot');  
+      if (this.props.current_game_id===null){
+        //user not in a game.
+        availabe_cmds.push('Create A New Game');
+        availabe_cmds.push('Join A Game');
+      } else {
+        //User is in a game
+        availabe_cmds.push('Switch Sides');
+        availabe_cmds.push('Quit Game');
+      }
+
+    } else {
+      //Another user clicked this user's name.
+      if (this.props.current_game_id!==null){
+        //In a game
+        availabe_cmds.push('Shot');        
       }
 
       availabe_cmds.push('Look');
-
-      if (clicking_user_id===this.props.id){
-        availabe_cmds.push('Say');
-        availabe_cmds.push('Emote');
-        availabe_cmds.push('Edit User');
-        availabe_cmds.push('Inventory');
-        availabe_cmds.push('Create A New Game');
-        availabe_cmds.push('Join A Game');
-      }
-
-      if (clicking_user_id!==this.props.id){
-        availabe_cmds.push(`Tell`);  
-      }
+      availabe_cmds.push(`Tell`); 
     }
 
     let cmds_arr = [];
@@ -1369,68 +1386,14 @@ class Item {
               `<p>${this.props.description}</p>`;    
     return msg;
   }
-   
-  //Find the item's container, and remove it from it.
-  do_disintegrate(){
-    //Remove the item from its container, and the world.
-
-    let container = this.world.get_instance(this.props.container_id);
-
-    if (container instanceof User){
-      //Find the location of the item on the user's body.
-      let inv_arr = container.get_all_items();
-      for (const obj of inv_arr){
-        //{id, location}
-        if (this.props.id===obj.id){
-          container.remove_item(obj.id, obj.location);
-          container.get_msg(this.props.id, `${this.props.name} has disintegrated.`);
-          break;
-        }
-      }
-
-    } else if (container instanceof NPC){
-      //Find the location of the item on the NPC's body.
-      let inv_arr = container.get_all_items_on_body();
-      for (const obj of inv_arr){
-        //{id, location}
-        if (this.props.id===obj.id){
-          container.remove_item(obj.id, obj.location);
-          container.get_msg(this.props.id, `${this.props.name} has disintegrated.`);
-          break;
-        }
-      }
-
-    } else if (container instanceof Room){
-      container.remove_entity(this.props.id);      
-      this.send_msg_to_room(`${this.props.name} has disintegrated.`);
-    }
-
-    this.world.remove_from_world(this.props.id);
-  }
-
+  
   //Called every game tick.
   do_tick(){    
 
     //Cooldown
     if (this.cooldown_counter!==0){
       this.cooldown_counter -= 1;
-    };
-
-    //TODO: Expiration mechanism.
-
-    //If the item is on the floor outside of it's holodeck, enable expiration.
-    // let container = this.world.get_instance(this.props.container_id);
-
-    // if ((container instanceof Room) && 
-    //     (container.props.holodeck_id!==this.props.holodeck_id)){
-    //       //Enable expiration
-    //       if (this.props.expiration_limit!==null){
-    //         this.expiration_counter += 1;
-    //         if (this.expiration_counter===this.props.expiration_limit){
-    //           this.do_disintegrate();
-    //         }
-    //       }
-    // }   
+    };  
   }
 
   //Recive a message from an entity.
@@ -1460,96 +1423,6 @@ class Item {
       }
     }    
   } 
-
-  //Returns an array of cmds for the cmds box, depending on the 
-  //clicking user's identity.
-  get_cmds_arr(clicking_user_id){
-    let arr = [];
-    let clicking_user = this.world.get_instance(clicking_user_id);
-
-    if (this.props.container_id===clicking_user.props.container_id ||
-        this.props.container_id===clicking_user_id){
-      //Both item and user are in the same room, or on user's body.
-
-      //Look
-      arr.push(`<span class="link" data-id="${this.props.id}">Look</span>`);
-
-      //Get
-      if (this.props.is_gettable){
-        arr.push(`<span class="link" data-id="${this.props.id}">Get</span>`);
-      }
-    }
-
-    //Hold
-    if (this.props.is_holdable){
-      if (this.props.container_id===clicking_user.props.container_id || 
-          //Item is in the same room as user
-          (this.props.container_id===clicking_user.props.id && clicking_user.props.holding!==this.props.id)
-          //Item is on the user's body but not held
-          ){
-          arr.push(`<span class="link" data-id="${this.props.id}">Hold</span>`);
-        }
-    }
-
-    //Wear
-    if (this.props.wear_slot!==null){
-      //Item can be worn
-      if ((this.props.container_id===clicking_user.props.container_id && 
-          //Item in the same room as user
-          this.props.is_gettable
-          //Item can be picked up
-        ) || (
-          this.props.container_id===clicking_user.props.id && 
-          //Item is on the user's body
-          clicking_user.props[this.props.wear_slot]!==this.props.id
-          //User is not already wearing the item
-        )){
-          arr.push(`<span class="link" data-id="${this.props.id}">Wear</span>`);
-      }
-    }
-
-    //Remove
-    if (clicking_user.props.holding===this.props.id ||
-        //User is holding the item
-        clicking_user.props[this.props.wear_slot]===this.props.id
-        //User is wearing the item
-      ){
-        arr.push(`<span class="link" data-id="${this.props.id}">Remove</span>`);
-      }   
-
-    //Drop
-    if (this.props.container_id===clicking_user.props.id){
-      arr.push(`<span class="link" data-id="${this.props.id}">Drop</span>`);
-    }
-
-    //Consume
-    if (this.props.is_consumable){
-      //Item can be consume
-      if ((this.props.container_id===clicking_user.props.container_id && 
-          //Item in the same room as user
-          this.props.is_gettable
-          //Item can be picked up
-        ) || this.props.container_id===clicking_user.props.id
-            //Item is on the user's body
-        ){
-          arr.push(`<span class="link" data-id="${this.props.id}">Consume</span>`);
-      }
-    }
-
-    //Use
-    if (this.props.action!==null && 
-        //Item can be used
-        (this.props.container_id===clicking_user.props.container_id || 
-         //Item is in the same room as the user
-         this.props.container_id===clicking_user.props.id
-         //Item is on the user's body
-        )
-      ){
-        arr.push(`<span class="link" data-id="${this.props.id}">Use</span>`);
-    }
-
-    return arr;
-  }
 
   //Process a click on the item's name in the client.
   //Note: we show the user the cmds available, but that does 
@@ -1789,21 +1662,7 @@ class NPC {
       }
     }    
   }  
-
-  get_cmds_arr(clicking_user_id){
-    let arr = [];
-    let clicking_user = this.world.get_instance(clicking_user_id);
-
-    if (this.props.container_id===clicking_user.props.container_id){
-      //Both item and user are in the same room.
-      //Look
-      arr.push(
-        `<span class="cmd_box_link" data-element="cmd_box_link" ` + 
-        `data-action="Look" data-id="${this.props.id}" ` + 
-        `data-name="${this.props.name}">Look</span>`      
-      );
-    }
-  }
+  
 }
 
 class Game {
@@ -1838,36 +1697,6 @@ class Game {
   //Returns an HTML string to display in the chat.
   get_name(){
     return `<span class="link" data-id="${this.props.id}">Game</span>`;
-  }
-
-  //Retuns an array of cmds for the cmds_box, depending
-  //on the clicking user's identity.
-  get_cmds_arr(clicking_user_id){
-
-    let arr = [      
-      `Game <span class="link" data-id="${this.props.id}">Info</span>`,
-      `<span class="link" data-id="${this.props.id}">Copy ID</span>`,
-    ];
-
-    //Only the game owner can edit or start the game.
-    if (this.props.owner_id===clicking_user_id){
-      arr.push(
-        `<span class="link" data-id="${this.props.id}">Edit</span>`,
-        `<span class="link" data-id="${this.props.id}">Start</span>`,
-      );
-    }
-    
-    //Check if user can switch teams.
-    if (!this.props.is_started){
-      arr.push(
-        `<span class="link" data-id="${this.props.id}">Switch Teams</span>`);
-    }
-
-    arr.push(
-      `<span class="link" data-id="${this.props.id}">Quit To Lobby</span>`);
-
-    return arr;
-
   }
 
   init_map(){

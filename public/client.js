@@ -95,7 +95,7 @@ function load_tell_modal(target_id){
     `<div class="control">`+    
     ` <textarea `+
     `   id=           "tell_modal_input"`+
-       `dataset-id=   ${target_id}`+
+       `data-id=      ${target_id}`+
     `   class=        "textarea"`+
     `   rows=         "3"></textarea>`+  
         
@@ -130,7 +130,7 @@ function load_emote_modal(){
 }
 
 //Appears when the 'edit' (user) command is clicked.
-function load_edit_modal(){
+function load_edit_modal(user_description){
 
   modal_title.innerHTML = "Edit User";
 
@@ -139,8 +139,8 @@ function load_edit_modal(){
     `<div class="control">`+
     ` <textarea `+
     `   id=           "user_description_input"`+
-    `   class=        "textarea"`+
-    `   rows=         "3"></textarea>`+
+    `   class=        "textarea"`+    
+    `   rows=         "3">${user_description}</textarea>`+
     `</div>`;    
   
   modal.classList.add('is-active');
@@ -202,6 +202,10 @@ function create_socket(){
 
       case "Login Reply":{ 
         if (msg.content.is_login_successful){
+          //Clear the modal.
+          modal_title.innerHTML = '';
+          modal_content.innerHTML = ``;
+          modal_form.innerHTML =  '';    
           modal.classList.remove('is-active'); 
           modal_cancel_btn.removeAttribute('disabled');
 
@@ -293,6 +297,11 @@ function create_socket(){
             }
           }
         }
+        break;
+      }
+      
+      case "User Details":{
+        load_edit_modal(msg.content.description);
         break;
       }
 
@@ -417,16 +426,17 @@ modal_submit_btn.addEventListener('click', (evt)=>{
     }
 
     case "Tell":{
+      let tell_modal_input = document.getElementById("tell_modal_input");
       if (tell_modal_input.value===''){
         insert_chat_box('box_server', 'Message is empty: not sent.');
-      } else {
+      } else {        
         let msg = {
           type: "Tell",
           content: {
-            target_id: evt.target.dataset.id,
+            target_id: tell_modal_input.dataset.id,
             message:   tell_modal_input.value
           }
-        }
+        }         
         socket.emit('Message From Client', msg);
       }      
       break;
@@ -577,7 +587,15 @@ chat.addEventListener('click', (evt)=>{
     }
 
     case "Edit User":{
-      load_edit_modal();
+      //Send a message to the server, asking for the user details.
+      let msg = {
+        type:    "Command",
+        content: {
+          id:   evt.target.dataset.id,
+          cmd:  "Get User Details"
+        }      
+      }
+      socket.emit('Message From Client', msg);       
       break;
     }
 
@@ -611,6 +629,8 @@ chat.addEventListener('click', (evt)=>{
     case "Inventory":
     case "Start":
     case "Get":
+    case "Switch Sides":
+    case "Quit Game":
     case "Create A New Game":{
       let msg = {
         type:    "Command",
@@ -631,7 +651,7 @@ chat.addEventListener('click', (evt)=>{
           id:     evt.target.dataset.id,
           target: evt.target.innerHTML        
         }
-      }
+      }      
       socket.emit('Message From Client', msg); 
     }
   }

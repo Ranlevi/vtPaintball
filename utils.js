@@ -12,7 +12,7 @@ Various utility functions.
 //There is a single ID_Generator instance.
 class ID_Generator {
   constructor(){
-    this.LENGTH=      7; 
+    this.LENGTH=      8; 
     this.characters= 'abcdefghijklmnopqrstuvwxyz0123456789';//lowercase since input is always lowercase.  
   }
   

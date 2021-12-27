@@ -8,6 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+when a player joins a game - tell everyone in it.
 add Look to permlinks (might be useful)
 invite mechanism?
 add id to game info
@@ -68,7 +69,9 @@ class Game_Controller {
       //Each socket is attached to a single user.
       socket.user_id = null;       
 
-      socket.on('Message From Client', (msg)=>{        
+      socket.on('Message From Client', (msg)=>{   
+        
+        let user = this.world.get_instance(socket.user_id);
 
         switch(msg.type){
 
@@ -114,8 +117,7 @@ class Game_Controller {
           }
 
           case "Disconnect":{
-            //Remove the user from the world.
-            let user = this.world.get_instance(socket.user_id);
+            //Remove the user from the world.            
             user.disconnect_from_game();
             break;
           }
@@ -159,11 +161,29 @@ class Game_Controller {
                 user.get_cmd(msg.content.id);
                 break;
               }
+
+              case "Get User Details":{
+                user.send_user_details_to_client();
+                break;
+              }
+
+              case "Switch Sides":{
+                user.switch_cmd();
+                break;
+              }
+
+              case "Quit Game":{
+                user.quit_cmd();
+                break;
+              }
+
             }
             break;
           }
 
           case "Name Clicked":{
+            console.log(msg);//debug game link here
+            console.log(this.world);
             let entity = this.world.get_instance(msg.content.id);
             entity.name_clicked(socket.user_id);
             break;
