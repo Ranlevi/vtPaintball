@@ -190,6 +190,12 @@ class Game_Controller {
             user.send_chat_msg_to_client('Done.');
             break;
           }
+
+          case "Emote":{
+            let user = this.world.get_instance(socket.user_id);
+            user.emote_cmd(msg.content);
+            break;
+          }
         }
       });    
     });

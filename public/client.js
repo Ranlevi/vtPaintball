@@ -108,6 +108,27 @@ function load_tell_modal(target_id){
 
 }
 
+//Apprears when the emote command is clicked.
+function load_emote_modal(){
+  modal_title.innerHTML = "Emote";
+
+  modal_form.innerHTML =   
+    `<label class="label">Write your emote:</label>`+
+    `<div class="control">`+    
+    `   <input `+
+    `     id=           "emote_input"`+    
+    `     autocomplete= "off"`+ 
+    `     class=        "input"`+ 
+    `     type=         "text"`+ 
+    `     placeholder=  "e.g. dances happily.">`+
+    ` </div>`;   
+  
+  modal.classList.add('is-active');
+
+  let emote_input = document.getElementById("emote_input");
+  emote_input.focus();
+}
+
 //Appears when the 'edit' (user) command is clicked.
 function load_edit_modal(){
 
@@ -340,12 +361,16 @@ modal_submit_btn.addEventListener('click', (evt)=>{
       break;
     }
 
-    case "Say":{
-      let msg = {
-        type: "Say",
-        content: comm_modal_input.value
+    case "Say":{      
+      if (comm_modal_input.value===''){
+        insert_chat_box("box_server", 'Message is empty, not sent.');
+      } else {
+        let msg = {
+          type: "Say",
+          content: comm_modal_input.value
+        }
+        socket.emit('Message From Client', msg);
       }
-      socket.emit('Message From Client', msg);
       break;
     }
 
@@ -368,8 +393,7 @@ modal_submit_btn.addEventListener('click', (evt)=>{
         content: {
           game_id: game_id_input.value
         }
-      }
-      console.log(msg);
+      }      
       socket.emit('Message From Client', msg); 
       break;
     }
@@ -393,14 +417,32 @@ modal_submit_btn.addEventListener('click', (evt)=>{
     }
 
     case "Tell":{
-      let msg = {
-        type: "Tell",
-        content: {
-          target_id: evt.target.dataset.id,
-          message:   tell_modal_input.value
+      if (tell_modal_input.value===''){
+        insert_chat_box('box_server', 'Message is empty: not sent.');
+      } else {
+        let msg = {
+          type: "Tell",
+          content: {
+            target_id: evt.target.dataset.id,
+            message:   tell_modal_input.value
+          }
         }
+        socket.emit('Message From Client', msg);
+      }      
+      break;
+    }
+
+    case "Emote":{
+      let emote_input = document.getElementById("emote_input");
+      if (emote_input.value===''){
+        insert_chat_box('box_server', "Emote message is empty, not sent.");
+      } else {
+        let msg = {
+          type:   "Emote",
+          content: emote_input.value
+        }              
+        socket.emit('Message From Client', msg); 
       }
-      socket.emit('Message From Client', msg);
       break;
     }
   }
@@ -557,6 +599,11 @@ chat.addEventListener('click', (evt)=>{
       }, function() {
         console.error('Copy ID failed.');
       });
+      break;
+    }
+
+    case "Emote":{
+      load_emote_modal();
       break;
     }
 
