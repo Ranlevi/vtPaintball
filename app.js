@@ -8,12 +8,10 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-add copy and start to game name click?
-add a link to the game in each room.
-when a player joins a game - tell everyone in it.
-add Look to permlinks (might be useful)
+Game options modal before spawning in create.
+An option for public/private game.
+In the lobby - see public games waiting for players.
 invite mechanism?
-add id to game info
 give the game 'charecter'. funny? scary? 
 remove non-active players after a while
 write help page.
@@ -185,7 +183,7 @@ class Game_Controller {
               }
 
               case "Drop":{
-                user.drop_cmd();
+                user.drop_cmd(msg.content.id);
                 break;
               }
 

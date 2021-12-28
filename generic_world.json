@@ -19,7 +19,9 @@
     }
   ],
   "item_spawn_rooms": {
-    "Welcome Sign": ["r0000000"]
+    "Welcome Sign": ["r0000000"],
+    "Desert Eagle": ["r0000000"],
+    "Iron Man Suit": ["r0000000"]
   }   
 }
 

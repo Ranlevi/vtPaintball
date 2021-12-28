@@ -65,6 +65,13 @@ class Room {
         
     let msg = `${this.get_name()} `;
 
+    //If in game, add the game name.
+    if (this.props.current_game_id!==null){
+      let game = this.world.get_instance(this.props.current_game_id);
+      msg += `(${game.get_name()})`;
+    }
+
+    //Exits
     let exits_html = '';    
     for (const [direction, obj] of Object.entries(this.props.exits)){         
       if (obj!==null){
@@ -97,10 +104,13 @@ class Room {
     }
 
     if (exits_html!==''){
-      exits_html = `[` + exits_html + ' ]';        
+      exits_html = ` [` + exits_html + ' ]';        
     }
 
-    msg += exits_html;              
+    msg += exits_html;   
+    
+    
+
     msg += `<p>${this.props.description}</p>`;
     msg += '<p>In the room: ';
     
@@ -545,7 +555,7 @@ class User {
   //drop the target to the room.
   //Note: we assume the target is on the user's body.
   drop_cmd(target_id){     
-    
+        
     this.remove_item_from_body(target_id);
 
     //Place it in the room.
@@ -594,7 +604,7 @@ class User {
       //Target is on the user's body.
       //Remove the item from it's current location
       this.remove_item_from_body(target_id);
-      this.props.holding = target_id;
+      
     } else if (entity.props.container_id===this.props.container_id){
       //Target is in the same room as the user
       //Remove it from the room.
@@ -603,6 +613,7 @@ class User {
     }
    
     //Set new location of entity.    
+    this.props.holding = target_id;
     entity.set_container_id(this.props.id);
 
     //Update defense & attack multipliers.
@@ -633,13 +644,13 @@ class User {
 
     //Item can be worn.
       
-    if (this.props[this.props.wear_slot]===target_id){
+    if (this.props[entity.props.wear_slot]===target_id){
       this.send_chat_msg_to_client(`You're already wearing it.`);
       return;
     }
 
-    if (this.props[this.props.wear_slot]!==null){
-      this.send_chat_msg_to_client(`You're already wearing something on your ${this.props.wear_slot}. Remove it first.`);
+    if (this.props[entity.props.wear_slot]!==null){
+      this.send_chat_msg_to_client(`You're already wearing something on your ${entity.props.wear_slot}. Remove it first.`);
       return;
     }
 
@@ -655,7 +666,7 @@ class User {
     }
     
     //Wear the item.
-    this.props[this.props.wear_slot] = target_id;
+    this.props[entity.props.wear_slot] = target_id;
 
     //Set new location of entity.    
     entity.set_container_id(this.props.id);
@@ -679,7 +690,7 @@ class User {
     }
 
     //Item is on the user's body.
-
+    
     if (this.props.slots.includes(target_id)){
       this.send_chat_msg_to_client(`It's already in your inventory slots.`);
       return;
@@ -692,13 +703,13 @@ class User {
     }
 
     //Slots are free.
-
-    if (this.props.wear_slot===null){
+    
+    if (entity.props.wear_slot===null){
       //Item must be held. Remove it.
       this.props.holding=null;
-    } else {
+    } else {      
       //Item must be worn. Remove it.
-      this.props[this.props.wear_slot] = null;
+      this.props[entity.props.wear_slot] = null;
     }
 
     //Add it to slots.
@@ -819,11 +830,9 @@ class User {
 
     this.spawn_in_room(this.props.spawn_room_id);
 
-    this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
-    this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
-    
-    this.game_cmd();
-    this.send_chat_msg_to_client(`<span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players. <span class="link">Start</span> the game when you're ready.`);
+    this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
+        
+    this.game_cmd();    
   }
   
   //Game and User can be edited: send an edit message if the user can edit them.
@@ -932,10 +941,8 @@ class User {
 
     this.spawn_in_room(this.props.spawn_room_id);
 
-    this.send_chat_msg_to_client(`You have been teleported to the game arena.`);
-    this.send_chat_msg_to_client(`You are in team ${this.props.team}.`);
-
-    this.look_cmd();
+    this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p>`);    
+    
     this.game_cmd();  
   }
 
@@ -1205,7 +1212,8 @@ class User {
         name:         game.props.name,
         blue_points:  game.props.blue_points,
         red_points:   game.props.red_points,
-        max_score:    game.props.max_score
+        max_score:    game.props.max_score,
+        is_private:   game.props.is_private
       }
     }    
     this.props.socket.emit('Message From Server', msg);
@@ -1312,11 +1320,7 @@ class User {
 
     if (clicking_user_id===this.props.id){
       //The user clicked his own name.
-      availabe_cmds.push('Look');
-      availabe_cmds.push('Say');
-      availabe_cmds.push('Emote');
-      availabe_cmds.push('Edit User');
-      availabe_cmds.push('Inventory');
+      availabe_cmds.push('Edit User');      
 
       if (this.props.current_game_id===null){
         //user not in a game.
@@ -1703,6 +1707,7 @@ class Game {
       blue_points:        0,
       red_points:         0,
       max_score:          5,
+      is_private:         false,
       item_spawn_rooms:   {} // {entity_name: [room_id, room_id]}
     }
 
@@ -1718,7 +1723,7 @@ class Game {
 
   //Returns an HTML string to display in the chat.
   get_name(){
-    return `<span class="link" data-id="${this.props.id}">Game</span>`;
+    return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   init_map(){
@@ -1783,6 +1788,10 @@ class Game {
       obj.team=           "Blue";
     }
 
+    let user = this.world.get_instance(user_id);
+    //Announce to all existing players.
+    this.send_msg_to_all_players(`${user.get_name()} has joined team ${obj.team}`);
+
     return obj;
   }  
 
@@ -1797,10 +1806,12 @@ class Game {
 
     let clicking_user = this.world.get_instance(clicking_user_id);
     availabe_cmds.push('Game Info');
+    availabe_cmds.push('Copy ID');
 
     if (clicking_user_id===this.props.owner_id){
       //The user is the game's owner      
       availabe_cmds.push('Edit Game');
+      availabe_cmds.push('Start');
     }      
 
     let cmds_arr = [];

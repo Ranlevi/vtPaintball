@@ -11,6 +11,12 @@ let perm_link_up=               document.getElementById("perm_link_up");
 let perm_link_down=             document.getElementById("perm_link_down");
 let perm_links_container=       document.getElementById("perm_links_container");
 
+let perm_links_cmds_container=  document.getElementById("perm_links_cmds_container");
+let perm_link_look=             document.getElementById("perm_link_look");
+let perm_link_inventory=        document.getElementById("perm_link_inventory");
+let perm_link_say=              document.getElementById("perm_link_say");
+let perm_link_emote=            document.getElementById("perm_link_emote");
+
 let modal=              document.getElementById('modal');
 let modal_title=        document.getElementById('modal_title');
 let modal_content=      document.getElementById('modal_content');
@@ -175,7 +181,16 @@ function load_join_game_modal(){
 function load_edit_game_modal(game_info){
   modal_title.innerHTML = "Edit Game";
 
-  modal_form.innerHTML =   
+  modal_form.innerHTML =  
+  `<label class="label">Game Name:</label>`+    
+  `<div class="control">`+    
+  `   <input `+
+  `     id=           "game_name_input"`+    
+  `     autocomplete= "off"`+ 
+  `     class=        "input"`+ 
+  `     type=         "text"`+ 
+  `     placeholder=  "e.g. Game Of Thrones">`+
+  `  </div>`+  
     `<label class="label">Max Score</label>`+
     `<div class="control">`+
       `<div class="select">`+
@@ -186,7 +201,7 @@ function load_edit_game_modal(game_info){
           `<option value="15">15</option>`+
         `</select>`+
       `</div>`+
-    `</div>`;
+    `</div>`; //add is private radio btn
   
   modal.classList.add('is-active');  
 }
@@ -574,6 +589,44 @@ perm_links_container.addEventListener('click', (evt)=>{
   }  
   
 })
+
+perm_links_cmds_container.addEventListener('click', (evt)=>{
+  
+  let clicked_cmd = null;
+  switch(evt.target.id){
+    case "perm_link_look":{
+      clicked_cmd = "Look";
+      break;
+    }
+
+    case "perm_link_inventory":{
+      clicked_cmd = "Inventory";
+      break;
+    }
+
+    case "perm_link_say":{
+      load_say_modal();
+      break;
+    }
+
+    case "perm_link_emote":{
+      load_emote_modal();
+      break;
+    }
+  }
+
+  if (clicked_cmd!==null){
+    let msg = {
+      type:    "Command",
+      content: {
+        id:   null,
+        cmd:  clicked_cmd
+      }      
+    }
+    socket.emit('Message From Client', msg); 
+  }
+  
+});
 
 //Chat Interface
 //--------------------
