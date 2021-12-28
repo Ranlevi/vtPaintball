@@ -172,7 +172,7 @@ function load_join_game_modal(){
 }
 
 //Appears when the 'edit game' command is clicked.
-function load_edit_game_modal(){
+function load_edit_game_modal(game_info){
   modal_title.innerHTML = "Edit Game";
 
   modal_form.innerHTML =   
@@ -180,10 +180,10 @@ function load_edit_game_modal(){
     `<div class="control">`+
       `<div class="select">`+
         `<select name="max_score">`+
-          `<option id="game_current_max_score"></option>`+
+          `<option id="game_current_max_score">${game_info.max_score}</option>`+
           `<option value="5">5</option>`+
           `<option value="10">10</option>`+
-          `<option value="10">15</option>`+
+          `<option value="15">15</option>`+
         `</select>`+
       `</div>`+
     `</div>`;
@@ -305,6 +305,20 @@ function create_socket(){
         break;
       }
 
+      case "Game Info":{
+        load_edit_game_modal(msg.content);
+        break;
+      }
+
+      case "Cmds Box":{
+        let list = "";
+        for (const item of msg.content){
+          list += `<li>${item}</li>`;
+        }
+        insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+        break;
+      }
+
     }  
    
   }); 
@@ -312,21 +326,21 @@ function create_socket(){
 
 
 
-  //Display a Cmd Box with the recived cmds.
-  socket_io.on('Cmds Box Message', (msg)=>{
-    let list = "";
-    for (const item of msg.content){
-      list += `<li>${item}</li>`;
-    }
-    insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
-  });
+  // //Display a Cmd Box with the recived cmds.
+  // socket_io.on('Cmds Box Message', (msg)=>{
+  //   let list = "";
+  //   for (const item of msg.content){
+  //     list += `<li>${item}</li>`;
+  //   }
+  //   insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+  // });
 
-  //Display a Disconnect message to the user.
-  socket_io.on('disconnect', ()=>{
-    console.log(`Connection Closed By Server.`);
-    socket = null;
-    // input_form.setAttribute("disabled", true);
-  });
+  // //Display a Disconnect message to the user.
+  // socket_io.on('disconnect', ()=>{
+  //   console.log(`Connection Closed By Server.`);
+  //   socket = null;
+  //   // input_form.setAttribute("disabled", true);
+  // });
 
   return socket_io;
 }
@@ -420,7 +434,7 @@ modal_submit_btn.addEventListener('click', (evt)=>{
       for (const [key, value] of formData.entries()){
         msg.content.props[key] = value;
       }
-
+      
       socket.emit('Message From Client', msg);
       break;
     }
@@ -605,7 +619,15 @@ chat.addEventListener('click', (evt)=>{
     }
 
     case "Edit Game":{
-      load_edit_game_modal();
+      let msg = {
+        type:    "Command",
+        content: {
+          id:   evt.target.dataset.id,
+          cmd:  "Get Game Info"
+        }      
+      }
+      socket.emit('Message From Client', msg);       
+      // load_edit_game_modal();
       break;
     }
 
@@ -629,8 +651,14 @@ chat.addEventListener('click', (evt)=>{
     case "Inventory":
     case "Start":
     case "Get":
+    case "Drop":
+    case "Remove":
+    case "Wear":
+    case "Hold":
+    case "Consume":
     case "Switch Sides":
     case "Quit Game":
+    case "Game Info":
     case "Create A New Game":{
       let msg = {
         type:    "Command",

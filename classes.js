@@ -552,7 +552,7 @@ class User {
     let room = this.world.get_instance(this.props.container_id);
     room.add_entity(target_id);
 
-    let entity = this.world.get_instance(target_id);
+    let entity = this.world.get_instance(target_id);  //Debug here
     entity.set_container_id(room.props.id);
 
     //Send messages.
@@ -1149,9 +1149,10 @@ class User {
   //Send an array of commands for display in a cmds box.
   send_cmds_arr_to_client(cmds_arr){
     let msg = {
+      type:    "Cmds Box",
       content: cmds_arr
     }
-    this.props.socket.emit('Cmds Box Message', msg);
+    this.props.socket.emit('Message From Server', msg);
   }
 
   //Send a message to all entities in the room (including non-users)
@@ -1185,8 +1186,29 @@ class User {
         description: this.props.description
       }
     }    
-    this.props.socket.emit('Message From Server', msg);    
+    this.props.socket.emit('Message From Server', msg);
+  }
 
+  send_game_info_to_client(){
+
+    if (this.props.current_game_id===null){
+      this.send_chat_msg_to_client('You are not in an active game.');
+      return;
+    }
+
+    //User is in a game
+    let game = this.world.get_instance(this.props.current_game_id);
+
+    let msg = {
+      type:     "Game Info",
+      content:  {
+        name:         game.props.name,
+        blue_points:  game.props.blue_points,
+        red_points:   game.props.red_points,
+        max_score:    game.props.max_score
+      }
+    }    
+    this.props.socket.emit('Message From Server', msg);
   }
 
   //An admin can send a message to all users.
@@ -1283,7 +1305,7 @@ class User {
   }
 
   name_clicked(clicking_user_id){
-
+    
     let availabe_cmds = [];
 
     let clicking_user = this.world.get_instance(clicking_user_id);
@@ -1318,11 +1340,11 @@ class User {
     }
 
     let cmds_arr = [];
-      for (const cmd of availabe_cmds){
-        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
-      }
-    
-      clicking_user.send_cmds_arr_to_client(cmds_arr);          
+    for (const cmd of availabe_cmds){
+      cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+    }
+  
+    clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
 }
 
@@ -1768,6 +1790,26 @@ class Game {
     //TBD
   }
 
+  //A user clicked on the game's name. Return a list
+  //of available commands.
+  name_clicked(clicking_user_id){
+    let availabe_cmds = [];
+
+    let clicking_user = this.world.get_instance(clicking_user_id);
+    availabe_cmds.push('Game Info');
+
+    if (clicking_user_id===this.props.owner_id){
+      //The user is the game's owner      
+      availabe_cmds.push('Edit Game');
+    }      
+
+    let cmds_arr = [];
+      for (const cmd of availabe_cmds){
+        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+      }    
+    clicking_user.send_cmds_arr_to_client(cmds_arr);          
+  }
+
   //Calculate score. If max score reached - finish the game.
   do_hit(shooter_id, victim_id){
 
@@ -1913,11 +1955,13 @@ class Game {
   }
 
   //Update edited parameters.
-  do_edit(msg){
-    
-    if (msg.props.max_score!==undefined){
-      this.props.max_score = parseInt(msg.props.max_score, 10);
+  do_edit(msg){    
+    if (msg.content.props.max_score!==undefined){
+      this.props.max_score = parseInt(msg.content.props.max_score, 10);
     }
+
+    let user = this.world.get_instance(this.props.owner_id);
+    user.send_chat_msg_to_client('Done');
   }
 
   //Returns an HTML string for 'Look' or 'Game' commands.

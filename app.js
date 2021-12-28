@@ -8,6 +8,8 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+add copy and start to game name click?
+add a link to the game in each room.
 when a player joins a game - tell everyone in it.
 add Look to permlinks (might be useful)
 invite mechanism?
@@ -162,8 +164,38 @@ class Game_Controller {
                 break;
               }
 
+              case "Hold":{
+                user.hold_cmd(msg.content.id);
+                break;
+              }
+
+              case "Remove":{
+                user.remove_cmd(msg.content.id);
+                break;
+              }
+
+              case "Wear":{
+                user.wear_cmd(msg.content.id);
+                break;
+              }
+
+              case "Consume":{
+                user.consume_cmd(msg.content.id);
+                break;
+              }
+
+              case "Drop":{
+                user.drop_cmd();
+                break;
+              }
+
               case "Get User Details":{
                 user.send_user_details_to_client();
+                break;
+              }
+
+              case "Get Game Info":{
+                user.send_game_info_to_client();
                 break;
               }
 
@@ -177,13 +209,15 @@ class Game_Controller {
                 break;
               }
 
+              case "Game Info":{
+                user.game_cmd();
+              }
+
             }
             break;
           }
 
-          case "Name Clicked":{
-            console.log(msg);//debug game link here
-            console.log(this.world);
+          case "Name Clicked":{               
             let entity = this.world.get_instance(msg.content.id);
             entity.name_clicked(socket.user_id);
             break;
@@ -203,11 +237,9 @@ class Game_Controller {
 
           case "Edit Game":{
             //Note: we assume the user is in a game and owns it, else he
-            //would be able to edit it.
-            let user = this.world.get_instance(socket.user_id);
+            //would be able to edit it.            
             let game = this.world.get_instance(user.props.current_game_id);        
-            game.do_edit(msg);
-            user.send_chat_msg_to_client('Done.');
+            game.do_edit(msg);            
             break;
           }
 
