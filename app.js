@@ -8,10 +8,8 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-In the lobby - see public games waiting for players.
-invite mechanism?
+maybe remove disconnect btn? player can just close the browser tab.
 give the game 'charecter'. funny? scary? 
-remove non-active players after a while
 write help page.
 tests
 logs
@@ -19,6 +17,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
+const TEST_MODE=       true;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -37,11 +36,17 @@ const { Server }= require("socket.io");
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {  
-  res.sendFile(__dirname + '/index.html');
+  
+  if (TEST_MODE){    
+    res.sendFile(__dirname + '/Testing/test_mode.html');  
+  } else {
+    res.sendFile(__dirname + '/index.html');
+  }
+  
 });
 
 app.get('/help', (req, res) => {
-  res.sendFile(__dirname + '/public/help.html');
+  res.sendFile(__dirname + '/public/help.html');    
 });
 
 server.listen(5000, () => {
@@ -216,7 +221,7 @@ class Game_Controller {
 
               case "Join This Game":{
                 user.join_cmd(msg.content.id);
-                break; //test this from btn pressing in lobby
+                break;
               }
 
             }
@@ -255,7 +260,16 @@ class Game_Controller {
             break;
           }
         }
-      });    
+      });  
+      
+      //Handle players who navigate away from the app.
+      socket.on('disconnect', (reason)=>{                
+        if (socket.user_id!==null){
+          let user = this.world.get_instance(socket.user_id);
+          user.disconnect_from_game();
+          console.log(reason);
+        }        
+      })
     });
   }
 

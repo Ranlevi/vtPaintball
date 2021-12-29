@@ -60,3 +60,9 @@ To that goal, links have two types of information associated with them.
 When the game starts, the user sees a login modal.
 The user fills the username. A Login message is sent to the server,
 and a login reply message is recived with the result.
+
+
+Testing
+-------
+assume the server is running normally.
+We design a client that connects and sends commands. 

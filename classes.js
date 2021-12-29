@@ -1454,15 +1454,11 @@ class Item {
       if (this.props.container_id===clicking_user.props.id){
         availabe_cmds.push('Drop');
       }
-
+      
       if (this.props.is_consumable){
         availabe_cmds.push('Consume');
       }
       
-      if (this.props.action!==null){
-        availabe_cmds.push('Consume');
-      }
-
       if (this.props.action!==null){
         availabe_cmds.push("Use");
       }
