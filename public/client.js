@@ -185,10 +185,12 @@ function load_edit_game_modal(game_info){
   `<label class="label">Game Name:</label>`+    
   `<div class="control">`+    
   `   <input `+
+  `     name=         "name"`+
   `     id=           "game_name_input"`+    
   `     autocomplete= "off"`+ 
   `     class=        "input"`+ 
   `     type=         "text"`+ 
+  `     value=        "${game_info.name}"`+
   `     placeholder=  "e.g. Game Of Thrones">`+
   `  </div>`+  
     `<label class="label">Max Score</label>`+
@@ -201,7 +203,12 @@ function load_edit_game_modal(game_info){
           `<option value="15">15</option>`+
         `</select>`+
       `</div>`+
-    `</div>`; //add is private radio btn
+    `</div>`+
+    `<div class="block">`+
+      `<label class="checkbox">`+
+      `<input type="checkbox" name="is_private" ${game_info.is_private? "checked": ""}>`+
+      `Game is Private</label>`+
+    `</div>`;
   
   modal.classList.add('is-active');  
 }
@@ -338,25 +345,6 @@ function create_socket(){
    
   }); 
   
-
-
-
-  // //Display a Cmd Box with the recived cmds.
-  // socket_io.on('Cmds Box Message', (msg)=>{
-  //   let list = "";
-  //   for (const item of msg.content){
-  //     list += `<li>${item}</li>`;
-  //   }
-  //   insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
-  // });
-
-  // //Display a Disconnect message to the user.
-  // socket_io.on('disconnect', ()=>{
-  //   console.log(`Connection Closed By Server.`);
-  //   socket = null;
-  //   // input_form.setAttribute("disabled", true);
-  // });
-
   return socket_io;
 }
 
@@ -670,7 +658,7 @@ chat.addEventListener('click', (evt)=>{
       load_join_game_modal();
       break;
     }
-
+    
     case "Edit Game":{
       let msg = {
         type:    "Command",
@@ -712,6 +700,8 @@ chat.addEventListener('click', (evt)=>{
     case "Switch Sides":
     case "Quit Game":
     case "Game Info":
+    case "Use":
+    case "Join This Game":
     case "Create A New Game":{
       let msg = {
         type:    "Command",

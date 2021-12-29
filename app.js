@@ -8,8 +8,6 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-Game options modal before spawning in create.
-An option for public/private game.
 In the lobby - see public games waiting for players.
 invite mechanism?
 give the game 'charecter'. funny? scary? 
@@ -211,6 +209,16 @@ class Game_Controller {
                 user.game_cmd();
               }
 
+              case "Use":{
+                user.use_cmd(msg.content.id);
+                break;
+              }
+
+              case "Join This Game":{
+                user.join_cmd(msg.content.id);
+                break; //test this from btn pressing in lobby
+              }
+
             }
             break;
           }
@@ -236,7 +244,7 @@ class Game_Controller {
           case "Edit Game":{
             //Note: we assume the user is in a game and owns it, else he
             //would be able to edit it.            
-            let game = this.world.get_instance(user.props.current_game_id);        
+            let game = this.world.get_instance(user.props.current_game_id);             
             game.do_edit(msg);            
             break;
           }

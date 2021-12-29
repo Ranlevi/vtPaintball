@@ -801,7 +801,7 @@ class User {
     this.send_msg_to_room(`${this.get_name()} ${content}`);
   }
 
-  //Create a game, with the user as the owner.
+  //Create a game, with the user as the owner. Open the edit game modal.
   create_cmd(){
 
     if (this.props.current_game_id!==null){
@@ -815,14 +815,14 @@ class User {
 
     let game = new Game(this.world, props);
     this.world.add_to_world(game);
-
-    let obj = game.add_player(this.props.id);
-
-    this.props.spawn_room_id=   obj.spawn_room_id;
-    this.props.team=            obj.team;    
     this.props.current_game_id= game.props.id;
     this.props.owned_game_id =  game.props.id;
 
+     let obj = game.add_player(this.props.id);
+
+    this.props.spawn_room_id=   obj.spawn_room_id;
+    this.props.team=            obj.team;    
+   
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
     //A room exists. Teleport to it.
@@ -832,64 +832,12 @@ class User {
 
     this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
         
-    this.game_cmd();    
+    this.game_cmd();  
+    
+    //Open the edit game modal
+    this.send_game_info_to_client();
   }
   
-  //Game and User can be edited: send an edit message if the user can edit them.
-  // edit_cmd(target=null){
-
-  //   if (target===null){    
-  //     this.send_chat_msg_to_client(`What do you want to edit?`);  
-  //     return;
-  //   }   
-    
-  //   let result = Utils.search_for_target(this.world,target, this.props.id);
-
-  //   if (result===null){
-  //     //Target not found
-  //     this.send_chat_msg_to_client(`There's no ${target} around.`);
-  //     return;      
-  //   }
-    
-  //   //Target exists    
-  //   let entity = this.world.get_instance(result.id);
-
-  //   let props = null;
-  //   if (entity.props.id===this.props.id){
-  //     //The entity is the user: can edit.
-  //     props = {
-  //       type:         "User",
-  //       description:  this.props.description
-  //     }
-
-  //   } else if (entity.props.type==="Game"){
-
-  //     if (entity.props.id===this.props.owned_game_id){
-  //       //The user owns the game.
-  //       props = {
-  //         type:       "Game",
-  //         max_score:  entity.props.max_score
-  //       }
-        
-  //     } else {
-  //       //The user does not own the game.
-  //       this.send_chat_msg_to_client(`You can only edit a game you created.`);
-  //       return;      
-  //     }
-
-  //   } else {
-  //     this.send_chat_msg_to_client(`You can't edit that.`);
-  //     return;      
-  //   }
-        
-  //   //Send the Edit Message    
-
-  //   let msg = {      
-  //     props:  props
-  //   }
-  //   this.props.socket.emit("Edit Message", msg);
-  // }
-
   //Call the item's action.
   use_cmd(target_id){
     //The item's action is called.
@@ -1399,6 +1347,27 @@ class Item {
     if (this.props.action!==null){
 
       switch(this.props.action){
+        case "list games":{          
+          let public_games_ids_arr = this.world.get_public_games();
+
+          let html = "<p>List of publicly available games:</p>";
+
+          if (public_games_ids_arr.length===0){
+            html += "Empty."
+          } else {
+            let list = "";
+            for (const id of public_games_ids_arr){
+              let game = this.world.get_instance(id);
+              list += `<li>${game.get_name()}</li>`;
+            }
+            html += `<ul>${list}</ul>`;
+          }
+
+          let user = this.world.get_instance(user_id);
+          user.send_chat_msg_to_client(html);
+          break;
+        }
+
         default:
           console.error(`User.do_action()-> ${this.props.action} not implemented.`);        
       }
@@ -1492,6 +1461,10 @@ class Item {
       
       if (this.props.action!==null){
         availabe_cmds.push('Consume');
+      }
+
+      if (this.props.action!==null){
+        availabe_cmds.push("Use");
       }
       
     }
@@ -1812,7 +1785,11 @@ class Game {
       //The user is the game's owner      
       availabe_cmds.push('Edit Game');
       availabe_cmds.push('Start');
-    }      
+    }   
+    
+    if (clicking_user.props.current_game_id===null){
+      availabe_cmds.push("Join This Game");      
+    }
 
     let cmds_arr = [];
       for (const cmd of availabe_cmds){
@@ -1966,9 +1943,18 @@ class Game {
   }
 
   //Update edited parameters.
-  do_edit(msg){    
+  do_edit(msg){  
+    
+    this.props.name = msg.content.props.name;
+
     if (msg.content.props.max_score!==undefined){
       this.props.max_score = parseInt(msg.content.props.max_score, 10);
+    }
+
+    if (msg.content.props.is_private==="on"){
+      this.props.is_private = true;
+    } else {
+      this.props.is_private = false;
     }
 
     let user = this.world.get_instance(this.props.owner_id);

@@ -52,6 +52,18 @@ class World {
     //No user with given username was found.
     return null;
   }
+
+  get_public_games(){
+    let public_games_ids_arr = [];
+    for (let inst of this.world.values()){
+      if (inst.props.type==="Game" && 
+          inst.props.is_private===false &&
+          inst.props.is_started===false){
+        public_games_ids_arr.push(inst.props.id);
+      }
+    }
+    return public_games_ids_arr;
+  }
 }
 
 exports.World=          World;

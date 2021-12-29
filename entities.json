@@ -28,5 +28,14 @@
       "subtype":            "Sign",
       "description":        "The sign reads: 'Welcome to Text Tag! This is a multiplayer, text-based game. Once you enter 'create' or 'join <some ID>', you will be teleported to the game area, which is a made of many connected rooms. You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!'"      
     }
+  },
+  "Game List Button":{
+    "props": {
+      "type":               "Item",
+      "name":               "Game List Button",      
+      "subtype":            "Button",
+      "description":        "Pressing this button will display the list of publicly available games.",
+      "action":             "list games"      
+    }
   }
 }
