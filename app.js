@@ -19,7 +19,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       false;
+const TEST_MODE=       true;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -34,16 +34,15 @@ const { Server }= require("socket.io");
  
 //Serving the client to the browser
 //--------------------------------
-//debug here
-// app.use(express.static('public'));
+//Serving static ciles (js, css)
+if (TEST_MODE){
+  app.use(express.static('Testing'));
+} else {
+  app.use(express.static('public'));
+}
 
 app.get('/', (req, res) => {    
-  if (TEST_MODE){    
-    res.sendFile(__dirname + '/Testing/test_mode.html');  
-  } else {
-    res.sendFile(__dirname + '/public/index.html');
-  }
-  
+  res.sendFile(__dirname + '/public/index.html');
 });
 
 app.get('/help', (req, res) => {
