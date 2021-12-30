@@ -525,7 +525,7 @@ disconnect_btn.addEventListener('click', ()=>{
 
 //Handle clicks on the Exits Perm Links.
 perm_links_container.addEventListener('click', (evt)=>{
-  
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
   let clicked_exit = null;
   switch(evt.target.id){
     case "perm_link_north":
@@ -579,7 +579,8 @@ perm_links_container.addEventListener('click', (evt)=>{
 })
 
 perm_links_cmds_container.addEventListener('click', (evt)=>{
-  
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
+
   let clicked_cmd = null;
   switch(evt.target.id){
     case "perm_link_look":{
@@ -701,6 +702,7 @@ chat.addEventListener('click', (evt)=>{
     case "Quit Game":
     case "Game Info":
     case "Use":
+    case "Shot":
     case "Join This Game":
     case "Create A New Game":{
       let msg = {

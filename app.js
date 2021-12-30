@@ -8,6 +8,8 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+boxes width on mobile
+every time an ite spawns - announce
 maybe remove disconnect btn? player can just close the browser tab.
 give the game 'charecter'. funny? scary? 
 write help page.
@@ -17,7 +19,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       true;
+const TEST_MODE=       false;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -32,15 +34,14 @@ const { Server }= require("socket.io");
  
 //Serving the client to the browser
 //--------------------------------
+//debug here
+// app.use(express.static('public'));
 
-app.use(express.static('public'));
-
-app.get('/', (req, res) => {  
-  
+app.get('/', (req, res) => {    
   if (TEST_MODE){    
     res.sendFile(__dirname + '/Testing/test_mode.html');  
   } else {
-    res.sendFile(__dirname + '/index.html');
+    res.sendFile(__dirname + '/public/index.html');
   }
   
 });
@@ -221,6 +222,11 @@ class Game_Controller {
 
               case "Join This Game":{
                 user.join_cmd(msg.content.id);
+                break;
+              }
+
+              case "Shot":{
+                user.shot_cmd(msg.content.id);
                 break;
               }
 

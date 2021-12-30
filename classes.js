@@ -455,7 +455,7 @@ class User {
 
     //Send messages. 
     this.send_chat_msg_to_client(`You travel ${direction}.`);
-    this.send_msg_to_room(`travels ${direction}.`);
+    this.send_msg_to_room(`${this.get_name()} travels ${direction}.`);
 
     //Remove the player from the current room, add it to the next one.    
     current_room.remove_entity(this.props.id);    
@@ -467,7 +467,7 @@ class User {
     this.look_cmd();
 
     //Send a message to the new room.
-    this.send_msg_to_room(`enters from ${Utils.get_opposite_direction(direction)}.`);
+    this.send_msg_to_room(`${this.get_name()} enters from ${Utils.get_opposite_direction(direction)}.`);
 
     //Check if the user made noise when entering the new room.
     //Computation of Noise Chance:
@@ -916,7 +916,7 @@ class User {
     }
 
     //Target is a user.
-    if (entity.props.team===this.props.team){
+    if (target.props.team===this.props.team){
       this.send_chat_msg_to_client(`You can't shot your team mates.`);
       return; 
     }
@@ -941,7 +941,7 @@ class User {
     //Computation of Hit Chance:
     //Attack & Defense mulipliers ranges: [0,9]
     let calculated_multiplier = 
-      this.props.attack_multiplier - entity.props.defense_multiplier;
+      this.props.attack_multiplier - target.props.defense_multiplier;
       //Range: [-9, 9]
 
     let normalized_hit_threshold = (calculated_multiplier+10)/20;
@@ -950,16 +950,16 @@ class User {
     let num = Math.random();    
     if (num<=normalized_hit_threshold){
       //Hit
-      this.send_chat_msg_to_client(`You hit ${entity.get_name()}!`);
-      entity.send_chat_msg_to_client(`${this.get_name()} hits you!`);
+      this.send_chat_msg_to_client(`You hit ${target.get_name()}!`);
+      target.send_chat_msg_to_client(`${this.get_name()} hits you!`);
 
       let game = this.world.get_instance(this.props.current_game_id);
-      game.do_hit(this.props.id, entity.props.id);
+      game.do_hit(this.props.id, target.props.id);
 
     } else {
       //Miss
       this.send_chat_msg_to_client('You miss!');
-      entity.send_chat_msg_to_client(`${this.get_name()} misses you!`);
+      target.send_chat_msg_to_client(`${this.get_name()} misses you!`);
     }
    
   }
@@ -1198,8 +1198,13 @@ class User {
     
     //Remove the user from his room.
     let room = this.world.get_instance(this.props.container_id);
-    room.remove_entity(this.props.id);
 
+    //If the game the player was in was destroyed, it's possible
+    //that the room does not exist.
+    if (room!==undefined){
+      room.remove_entity(this.props.id);  
+    };
+    
     this.send_chat_msg_to_client(`Disconnected! To re-enter, refresh the page. Bye Bye!`);
 
     this.world.remove_from_world(this.props.id); 
