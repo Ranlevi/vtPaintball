@@ -108,13 +108,11 @@ class Room {
     }
 
     msg += exits_html;   
-    
-    
 
     msg += `<p>${this.props.description}</p>`;
     msg += '<p>In the room: ';
     
-    for (const entity_id of this.props.entities){
+    for (const entity_id of this.props.entities){            
       let entity = this.world.get_instance(entity_id);      
       msg += `${entity.get_name()} `;
     }  
@@ -1804,6 +1802,25 @@ class Game {
 
     let shooter = this.world.get_instance(shooter_id);
     let victim  = this.world.get_instance(victim_id);    
+
+    //Remove all things worn and in slots.
+    for (const body_part of victim.BODY_PARTS){
+      if (victim.props[body_part]!==null){
+        let item = this.world.get_instance(victim.props[body_part]);
+        //Respawn the item in a room.
+        let spawn_rooms_arr= this.props.item_spawn_rooms[item.props.name];          
+        let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
+
+        item.props.container_id = spawn_room_id;
+
+        let spawn_room = this.world.get_instance(spawn_room_id);
+        spawn_room.add_entity(item.props.id);
+
+        victim.remove_item_from_body(item.props.id);
+      }
+    }      
+
+    victim.spawn_in_room(victim.props.spawn_room_id);  
     
     if (shooter.props.team==="Blue"){
       this.props.blue_points += 1;        
@@ -1820,34 +1837,14 @@ class Game {
     } else if (this.props.red_points===this.props.max_score){
       this.send_msg_to_all_players(`RED TEAM WINS!`);
       this.end_game();
-    } else {
-      //Remove all things worn and in slots.
-
-      for (const body_part of victim.BODY_PARTS){
-        if (victim.props[body_part]!==null){
-          let item = this.world.get_instance(victim.props[body_part]);
-          //Respawn the item in a room.
-          let spawn_rooms_arr= this.item_spawn_rooms[item.props.name];
-          let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
-
-          item.props.container_id = spawn_room_id;
-
-          let spawn_room = this.world.get_instance(spawn_room_id);
-          spawn_room.add_entity();
-        }
-      }      
-
-
-      victim.spawn_in_room(victim.props.spawn_room_id);
-    }
+    }       
   }
 
   //Respawn all players in their spawn rooms.
   //Reset the game and start it.
   start_game(){
 
-    for (const id of this.props.entities){
-
+    for (const id of this.props.entities){      
       let entity = this.world.get_instance(id);
 
       if (entity.props.type==="User"){

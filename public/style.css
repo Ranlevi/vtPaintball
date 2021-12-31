@@ -46,10 +46,12 @@ html, body {
   padding:          0.5rem;
 }
 
-/* .box_user {
-  align-self:       flex-end;  
-  background-color: Aquamarine;
-} */
+.link {
+  color:          blue;
+  text-decoration:  underline;
+  cursor:           pointer;
+  display:          inline-block;
+}
 
 .box_server {  
   background-color: white;
@@ -92,12 +94,6 @@ html, body {
   font-weight:      600;
 }
 
-.link {
-  color:          blue;
-  text-decoration:  underline;
-  cursor:           pointer;
-  display:          inline-block;
-}
 
 .perm_links_container {
   height:           fit-content;

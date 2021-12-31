@@ -13,7 +13,7 @@
   "Iron Man Suit": {    
     "props": {
       "type":               "Item",
-      "name":               "Iron Man Shirt",      
+      "name":               "Iron Man Suit",      
       "subtype":            "Shirt",
       "description":        "A metalic, shining, power suit. Defense Rating: 5",                          
       "is_gettable":        true,
