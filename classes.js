@@ -494,14 +494,6 @@ class User {
       return;
     }
 
-    //Target is not null. Search for it.       
-    // let result = Utils.search_for_target(this.world, target, this.props.id);   
-    
-    // if (result===null){
-    //   this.send_chat_msg_to_client(`There is no such thing around.`);
-    //     return;            
-    // }
-
     //Target was found.
     let entity = this.world.get_instance(target_id);
     this.send_chat_msg_to_client(entity.get_look_string());
@@ -1271,6 +1263,7 @@ class User {
 
     if (clicking_user_id===this.props.id){
       //The user clicked his own name.
+      availabe_cmds.push('User Info');
       availabe_cmds.push('Edit User');      
 
       if (this.props.current_game_id===null){

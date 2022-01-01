@@ -668,8 +668,7 @@ chat.addEventListener('click', (evt)=>{
           cmd:  "Get Game Info"
         }      
       }
-      socket.emit('Message From Client', msg);       
-      // load_edit_game_modal();
+      socket.emit('Message From Client', msg);             
       break;
     }
 
@@ -701,6 +700,7 @@ chat.addEventListener('click', (evt)=>{
     case "Switch Sides":
     case "Quit Game":
     case "Game Info":
+    case "User Info":
     case "Use":
     case "Shot":
     case "Join This Game":

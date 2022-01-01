@@ -8,6 +8,11 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+messages from server container data - presentaion is on the client.
+change links to buttons?
+bug: blue killed holding gun - gun not spwaned.
+different colors and fonts for items
+sounds.
 look user self
 game info for those in the lobby.
 shot appears before start.
@@ -232,6 +237,11 @@ class Game_Controller {
 
               case "Shot":{
                 user.shot_cmd(msg.content.id);
+                break;
+              }
+
+              case "User Info":{
+                user.look_cmd(msg.content.id);
                 break;
               }
 
