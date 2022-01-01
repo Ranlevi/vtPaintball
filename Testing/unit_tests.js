@@ -2,10 +2,16 @@ let tests_results_div = document.getElementById("tests_results");
 
 let state_obj = {
   test_user_1: {
+    name:                   "Test User 1",
+    id:                     null,
     login_reply_successful: null,
+    recieved_msgs:          []
   },
   test_user_2: {
+    name:                   "Test User 2",
+    id:                     null,
     login_reply_successful: null,
+    recieved_msgs:          []
   },
 }
 
@@ -13,7 +19,7 @@ function create_socket(user){
   let socket_io = io(); 
 
   socket_io.on('Message From Server', (msg)=>{
-
+    
     switch(msg.type){
 
       case "Login Reply":{ 
@@ -25,8 +31,9 @@ function create_socket(user){
         break;
       }
 
+      case "Cmds Box":
       case "Chat Message":{
-        
+        state_obj[user].recieved_msgs.push(msg.content);
       }
     }  
    
@@ -39,14 +46,17 @@ function sleep(ms){
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function htmlToTemplate(html){
+  let template = document.createElement('template');
+  template.innerHTML = html.trim();
+  return template.content;
+}
+
 async function run_test(){
 
   let socket_test_user1 = create_socket("test_user_1"); 
   let socket_test_user2 = create_socket("test_user_2"); 
-
-  let test_user1_id = null;
-  let test_user2_id = null;
-
+  
   //Setup 1:
   //Action: Send a nominal login message. 
   //Expect: successful login.
@@ -63,7 +73,8 @@ async function run_test(){
     socket_test_user1.emit('Message From Client', msg);
   
     await sleep(1000);
-  
+
+    //Check if login was successful  
     if (state_obj["test_user_1"].login_reply_successful){
       html += "Pass.";
     } else {
@@ -72,6 +83,12 @@ async function run_test(){
     let div = document.createElement("div");
     div.innerHTML = html;
     tests_results_div.append(div);
+
+    //Get the id of Test User 1
+    //Note: .children gets only element nodes, which is what we need.
+    let welcome_msg=          state_obj.test_user_1.recieved_msgs[0];
+    let template=             htmlToTemplate(welcome_msg);
+    state_obj.test_user_1.id= template.children[0].dataset.id;     
   }
   await setup_test_user_1(socket_test_user1);
 
@@ -126,8 +143,13 @@ async function run_test(){
     let div = document.createElement("div");
     div.innerHTML = html;
     tests_results_div.append(div);
+
+    //Get the id of Test User 2    
+    let welcome_msg=          state_obj.test_user_2.recieved_msgs[0];
+    let template=             htmlToTemplate(welcome_msg);
+    state_obj.test_user_2.id= template.children[0].dataset.id;    
   }
-  await setup_test_user_2(socket_test_user2);  
+  await setup_test_user_2(socket_test_user2);    
 
   //Test 2
   //Action: Test User 1 Clicking his own name
@@ -136,24 +158,68 @@ async function run_test(){
     let html = "Test 2: ";  
 
     let msg = {
-      type:         "Command",
+      type:         "Name Clicked",
       content: {
-        id:   evt.target.dataset.id,
-        cmd:  evt.target.innerHTML
+        id:   state_obj.test_user_1.id,
+        cmd:  state_obj.test_user_1.name
       }
     }
-    socket_test_user2.emit('Message From Client', msg);
+    socket_test_user1.emit('Message From Client', msg);
 
     await sleep(1000);
 
-    if (state_obj["test_user_2"].login_reply_successful){
-      html += "Fail.";
-    } else {
-      html += "Pass.";
+    //Get the CMD Box message. 
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[2];
+    
+    let test_passed = true;
+    let error_msg   = "";
+
+    //Check if User Info exists
+    let str=      rcvd_msg[0];
+    let template= htmlToTemplate(str);
+
+    if (template.children[0].innerHTML!="User Info"){
+      test_passed = false;
+      error_msg = "User Info Missing";
     }
+
+    //Check Edit User exists
+    str=      rcvd_msg[1];
+    template= htmlToTemplate(str);
+
+    if (template.children[0].innerHTML!="Edit User"){
+      test_passed = false;
+      error_msg = "Edit User Missing";
+    }
+
+    //Check Create A New Game exists
+    str=      rcvd_msg[2];
+    template= htmlToTemplate(str);
+
+    if (template.children[0].innerHTML!="Create A New Game"){
+      test_passed = false;
+      error_msg = "Create A New Game Missing";
+    }    
+
+    //Check Join A Game exists
+    str=      rcvd_msg[3];
+    template= htmlToTemplate(str);
+
+    if (template.children[0].innerHTML!="Join A Game"){
+      test_passed = false;
+      error_msg = "Join A Game Missing";
+    }
+
+    if (test_passed){
+      html += "Passed.";
+    } else {
+      html += `Failed: ${error_msg}`;
+    }
+
     let div = document.createElement("div");
-    div.innerHTML = html;
+    div.innerHTML = html
     tests_results_div.append(div);
+    
   }
   await test_2(socket_test_user1);
 
