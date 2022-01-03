@@ -30,7 +30,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       true;
+const TEST_MODE=       false;
 
 const fs=         require('fs');
 const Classes=    require('./classes');

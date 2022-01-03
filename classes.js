@@ -226,7 +226,7 @@ class User {
     dest_room.add_entity(this.props.id);
     this.props.container_id = dest_room.props.id;
 
-    this.send_chat_msg_to_client(`**Poof!**`);
+    this.send_chat_msg_to_client(`**You were teleported to a new room.**`);
     this.send_exits_msg_to_client();
     this.send_change_bg_msg_to_client(dest_room.props.background);
     this.look_cmd();
@@ -805,10 +805,14 @@ class User {
 
     let game = new Game(this.world, props);
     this.world.add_to_world(game);
+
+    this.send_msg_to_room(`${this.get_name()} teleports to a new game.`);
+    this.spawn_in_room(this.props.spawn_room_id);
+
     this.props.current_game_id= game.props.id;
     this.props.owned_game_id =  game.props.id;
 
-     let obj = game.add_player(this.props.id);
+    let obj = game.add_player(this.props.id);
 
     this.props.spawn_room_id=   obj.spawn_room_id;
     this.props.team=            obj.team;    
@@ -816,10 +820,7 @@ class User {
     //Remove the user from the current room. 
     //Add him to the spwan room of the game.
     //A room exists. Teleport to it.
-    this.send_msg_to_room(`${this.get_name()} teleports to a new game.`);
-
-    this.spawn_in_room(this.props.spawn_room_id);
-
+    
     this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
         
     this.game_cmd();  
@@ -1715,6 +1716,23 @@ class Game {
       console.error(`classes.game.init_map -> pacman.json does not exist.`);
     }
 
+    //Spawn items    
+    for (const [item_name, spawn_room_arr] of Object.entries(this.props.item_spawn_rooms)){
+      //Spawn all the items in all their rooms.
+      for (const room_id of spawn_room_arr){        
+        let props = this.world.entities_db[item_name].props;
+        let item = new Item(this.world, props);
+        item.props.container_id=  room_id;       
+
+        let room = this.world.get_instance(room_id);
+        room.add_entity(item.props.id);
+        
+        item.props.current_game_id=  this.props.id;
+        this.props.entities.push(item.props.id);
+        this.world.add_to_world(item);
+      }      
+    }
+
   }
 
   //Join a team according to balance.
@@ -1865,7 +1883,7 @@ class Game {
       //Spawn all the items in all their rooms.
       for (const room_id of spawn_room_arr){        
         let props = this.world.entities_db[item_name].props;
-        let item = new Item(this.world, props);
+        let item = new Item(this.world, props);        
         item.props.container_id=  room_id;       
 
         let room = this.world.get_instance(room_id);
@@ -1875,7 +1893,7 @@ class Game {
         this.props.entities.push(item.props.id);
         this.world.add_to_world(item);
       }      
-    }    
+    }
 
     this.props.is_started = true;
     this.props.blue_points = 0;
@@ -1889,8 +1907,8 @@ class Game {
   }
 
   send_msg_to_all_players(msg){
-    for (const entity_id of this.props.entities){
-      let entity = this.world.get_instance(entity_id);
+    for (const entity_id of this.props.entities){      
+      let entity = this.world.get_instance(entity_id);     
       if (entity.props.type==="User"){
         entity.send_chat_msg_to_client(msg);
       }
