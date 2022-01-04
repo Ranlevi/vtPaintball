@@ -8,6 +8,10 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+remove door locks mechanism
+remove getters and setters, just have useful methods.
+
+
 messages from server container data - presentaion is on the client.
 change links to buttons?
 bug: blue killed holding gun - gun not spwaned.
@@ -136,116 +140,107 @@ class Game_Controller {
             break;
           }
 
-          case "Command":{
-            //The user clicked a command link.
-            let user = this.world.get_instance(socket.user_id);
-            
-            switch(msg.content.cmd){
-              case "North":
-              case "South":
-              case "East":
-              case "West":
-              case "Up":
-              case "Down":{
-                user.move_cmd(msg.content.cmd);
-                break;
-              }
+          case "North":
+          case "South":
+          case "East":
+          case "West":
+          case "Up":
+          case "Down":{
+            user.move_cmd(msg.type);
+            break;
+          }
 
-              case "Look":{
-                user.look_cmd(msg.content.id);                
-                break;
-              }
+          case "Look":{
+            user.look_cmd(msg.content.id);                
+            break;
+          }
 
-              case "Inventory":{
-                user.inventory_cmd();
-                break;
-              }
+          case "Inventory":{
+            user.inventory_cmd();
+            break;
+          }
 
-              case "Create A New Game":{
-                user.create_cmd();
-                break;
-              }  
-              
-              case "Start":{
-                user.start_cmd();
-                break;
-              }
+          case "Create A New Game":{
+            user.create_cmd();
+            break;
+          }  
+          
+          case "Start":{
+            user.start_cmd();
+            break;
+          }
 
-              case "Get":{
-                user.get_cmd(msg.content.id);
-                break;
-              }
+          case "Get":{
+            user.get_cmd(msg.content.id);
+            break;
+          }
 
-              case "Hold":{
-                user.hold_cmd(msg.content.id);
-                break;
-              }
+          case "Hold":{
+            user.hold_cmd(msg.content.id);
+            break;
+          }
 
-              case "Remove":{
-                user.remove_cmd(msg.content.id);
-                break;
-              }
+          case "Remove":{
+            user.remove_cmd(msg.content.id);
+            break;
+          }
 
-              case "Wear":{
-                user.wear_cmd(msg.content.id);
-                break;
-              }
+          case "Wear":{
+            user.wear_cmd(msg.content.id);
+            break;
+          }
 
-              case "Consume":{
-                user.consume_cmd(msg.content.id);
-                break;
-              }
+          case "Consume":{
+            user.consume_cmd(msg.content.id);
+            break;
+          }
 
-              case "Drop":{
-                user.drop_cmd(msg.content.id);
-                break;
-              }
+          case "Drop":{
+            user.drop_cmd(msg.content.id);
+            break;
+          }
 
-              case "Get User Details":{
-                user.send_user_details_to_client();
-                break;
-              }
+          case "Get User Details":{
+            user.send_user_details_to_client();
+            break;
+          }
 
-              case "Get Game Info":{
-                user.send_game_info_to_client();
-                break;
-              }
+          case "Get Game Info":{
+            user.send_game_info_to_client();
+            break;
+          }
 
-              case "Switch Sides":{
-                user.switch_cmd();
-                break;
-              }
+          case "Switch Sides":{
+            user.switch_cmd();
+            break;
+          }
 
-              case "Quit Game":{
-                user.quit_cmd();
-                break;
-              }
+          case "Quit Game":{
+            user.quit_cmd();
+            break;
+          }
 
-              case "Game Info":{
-                user.game_cmd();
-              }
+          case "Game Info":{
+            user.game_cmd();
+          }
 
-              case "Use":{
-                user.use_cmd(msg.content.id);
-                break;
-              }
+          case "Use":{
+            user.use_cmd(msg.content.id);
+            break;
+          }
 
-              case "Join This Game":{
-                user.join_cmd(msg.content.id);
-                break;
-              }
+          case "Join This Game":{
+            user.join_cmd(msg.content.id);
+            break;
+          }
 
-              case "Shot":{
-                user.shot_cmd(msg.content.id);
-                break;
-              }
+          case "Shot":{
+            user.shot_cmd(msg.content.id);
+            break;
+          }
 
-              case "User Info":{
-                user.look_cmd(msg.content.id);
-                break;
-              }
-
-            }
+          case "User Info":{
+            user.look_cmd(msg.content.id);
             break;
           }
 
@@ -311,8 +306,7 @@ class Game_Controller {
       let parsed_info = JSON.parse(fs.readFileSync(path));  
       
       for (const props of parsed_info.rooms){
-        let room = new Classes.Room(this.world, props);        
-        this.world.add_to_world(room);    
+        new Classes.Room(this.world, props);        
       }
 
       //Spawn items    
@@ -383,7 +377,6 @@ class Game_Controller {
     }    
     
     let user= new Classes.User(this.world, user_props);    
-    this.world.add_to_world(user);    
 
     let lobby = this.world.get_instance(this.FIRST_ROOM_ID);    
     lobby.add_entity(user.get_id());

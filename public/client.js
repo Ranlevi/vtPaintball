@@ -31,7 +31,6 @@ const CLIENT_VERSION=     0.1;
 
 //Global Variables
 let stop_chat_scroll=         false;
-let currently_edited_item_id= null;
 let socket;
 
 //Initialize the client.
@@ -72,6 +71,144 @@ function init(){
   let username_input = document.getElementById("username_input");
   username_input.focus();
 }
+
+//Create a socket_io instance, and handle incoming messages
+//this happens after a Login Reply (success) is recived.
+function create_socket(){
+  let socket_io = io(); 
+
+  socket_io.on('Message From Server', (msg)=>{
+
+    switch(msg.type){
+
+      case "Login Reply":{ 
+        if (msg.content.is_login_successful){
+          //Clear the modal.
+          modal_title.innerHTML = '';
+          modal_content.innerHTML = ``;
+          modal_form.innerHTML =  '';    
+          modal.classList.remove('is-active'); 
+          modal_cancel_btn.removeAttribute('disabled');
+
+        } else {
+          let warning_text = document.getElementById("warning_text");
+          warning_text.innerHTML = 'A User with this name already exists in the game.';
+        }
+        break;
+      }
+
+      case "Chat Message":{
+        insert_chat_box("box_server", msg.content);
+        break;
+      }
+
+      case "Change Background":{
+        chat.style.backgroundColor = msg.content.background;
+        break;
+      }
+
+      case "Exits Message":{
+        //{perm_link_north: bol...}        
+        for (const [key, value] of Object.entries(msg.content)){
+          switch(key){
+            case "north":{
+              if (value===true){
+                perm_link_north.classList.remove("perm_links_off");
+                perm_link_north.classList.add("perm_links_on")
+              } else {
+                perm_link_north.classList.remove("perm_links_on");
+                perm_link_north.classList.add("perm_links_off")
+              }
+              break;
+            }      
+
+            case "south":{
+              if (value===true){
+                perm_link_south.classList.remove("perm_links_off");
+                perm_link_south.classList.add("perm_links_on")
+              } else {
+                perm_link_south.classList.remove("perm_links_on");
+                perm_link_south.classList.add("perm_links_off")
+              }
+              break;
+            }
+
+            case "east":{
+              if (value===true){
+                perm_link_east.classList.remove("perm_links_off");
+                perm_link_east.classList.add("perm_links_on")
+              } else {
+                perm_link_east.classList.remove("perm_links_on");
+                perm_link_east.classList.add("perm_links_off")
+              }
+              break;
+            }
+
+            case "west":{
+              if (value===true){
+                perm_link_west.classList.remove("perm_links_off");
+                perm_link_west.classList.add("perm_links_on")
+              } else {
+                perm_link_west.classList.remove("perm_links_on");
+                perm_link_west.classList.add("perm_links_off")
+              }
+              break;
+            }
+
+            case "up":{
+              if (value===true){
+                perm_link_up.classList.remove("perm_links_off");
+                perm_link_up.classList.add("perm_links_on")
+              } else {
+                perm_link_up.classList.remove("perm_links_on");
+                perm_link_up.classList.add("perm_links_off")
+              }
+              break;
+            }
+
+            case "down":{
+              if (value===true){
+                perm_link_down.classList.remove("perm_links_off");
+                perm_link_down.classList.add("perm_links_on")
+              } else {
+                perm_link_down.classList.remove("perm_links_on");
+                perm_link_down.classList.add("perm_links_off")
+              }
+              break;
+            }
+          }
+        }
+        break;
+      }
+      
+      case "User Details":{
+        load_edit_modal(msg.content.description);
+        break;
+      }
+
+      case "Game Info":{
+        load_edit_game_modal(msg.content);
+        break;
+      }
+
+      case "Cmds Box":{
+        let list = "";
+        for (const item of msg.content){
+          list += `<li>${item}</li>`;
+        }
+        insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+        break;
+      }
+    }  
+   
+  }); 
+  
+  return socket_io;
+}
+
+// Modals
+//---------------------------------------------
+//---------------------------------------------
 
 //Appears when the 'say' command is clicked.
 function load_say_modal(){
@@ -211,141 +348,6 @@ function load_edit_game_modal(game_info){
     `</div>`;
   
   modal.classList.add('is-active');  
-}
-
-//Create a socket_io instance, and handle incoming messages
-//this happens after a Login Reply (success) is recived.
-function create_socket(){
-  let socket_io = io(); 
-
-  socket_io.on('Message From Server', (msg)=>{
-
-    switch(msg.type){
-
-      case "Login Reply":{ 
-        if (msg.content.is_login_successful){
-          //Clear the modal.
-          modal_title.innerHTML = '';
-          modal_content.innerHTML = ``;
-          modal_form.innerHTML =  '';    
-          modal.classList.remove('is-active'); 
-          modal_cancel_btn.removeAttribute('disabled');
-
-        } else {
-          let warning_text = document.getElementById("warning_text");
-          warning_text.innerHTML = 'A User with this name already exists in the game.';
-        }
-        break;
-      }
-
-      case "Chat Message":{
-        insert_chat_box("box_server", msg.content);
-        break;
-      }
-
-      case "Change Background":{
-        chat.style.backgroundColor = msg.content.background;
-        break;
-      }
-
-      case "Exits Message":{
-        //{perm_link_north: bol...}        
-        for (const [key, value] of Object.entries(msg.content)){
-          switch(key){
-            case "north":{
-              if (value===true){
-                perm_link_north.classList.remove("perm_links_off");
-                perm_link_north.classList.add("perm_links_on")
-              } else {
-                perm_link_north.classList.remove("perm_links_on");
-                perm_link_north.classList.add("perm_links_off")
-              }
-              break;
-            }      
-
-            case "south":{
-              if (value===true){
-                perm_link_south.classList.remove("perm_links_off");
-                perm_link_south.classList.add("perm_links_on")
-              } else {
-                perm_link_south.classList.remove("perm_links_on");
-                perm_link_south.classList.add("perm_links_off")
-              }
-              break;
-            }
-
-            case "east":{
-              if (value===true){
-                perm_link_east.classList.remove("perm_links_off");
-                perm_link_east.classList.add("perm_links_on")
-              } else {
-                perm_link_east.classList.remove("perm_links_on");
-                perm_link_east.classList.add("perm_links_off")
-              }
-              break;
-            }
-
-            case "west":{
-              if (value===true){
-                perm_link_west.classList.remove("perm_links_off");
-                perm_link_west.classList.add("perm_links_on")
-              } else {
-                perm_link_west.classList.remove("perm_links_on");
-                perm_link_west.classList.add("perm_links_off")
-              }
-              break;
-            }
-
-            case "up":{
-              if (value===true){
-                perm_link_up.classList.remove("perm_links_off");
-                perm_link_up.classList.add("perm_links_on")
-              } else {
-                perm_link_up.classList.remove("perm_links_on");
-                perm_link_up.classList.add("perm_links_off")
-              }
-              break;
-            }
-
-            case "down":{
-              if (value===true){
-                perm_link_down.classList.remove("perm_links_off");
-                perm_link_down.classList.add("perm_links_on")
-              } else {
-                perm_link_down.classList.remove("perm_links_on");
-                perm_link_down.classList.add("perm_links_off")
-              }
-              break;
-            }
-          }
-        }
-        break;
-      }
-      
-      case "User Details":{
-        load_edit_modal(msg.content.description);
-        break;
-      }
-
-      case "Game Info":{
-        load_edit_game_modal(msg.content);
-        break;
-      }
-
-      case "Cmds Box":{
-        let list = "";
-        for (const item of msg.content){
-          list += `<li>${item}</li>`;
-        }
-        insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
-        break;
-      }
-
-    }  
-   
-  }); 
-  
-  return socket_io;
 }
 
 //When the user presses enter on the modal form, 
@@ -567,11 +569,7 @@ perm_links_container.addEventListener('click', (evt)=>{
 
   if (clicked_exit!==null){
     let msg = {
-      type:    "Command",
-      content: {
-        id:   null,
-        cmd:  clicked_exit
-      }      
+      type:   `${clicked_exit}`            
     }
     socket.emit('Message From Client', msg); 
   }  
@@ -618,7 +616,8 @@ perm_links_cmds_container.addEventListener('click', (evt)=>{
 });
 
 //Chat Interface
-//--------------------
+//----------------------------------------------
+//----------------------------------------------
 
 //Handle clicks on hyperlinks
 chat.addEventListener('click', (evt)=>{
@@ -706,7 +705,7 @@ chat.addEventListener('click', (evt)=>{
     case "Join This Game":
     case "Create A New Game":{
       let msg = {
-        type:    "Command",
+        type:    `${evt.target.innerHTML}`,
         content: {
           id:   evt.target.dataset.id,
           cmd:  evt.target.innerHTML

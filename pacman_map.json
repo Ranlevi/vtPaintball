@@ -11,8 +11,8 @@
       "entities":     [],
       "exits": {
         "north":      null,
-        "south":      {"id": "r0000009", "code": null},
-        "east":       {"id": "r0000003", "code": null},
+        "south":      "r0000009",
+        "east":       "r0000003",
         "west":       null,
         "up":         null,
         "down":       null
@@ -27,10 +27,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000015", "code": null},
+        "north":      "r0000015",
         "south":      null,
         "east":       null,
-        "west":       {"id": "r0000021", "code": null},
+        "west":       "r0000021",
         "up":         null,
         "down":       null
       },
@@ -46,8 +46,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000004", "code": null},
-        "west":       {"id": "r0000001", "code": null},
+        "east":       "r0000004",
+        "west":       "r0000001",
         "up":         null,
         "down":       null
       },
@@ -62,9 +62,9 @@
       "entities":     [],
       "exits": {
         "north":      null,
-        "south":      {"id": "r0000011", "code": null},
-        "east":       {"id": "r0000005", "code": null},
-        "west":       {"id": "r0000003", "code": null},
+        "south":      "r0000011",
+        "east":       "r0000005",
+        "west":       "r0000003",
         "up":         null,
         "down":       null
       },
@@ -79,9 +79,9 @@
       "entities":     [],
       "exits": {
         "north":      null,
-        "south":      {"id": "r0000012", "code": null},
-        "east":       {"id": "r0000006", "code": null},
-        "west":       {"id": "r0000004", "code": null},
+        "south":      "r0000012",
+        "east":       "r0000006",
+        "west":       "r0000004",
         "up":         null,
         "down":       null
       },
@@ -96,9 +96,9 @@
       "entities":     [],
       "exits": {
         "north":      null,
-        "south":      {"id": "r0000013", "code": null},
-        "east":       {"id": "r0000007", "code": null},
-        "west":       {"id": "r0000005", "code": null},
+        "south":      "r0000013",
+        "east":       "r0000007",
+        "west":       "r0000005",
         "up":         null,
         "down":       null
       },
@@ -114,8 +114,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000008", "code": null},
-        "west":       {"id": "r0000006", "code": null},
+        "east":       "r0000008",
+        "west":       "r0000006",
         "up":         null,
         "down":       null
       },
@@ -130,9 +130,9 @@
       "entities":     [],
       "exits": {
         "north":      null,
-        "south":      {"id": "r0000015", "code": null},
+        "south":      "r0000015",
         "east":       null,
-        "west":       {"id": "r0000007", "code": null},
+        "west":       "r0000007",
         "up":         null,
         "down":       null
       },
@@ -146,8 +146,8 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000001", "code": null},
-        "south":      {"id": "r0000016", "code": null},
+        "north":      "r0000001",
+        "south":      "r0000016",
         "east":       null,
         "west":       null,
         "up":         null,
@@ -165,8 +165,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000011", "code": null},
-        "west":       {"id": "r0000009", "code": null},
+        "east":       "r0000011",
+        "west":       "r0000009",
         "up":         null,
         "down":       null
       },
@@ -180,10 +180,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000004", "code": null},
-        "south":      {"id": "r0000018", "code": null},
+        "north":      "r0000004",
+        "south":      "r0000018",
         "east":       null,
-        "west":       {"id": "r0000010", "code": null},
+        "west":       "r0000010",
         "up":         null,
         "down":       null
       },
@@ -197,8 +197,8 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000005", "code": null},
-        "south":      {"id": "r0000019", "code": null},
+        "north":      "r0000005",
+        "south":      "r0000019",
         "east":       null,
         "west":       null,
         "up":         null,
@@ -214,9 +214,9 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000006", "code": null},
-        "south":      {"id": "r0000020", "code": null},
-        "east":       {"id": "r0000014", "code": null},
+        "north":      "r0000006",
+        "south":      "r0000020",
+        "east":       "r0000014",
         "west":       null,
         "up":         null,
         "down":       null
@@ -233,8 +233,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000015", "code": null},
-        "west":       {"id": "r0000013", "code": null},
+        "east":       "r0000015",
+        "west":       "r0000013",
         "up":         null,
         "down":       null
       },
@@ -248,10 +248,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000008", "code": null},
-        "south":      {"id": "r0000002", "code": null},
+        "north":      "r0000008",
+        "south":      "r0000002",
         "east":       null,
-        "west":       {"id": "r0000014", "code": null},
+        "west":       "r0000014",
         "up":         null,
         "down":       null
       },
@@ -265,9 +265,9 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000009", "code": null},
+        "north":      "r0000009",
         "south":      null,
-        "east":       {"id": "r0000017", "code": null},
+        "east":       "r0000017",
         "west":       null,
         "up":         null,
         "down":       null
@@ -284,8 +284,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000018", "code": null},
-        "west":       {"id": "r0000016", "code": null},
+        "east":       "r0000018",
+        "west":       "r0000016",
         "up":         null,
         "down":       null
       },
@@ -299,10 +299,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000011", "code": null},
+        "north":      "r0000011",
         "south":      null,
-        "east":       {"id": "r0000019", "code": null},
-        "west":       {"id": "r0000017", "code": null},
+        "east":       "r0000019",
+        "west":       "r0000017",
         "up":         null,
         "down":       null
       },
@@ -316,10 +316,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000012", "code": null},
+        "north":      "r0000012",
         "south":      null,
-        "east":       {"id": "r0000020", "code": null},
-        "west":       {"id": "r0000018", "code": null},
+        "east":       "r0000020",
+        "west":       "r0000018",
         "up":         null,
         "down":       null
       },
@@ -333,10 +333,10 @@
       "description":  "",
       "entities":     [],
       "exits": {
-        "north":      {"id": "r0000013", "code": null},
+        "north":      "r0000013",
         "south":      null,
-        "east":       {"id": "r0000021", "code": null},
-        "west":       {"id": "r0000019", "code": null},
+        "east":       "r0000021",
+        "west":       "r0000019",
         "up":         null,
         "down":       null
       },
@@ -352,8 +352,8 @@
       "exits": {
         "north":      null,
         "south":      null,
-        "east":       {"id": "r0000002", "code": null},
-        "west":       {"id": "r0000020", "code": null},
+        "east":       "r0000002",
+        "west":       "r0000020",
         "up":         null,
         "down":       null
       },
