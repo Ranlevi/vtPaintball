@@ -78,7 +78,7 @@ function create_socket(){
   let socket_io = io(); 
 
   socket_io.on('Message From Server', (msg)=>{
-
+    
     switch(msg.type){
 
       case "Login Reply":{ 
@@ -644,11 +644,7 @@ chat.addEventListener('click', (evt)=>{
     case "Edit User":{
       //Send a message to the server, asking for the user details.
       let msg = {
-        type:    "Command",
-        content: {
-          id:   evt.target.dataset.id,
-          cmd:  "Get User Details"
-        }      
+        type:    "Get User Details"
       }
       socket.emit('Message From Client', msg);       
       break;

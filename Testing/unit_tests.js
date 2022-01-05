@@ -51,7 +51,7 @@ function sleep(){
 
 function htmlToTemplate(html){
   let template = document.createElement('template');
-  template.innerHTML = html.trim();
+  template.innerHTML = html;
   return template.content;
 }
 
@@ -233,24 +233,19 @@ async function run_test(){
     let html = "Test 3: ";
 
     let msg = {
-      type:    "Command",
-      content: {
-        id:   state_obj.test_user_1.id,
-        cmd:  "User Info"
-      }      
+      type:    "Get User Details",
     }
     socket_test_user1.emit('Message From Client', msg); 
 
     await sleep(1000);
 
     //Get the latest Chat message. 
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[state_obj.test_user_1.recieved_msgs.length-1];        
-    let template= htmlToTemplate(rcvd_msg);
-    
-    if (template.children[1].innerHTML==="A (non-NPC) human."){    
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[state_obj.test_user_1.recieved_msgs.length-1];  
+        
+    if (rcvd_msg.description==="A (non-NPC) human."){    
       html += "Passed.";
     } else {
-      html += `Failed. Rcvd Msg: ${template.children[1].innerHTML}`;
+      html += `Failed. Rcvd Msg: ${rcvd_msg.description}`;
     }
 
     let div = document.createElement("div");
@@ -357,13 +352,7 @@ async function run_test(){
   //Test 7
   //Action: Test User 1 Clicking Create A New Game.
   //Expect: 
-  //Change backgroud to Red
-  //Msg: join the red team
-  //Msg: poof
-  //Msg: Red spawn room
-  //Msg: You have been teleported
-  //Msg: Game Details
-  //Server Message with Game Details for edit game modal
+  
   const test_7 = async function (socket_test_user1){
     let html = "Test 7: ";
     let test_passed = true;
@@ -420,7 +409,7 @@ async function run_test(){
     div.innerHTML = html
     tests_results_div.append(div);
   }
-  await test_7(socket_test_user1); 
+  // await test_7(socket_test_user1); 
 
   //Test 8
   //Action: Test User 1 Clicking Create A New Game.

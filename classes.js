@@ -210,41 +210,22 @@ class User {
     let destination_room= this.world.get_instance(destination_room_id);
     origin_room.remove_entity(this.props.id);
     destination_room.add_entity(this.props.id);
-    this.props.container_id = destination_room_id;
-  }
-
-  //continude here - do spawn
-  spawn_in_room(dest_id){
-    //A room exists. Teleport to it.
-    let origin_room = this.world.get_instance(this.props.container_id);
-    this.send_msg_to_room(`${this.get_name()} disappears.`);
-    origin_room.remove_entity(this.props.id);
-    
-    let dest_room = this.world.get_instance(dest_id);
-    dest_room.add_entity(this.props.id);
-    this.props.container_id = dest_room.props.id;
-
-    this.send_chat_msg_to_client(`**You were teleported to a new room.**`);
+    this.send_change_bg_msg_to_client(destination_room.props.background);
     this.send_exits_msg_to_client();
-    this.send_change_bg_msg_to_client(dest_room.props.background);
+    this.props.container_id = destination_room_id;
     this.look_cmd();
-
-    //Send a message to the new room.
-    this.send_msg_to_room(`${this.get_name()} appears in the room.`);
   }
 
-  //Misc Methods
-  //--------------
-
-  //Returns string
-  get_id(){
-    return this.props.id;
+  //Disappear in one room, appear in other.
+  spawn_in_room(dest_id){    
+    this.send_msg_to_room(`${this.get_name()} teleports away.`);
+    this.__move_to_room(this.props.container_id, dest_id);    
+    this.send_msg_to_room(`${this.get_name()} teleported into the room.`);
   }
-
-  //Called each game tick.
-  //Send a status message to client.   
+ 
+  //Called each game tick.  
   do_tick(){        
-    // this.send_status_msg_to_client();
+    // For future ideas.
   }     
   
   //Returns an HTML string for the name of the entity.
@@ -261,35 +242,6 @@ class User {
 
     return `<span class="link ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
   }
-
-  //A user has clicked this user's name. 
-  //Retuns an array of available cmds for the cmds_box.
-  // get_cmds_arr(clicking_user_id){
-
-  //   let arr = [];
-
-  //   if (this.props.current_game_id!==null && this.props.id!==clicking_user_id){
-  //     let game = this.world.get_instance(this.props.current_game_id);
-
-  //     if (game.props.is_started){
-  //       arr.push(`<span class="link" data-id="${this.props.id}">Shot</span>`);
-  //     }
-  //   }
-    
-  //   arr.push(
-  //     `<span class="link" data-id="${this.props.id}">Look</span>`
-  //   );
-
-  //   //A user can edit and inventory himself.
-  //   if (clicking_user_id===this.props.id){
-  //     arr.push(
-  //       `<span class="link" data-id="${this.props.id}">Edit</span>`,
-  //       `<span class="link" data-id="${this.props.id}">Inventory</span>`
-  //     );
-  //   }
-
-  //   return arr;
-  // }
 
   //Return a String message with what other see when they look at the user.
   get_look_string(){    
@@ -338,9 +290,6 @@ class User {
     }    
   }
   
-  //Inventory Manipulation Methods
-  //--------------------------------
-  
   //Returns an array of objects: {id: string, location: string}
   //Results will be ordered by holding->wearing->slots.
   get_all_items(){    
@@ -375,17 +324,6 @@ class User {
     this.props.slots.splice(ix,1);
   }
 
-  //Remove the given id from the given location.
-  //Note: assumes the item exists in the inventory.
-  remove_item(id, location){
-    if (location==="slots"){
-      let ix = this.props.slots.indexOf(id);          
-      this.props.slots.splice(ix,1);
-    } else {
-      this.props[location] = null;
-    }   
-  }
-
   //Handle Client Commands.
   //-----------------------------
 
@@ -394,42 +332,17 @@ class User {
     let direction = dir.toLowerCase();
 
     let current_room=   this.world.get_instance(this.props.container_id);    
-    let next_room_obj=  current_room.props.exits[direction]; //null or {"id": str, "code": str/null}
+    let next_room_id=  current_room.props.exits[direction]; //null or {"id": str, "code": str/null}
   
-    if (next_room_obj===null){
+    if (next_room_id===null){
       //There's no exit in that direction.
       this.send_chat_msg_to_client(`There's no exit to ${direction}.`);
       return;
     }
 
-    //An exit exists.    
-    //Check if locked, and if true - check for key on the user's body.
-    if (next_room_obj.code!==null){
-      //This door requires a key.
-      let inv_arr = this.get_all_items();
-      
-      //Check for a key
-      let key_exists = false;
-      for (const obj of inv_arr){
-        //obj is of the form: {id: string, location: string}
-        let entity = this.world.get_instance(obj.id);
-        if (entity.props.key_code===next_room_obj.code){
-          key_exists = true;
-          break;
-        }
-      }
-        
-      if (!key_exists){
-        //The user does not have a key on their body.
-        this.send_chat_msg_to_client(`It's locked, and you don't have the key.`);        
-        return;
-      }
-    }
+    //An exit exists.        
 
-    //Key found (or exit is not locked)
-    //User can move to the next room.
-
-    let next_room = this.world.get_instance(next_room_obj.id);
+    let next_room = this.world.get_instance(next_room_id);
 
     //If in an active game, and this is the opposite team's spawn room - can't enter.
     if (this.props.current_game_id!==null){
@@ -452,16 +365,9 @@ class User {
     //Send messages. 
     this.send_chat_msg_to_client(`You travel ${direction}.`);
     this.send_msg_to_room(`${this.get_name()} travels ${direction}.`);
-
-    //Remove the player from the current room, add it to the next one.    
-    current_room.remove_entity(this.props.id);    
-    next_room.add_entity(this.props.id);
-
-    this.props.container_id= next_room_obj.id;
-    this.send_exits_msg_to_client();
-    this.send_change_bg_msg_to_client(next_room.props.background);
-    this.look_cmd();
-
+    
+    this.__move_to_room(this.props.container_id, next_room_id)
+    
     //Send a message to the new room.
     this.send_msg_to_room(`${this.get_name()} enters from ${Utils.get_opposite_direction(direction)}.`);
 
@@ -484,9 +390,8 @@ class User {
   //returns a string message.   
   look_cmd(target_id=null){    
     
-    let room= this.world.get_instance(this.props.container_id);   
-
     if (target_id===null){
+      let room= this.world.get_instance(this.props.container_id);   
       //Look at the room the user is in.
       this.send_chat_msg_to_client(room.get_look_string());      
       return;
@@ -494,7 +399,15 @@ class User {
 
     //Target was found.
     let entity = this.world.get_instance(target_id);
-    this.send_chat_msg_to_client(entity.get_look_string());
+
+    if (entity.props.container_id===this.props.id || 
+        entity.props.container_id===this.props.container_id){
+      this.send_chat_msg_to_client(entity.get_look_string());
+      return;
+    }
+
+    //Target is not on the body or in the same room.
+    this.send_chat_msg_to_client(`It's not in the same room as you you.`);
   }
 
   //Pick an item from the room, and place it in a slot.
@@ -550,7 +463,7 @@ class User {
     let room = this.world.get_instance(this.props.container_id);
     room.add_entity(target_id);
 
-    let entity = this.world.get_instance(target_id);  //Debug here
+    let entity = this.world.get_instance(target_id);
     entity.set_container_id(room.props.id);
 
     //Send messages.
@@ -802,18 +715,11 @@ class User {
     }
 
     let game = new Game(this.world, props);
-    // this.world.add_to_world(game);
-
-    this.send_msg_to_room(`${this.get_name()} teleports to a new game.`);
     
-
     this.props.current_game_id= game.props.id;
     this.props.owned_game_id =  game.props.id;
 
-    let obj = game.add_player(this.props.id);
-
-    this.props.spawn_room_id=   obj.spawn_room_id;
-    this.props.team=            obj.team;    
+    game.add_player(this.props.id);
 
     this.spawn_in_room(this.props.spawn_room_id);
    
@@ -828,7 +734,6 @@ class User {
   //Call the item's action.
   use_cmd(target_id){
     //The item's action is called.
-
     let entity = this.world.get_instance(target_id);
 
     if (entity.props.container_id!==this.props.id && 
@@ -866,10 +771,7 @@ class User {
     }
 
     //User can join the game.
-    let obj = game.add_player(this.props.id);
-
-    this.props.spawn_room_id=   obj.spawn_room_id;
-    this.props.team=            obj.team;    
+    game.add_player(this.props.id);
     this.props.current_game_id= game.props.id;
 
     this.send_msg_to_room(`${this.get_name()} teleports to a game.`);
@@ -896,12 +798,7 @@ class User {
       this.send_chat_msg_to_client(`It's not in the same room as you.`);
       return;      
     }
-
-    if (target_id===this.props.id){
-      this.send_chat_msg_to_client(`Do you want to shot YOURSELF?!`);
-      return; 
-    }
-
+    
     //Target is a user.
     if (target.props.team===this.props.team){
       this.send_chat_msg_to_client(`You can't shot your team mates.`);
@@ -998,7 +895,7 @@ class User {
     }
 
     this.spawn_in_room(this.props.spawn_room_id);
-    game.send_msg_to_all_players(`${this.get_name()} has join Team ${this.props.team}.`);
+    game.send_msg_to_all_players(`${this.get_name()} has joined Team ${this.props.team}.`);
 
   }
 
@@ -1013,13 +910,9 @@ class User {
     //User is in a game.
     let game = this.world.get_instance(this.props.current_game_id);    
 
-    this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");
-    this.props.team= null;
-    this.props.current_game_id= null;
-    this.props.owned_game_id=   null;
-
-    this.spawn_in_room('r0000000');
+    this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");    
     game.player_quit(this.props.id);
+    this.spawn_in_room('r0000000');    
   }
 
   //Send the user information about the current game.
@@ -1328,6 +1221,7 @@ class Item {
       }
     }
 
+    this.world.add_to_world(this);
   }
 
   set_container_id(new_container_id){
@@ -1704,8 +1598,7 @@ class Game {
       
       this.props.blue_spawn_room_id=  parsed_info.blue_spawn_room_id;
       this.props.red_spawn_room_id=   parsed_info.red_spawn_room_id;
-
-      this.props.item_spawn_rooms= parsed_info.item_spawn_rooms;
+      this.props.item_spawn_rooms=    parsed_info.item_spawn_rooms;
 
       //Spawn Rooms
       for (const props of parsed_info.rooms){
@@ -1730,8 +1623,7 @@ class Game {
         room.add_entity(item.props.id);
         
         item.props.current_game_id=  this.props.id;
-        this.props.entities.push(item.props.id);
-        this.world.add_to_world(item);
+        this.props.entities.push(item.props.id);        
       }      
     }
 
@@ -1741,6 +1633,9 @@ class Game {
   //Returns obj: {spawn_room_id: string, team: string};
   add_player(user_id){
     this.props.entities.push(user_id);
+
+    let player = this.world.get_instance(user_id);
+    
 
     //Find the current number of players in each team.
     let num_of_blue_players = 0;
@@ -1757,27 +1652,18 @@ class Game {
       }
     }
 
-    //Return result
-    let obj = {
-      spawn_room_id: null, 
-      team:          ""
-    }
-
     if (num_of_blue_players>=num_of_red_player){
       //Join Red
-      obj.spawn_room_id=  this.props.red_spawn_room_id;
-      obj.team=           "Red";
+      player.props.spawn_room_id= this.props.red_spawn_room_id;
+      player.props.team=          "Red";      
     } else {
       //Join Blue
-      obj.spawn_room_id=  this.props.blue_spawn_room_id;
-      obj.team=           "Blue";
+      player.props.spawn_room_id= this.props.blue_spawn_room_id;
+      player.props.team=          "Blue";      
     }
-
-    let user = this.world.get_instance(user_id);
+    
     //Announce to all existing players.
-    this.send_msg_to_all_players(`${user.get_name()} has joined team ${obj.team}`);
-
-    return obj;
+    this.send_msg_to_all_players(`${player.get_name()} has joined team ${player.props.team}`);
   }  
 
   do_tick(){
@@ -1929,6 +1815,11 @@ class Game {
     if (ix!==-1){
       this.props.entities.splice(ix,1);
     }
+
+    let user = this.world.get_instance(user_id);
+    user.props.team= null;
+    user.props.current_game_id= null;
+    user.props.owned_game_id=   null;
 
     //Check how many players are left in the game.
     let num_of_players = 0;

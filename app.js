@@ -34,7 +34,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       false;
+const TEST_MODE=       true;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -200,7 +200,7 @@ class Game_Controller {
             break;
           }
 
-          case "Get User Details":{
+          case "Get User Details":{ //continue: make better difference between user details and user info
             user.send_user_details_to_client();
             break;
           }
@@ -318,8 +318,7 @@ class Game_Controller {
           item.props.container_id=  room_id;       
 
           let room = this.world.get_instance(room_id);
-          room.add_entity(item.props.id);        
-          this.world.add_to_world(item);
+          room.add_entity(item.props.id);                  
         }      
       }
       
@@ -379,9 +378,9 @@ class Game_Controller {
     let user= new Classes.User(this.world, user_props);    
 
     let lobby = this.world.get_instance(this.FIRST_ROOM_ID);    
-    lobby.add_entity(user.get_id());
+    lobby.add_entity(user.props.id);
     
-    return user.get_id();
+    return user.props.id;
   }  
 }
 
