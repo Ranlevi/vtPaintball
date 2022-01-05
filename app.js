@@ -235,25 +235,18 @@ class Game_Controller {
             break;
           }
 
-          // case "User Info":{
-          //   user.look_cmd(msg.content.id);
-          //   break;
-          // }
-
-          case "Name Clicked":{               
+          case "Name Clicked":{              
             let entity = this.world.get_instance(msg.content.id);
             entity.name_clicked(socket.user_id);
             break;
           }
 
           case "Edit User":{
-            let user = this.world.get_instance(socket.user_id);
             user.set_description(msg.content.description);            
             break;
           }
 
           case "Join Game":{
-            let user = this.world.get_instance(socket.user_id);
             user.join_cmd(msg.content.game_id);
             break;
           }
@@ -267,8 +260,12 @@ class Game_Controller {
           }
 
           case "Emote":{
-            let user = this.world.get_instance(socket.user_id);
             user.emote_cmd(msg.content);
+            break;
+          }
+
+          case "User Info":{
+            user.send_chat_msg_to_client(user.get_look_string());
             break;
           }
         }
