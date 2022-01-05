@@ -3,8 +3,7 @@ let tests_results_div = document.getElementById("tests_results");
 let state_obj = {
   test_user_1: {
     name:                   "Test User 1",
-    id:                     null,
-    login_reply_successful: null,
+    id:                     null,    
     recieved_msgs:          []
   },
   test_user_2: {
@@ -25,19 +24,39 @@ function create_socket(user){
     switch(msg.type){
 
       case "Login Reply":{ 
-        if (msg.content.is_login_successful){
-          state_obj[user].login_reply_successful = true;
-        } else {
-          state_obj[user].login_reply_successful = false;
-        }        
+        let obj = {
+          type:                 "Login Reply",
+          is_login_successful:  msg.content.is_login_successful
+        };
+
+        state_obj[user].recieved_msgs.push(obj);
         break;
       }
 
-      case "User Details":
-      case "Cmds Box":
-      case "Chat Message":{
-        state_obj[user].recieved_msgs.push(msg.content);
+      case "User Details":{
+        console.log(msg);
+        break;
       }
+
+      case "Chat Message":{
+        let obj = {
+          type:     "Chat Message",
+          content:  msg.content
+        }
+        console.log(htmlToTemplate(obj.content).children);
+        state_obj[user].recieved_msgs.push(obj);
+        break;
+      }
+
+      // if (template.children[0].innerHTML!="User Info"){
+
+      
+
+
+      // case "Cmds Box":
+      // case "Chat Message":{
+      //   state_obj[user].recieved_msgs.push(msg.content);
+      // }
     }  
    
   }); 
@@ -55,6 +74,12 @@ function htmlToTemplate(html){
   return template.content;
 }
 
+function print_test_result(html){
+  let div = document.createElement("div");
+  div.innerHTML = html;
+  tests_results_div.append(div);
+}
+
 async function run_test(){
 
   let socket_test_user1 = create_socket("test_user_1"); 
@@ -65,7 +90,7 @@ async function run_test(){
   //Expect: successful login.
   const setup_test_user_1 = async function(socket_test_user1){
 
-    let html = "Setup 1: ";  
+    let html = "Setup 1: Login Test User 1. ";  
 
     let msg = {
       type:         "Login",
@@ -78,22 +103,26 @@ async function run_test(){
     await sleep();
 
     //Check if login was successful  
-    if (state_obj["test_user_1"].login_reply_successful){
+    let msg_obj = state_obj["test_user_1"].recieved_msgs.shift();    
+    if (msg_obj.type==="Login Reply" && msg_obj.is_login_successful){
       html += "Pass.";
     } else {
-      html += "Fail.";
+      html += `Fail.`;
     }
-    let div = document.createElement("div");
-    div.innerHTML = html;
-    tests_results_div.append(div);
+    
+    print_test_result(html);   
+  }
+  await setup_test_user_1(socket_test_user1);
 
+  function get_id_of_test_user_1(){
     //Get the id of Test User 1
     //Note: .children gets only element nodes, which is what we need.
     let welcome_msg=          state_obj.test_user_1.recieved_msgs[0];
     let template=             htmlToTemplate(welcome_msg);
     state_obj.test_user_1.id= template.children[0].dataset.id;     
   }
-  await setup_test_user_1(socket_test_user1);
+  // get_id_of_test_user_1();
+   
 
   //Test 1:
   //Action: Try to create another user with the same name.
@@ -120,7 +149,7 @@ async function run_test(){
     div.innerHTML = html;
     tests_results_div.append(div);
   }
-  await test_1(socket_test_user2);
+  // await test_1(socket_test_user2);
   
   //Setup 2:
   //Setup 2nd User
@@ -152,7 +181,7 @@ async function run_test(){
     let template=             htmlToTemplate(welcome_msg);
     state_obj.test_user_2.id= template.children[0].dataset.id;    
   }
-  await setup_test_user_2(socket_test_user2);    
+  // await setup_test_user_2(socket_test_user2);    
 
   //Test 2
   //Action: Test User 1 Clicking his own name
@@ -224,7 +253,7 @@ async function run_test(){
     tests_results_div.append(div);
     
   }
-  await test_2(socket_test_user1);
+  // await test_2(socket_test_user1);
 
   //Test 3
   //Action: Test User 1 Clicking User Info.
@@ -252,7 +281,7 @@ async function run_test(){
     div.innerHTML = html
     tests_results_div.append(div);
   }
-  await test_3(socket_test_user1);
+  // await test_3(socket_test_user1);
 
   //Test 4
   //Action: Test User 1 Clicking Edit User.
@@ -284,7 +313,7 @@ async function run_test(){
     div.innerHTML = html
     tests_results_div.append(div);
   }
-  await test_4(socket_test_user1); 
+  // await test_4(socket_test_user1); 
 
   //Test 5
   //Action: Test User 1 Changes description and presses Submit.
@@ -314,7 +343,7 @@ async function run_test(){
     div.innerHTML = html
     tests_results_div.append(div);
   }
-  await test_5(socket_test_user1); 
+  // await test_5(socket_test_user1); 
 
   //Test 6
   //Action: Test User 1 Clicking User Info.
@@ -347,7 +376,7 @@ async function run_test(){
     div.innerHTML = html
     tests_results_div.append(div);
   }
-  await test_6(socket_test_user1); 
+  // await test_6(socket_test_user1); 
 
   //Test 7
   //Action: Test User 1 Clicking Create A New Game.

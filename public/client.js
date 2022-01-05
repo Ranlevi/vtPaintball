@@ -181,7 +181,7 @@ function create_socket(){
         break;
       }
       
-      case "User Details":{
+      case "User Details For Modal":{
         load_edit_modal(msg.content.description);
         break;
       }
@@ -644,7 +644,7 @@ chat.addEventListener('click', (evt)=>{
     case "Edit User":{
       //Send a message to the server, asking for the user details.
       let msg = {
-        type:    "Get User Details"
+        type:    "Get User Details For Modal"
       }
       socket.emit('Message From Client', msg);       
       break;

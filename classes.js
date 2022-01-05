@@ -228,6 +228,50 @@ class User {
     // For future ideas.
   }     
   
+  get_name__(){    
+
+    let team_class;
+    if (this.props.team===null){
+      team_class = "";
+    } else if (this.props.team==="Blue"){
+      team_class = "blue_team";
+    } else if (this.props.team==="Red"){
+      team_class = "red_team";
+    }
+
+    let obj = {
+      html:   `<span class="link ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`,
+      objects: {}       
+    }
+    
+
+    return obj;
+  }
+
+  send_msg_to_client(msg_type){
+
+    switch (msg_type) {
+      case "Welcome Message":
+        let message = {
+          type:     msg_type,
+          content:  {
+            html:   `Welcome <span class="link ${team_class}" data-id="${this.props.id}">${this.props.name}</span>!`,
+            objects: {}
+          }
+        }
+        message.content.objects[`${this.props.name}`] = { //continue here. no good. 
+          id:       this.props.id,
+          classes:  ["link", `${team_class}`]
+        }
+
+        this.props.socket.emit('Message From Server', message);
+        break;
+    
+      default:
+        break;
+    }
+  }
+
   //Returns an HTML string for the name of the entity.
   get_name(){    
 
@@ -1016,7 +1060,7 @@ class User {
   //Send the user details to the client.
   send_user_details_to_client(){
     let msg = {
-      type:     "User Details",
+      type:     "User Details For Modal",
       content:  {
         description: this.props.description
       }

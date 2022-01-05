@@ -125,11 +125,7 @@ class Game_Controller {
               //Attach the user_id to the socket, and return a Login Message.
               socket.user_id = this.create_new_user(socket, msg.content.username);
               reply_msg.content.is_login_successful = true;                    
-              socket.emit('Message From Server', reply_msg);         
-              
-              let user = this.world.get_instance(socket.user_id);
-              user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
-              user.look_cmd();
+              socket.emit('Message From Server', reply_msg);  
             }
             break;
           }
@@ -200,7 +196,7 @@ class Game_Controller {
             break;
           }
 
-          case "Get User Details":{ //continue: make better difference between user details and user info
+          case "Get User Details For Modal":{ 
             user.send_user_details_to_client();
             break;
           }
@@ -239,10 +235,10 @@ class Game_Controller {
             break;
           }
 
-          case "User Info":{
-            user.look_cmd(msg.content.id);
-            break;
-          }
+          // case "User Info":{
+          //   user.look_cmd(msg.content.id);
+          //   break;
+          // }
 
           case "Name Clicked":{               
             let entity = this.world.get_instance(msg.content.id);
@@ -379,6 +375,9 @@ class Game_Controller {
 
     let lobby = this.world.get_instance(this.FIRST_ROOM_ID);    
     lobby.add_entity(user.props.id);
+
+    user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
+    user.look_cmd();
     
     return user.props.id;
   }  

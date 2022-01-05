@@ -62,15 +62,13 @@ The user fills the username. A Login message is sent to the server,
 and a login reply message is recived with the result.
 
 
-Testing
--------
-assume the server is running normally.
-We design a client that connects and sends commands. 
+Message is Chat: Welcome, aa! 
+text: welcome <aa>!
+objects: 
+  innerHTML : {
+    id: 
+    classes:[]
+  }
+}
 
-game
------
-Create command:
-- A game is created, the user is spawned as owner.
-
-Start cmd:
-- All items are respawned.
+Maybe only predetermind messages. 
