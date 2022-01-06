@@ -11,6 +11,7 @@ let state_obj = {
     name:                   "Test User 2",
     id:                     null,    
     game_id:                null,
+    game_list_button_id:    null,
     recieved_msgs:          []
   },
 }
@@ -163,6 +164,11 @@ async function run_test(){
     state_obj.test_user_2.id = template.childNodes[1].dataset.id;  
   }
   await setup_test_user_2(socket_test_user2);   
+
+  //Get ID of Game List Button
+  let template= htmlToTemplate(state_obj.test_user_2.recieved_msgs[0].content);
+  template=     htmlToTemplate(template.children[2].innerHTML);
+  state_obj.test_user_2.game_list_button_id = template.children[1].dataset.id;  
   
   //Clear message store
   state_obj.test_user_2.recieved_msgs = []; 
@@ -345,7 +351,7 @@ async function run_test(){
   await test_7(socket_test_user1); 
 
   //Get the Game's ID.
-  let template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
+  template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
   state_obj.test_user_1.game_id = template.children[1].dataset.id;  
 
   //Clear message store
@@ -478,8 +484,8 @@ async function run_test(){
       type:    "Edit Game",
       content: {
         props: {
-          name: "My Test Game",
-          max_score: "15" //continue here          
+          name:       "My Test Game",
+          max_score:  "15"
         }
       }
     }
@@ -487,10 +493,16 @@ async function run_test(){
 
     await sleep();
     
-    let html=      "Test 11: Test User 1 clicks Edit. --> ";
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.pop();    
+    let html=      "Test 12: Test User 1 submit Game Edit parameters. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift();    
+    let template=  htmlToTemplate(rcvd_msg.content);
+    template=      template.childNodes[0];
+
+    let template2=  htmlToTemplate(rcvd_msg.content);
+    template2=      template2.childNodes[3];            
     
-    if (rcvd_msg.content.name==="Text Tag"){ 
+    if (template.childNodes[0].innerHTML==="My Test Game" &&
+        template2.childNodes[1].data===" is: 15"){ 
       html += "Passed.";
     } else {
       html += "Failed.";
@@ -499,6 +511,47 @@ async function run_test(){
     print_test_result(html);
   }
   await test_12(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 13: 
+  //Action: Test User 2 clicking on the Game List Button.
+  //Expect: Server msg with Look and Use
+  const test_13 = async function (socket_test_user2){
+
+    send_name_clicked_msg(state_obj.test_user_2.game_list_button_id, socket_test_user2);
+    await sleep();
+    
+    //Get the CMD Box message. 
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift(); //continue here
+    console.log(rcvd_msg);
+    // let rcvd_cmds = "";
+    // for (const line of rcvd_msg.content){
+    //   let template = htmlToTemplate(line);
+    //   rcvd_cmds += template.firstChild.innerHTML;
+    // }    
+  
+    // let html = "Test 13: Test User 2 Clicking Game List Button. --> ";  
+    // if (rcvd_cmds==="Game InfoCopy IDEdit GameStart"){
+    //   html += "Pass.";
+    // } else {
+    //   html += "Failed.";
+    // }
+  
+    print_test_result(html);
+  }
+  await test_13(socket_test_user2); 
+
+
+  //Test 14: 
+  //Action: Test User 2 clicking on the Game List Button Look cmd.
+  //Expect: Server msg with Look results on the button.
+
+  //Test 15: 
+  //Action: Test User 2 clicking on the Game List Button Use cmd.
+  //Expect: Server msg with the game listed.
+
   
 }
 
