@@ -3,12 +3,14 @@ let tests_results_div = document.getElementById("tests_results");
 let state_obj = {
   test_user_1: {
     name:                   "Test User 1",
-    id:                     null,    
+    id:                     null,
+    game_id:                null,
     recieved_msgs:          []
   },
   test_user_2: {
     name:                   "Test User 2",
     id:                     null,    
+    game_id:                null,
     recieved_msgs:          []
   },
 }
@@ -39,6 +41,17 @@ function print_test_result(html){
   let div = document.createElement("div");
   div.innerHTML = html;
   tests_results_div.append(div);
+}
+
+function send_name_clicked_msg(clicked_entity_id, user_socket){
+
+  let msg = {
+    type:         "Name Clicked",
+    content: {
+      id:   clicked_entity_id
+    }
+  }
+  user_socket.emit('Message From Client', msg);
 }
 
 async function run_test(){
@@ -129,7 +142,7 @@ async function run_test(){
         username :  "Test User 2"
       }
     }
-    socket_test_user2.emit('Message From Client', msg);
+    socket_test_user2.emit('Message From Client', msg); 
   
     await sleep();
 
@@ -161,16 +174,8 @@ async function run_test(){
   //Action: Test User 1 Clicking his own name
   //Expect: Cmd Box with User Info, Edit User, Create a New Game, Join a Game.
   const test_2 = async function(socket_test_user1){
-    
-    let msg = {
-      type:         "Name Clicked",
-      content: {
-        id:   state_obj.test_user_1.id,
-        cmd:  state_obj.test_user_1.name
-      }
-    }
-    socket_test_user1.emit('Message From Client', msg);
 
+    send_name_clicked_msg(state_obj.test_user_1.id, socket_test_user1);
     await sleep();
     
     //Get the CMD Box message. 
@@ -255,8 +260,7 @@ async function run_test(){
   //Test 5
   //Action: Test User 1 Changes description and presses Submit.
   //Expect: Recive 'Description Updated' msg.
-  const test_5 = async function (socket_test_user1){
-    let html = "Test 5: ";
+  const test_5 = async function (socket_test_user1){   
 
     let msg = {
       type:    "Edit User",
@@ -269,118 +273,233 @@ async function run_test(){
     await sleep();
 
     //Get the latest message. 
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[state_obj.test_user_1.recieved_msgs.length-1];    
-    if (rcvd_msg==="Description updated."){    
+    let html = "Test 5: Test User 1 Changing description. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift();    
+    
+    if (rcvd_msg.content==="Description updated."){    
       html += "Passed.";
     } else {
-      html += `Failed. Rcvd Msg: ${rcvd_msg}`;
+      html += `Failed.`;
     }
 
-    let div = document.createElement("div");
-    div.innerHTML = html
-    tests_results_div.append(div);
+    print_test_result(html);
   }
-  // await test_5(socket_test_user1); 
+  await test_5(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
 
   //Test 6
   //Action: Test User 1 Clicking User Info.
   //Expect: Chat message with the new info.
   const test_6 = async function (socket_test_user1){
-    let html = "Test 6: ";
 
     let msg = {
-      type:    "Command",
-      content: {
-        id:   state_obj.test_user_1.id,
-        cmd:  "User Info"
-      }      
+      type:    "User Info",
     }
     socket_test_user1.emit('Message From Client', msg); 
 
     await sleep();
 
-    //Get the latest Chat message. 
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[state_obj.test_user_1.recieved_msgs.length-1];        
-    let template= htmlToTemplate(rcvd_msg);
-    
-    if (template.children[1].innerHTML==="A Test Description."){    
+    let rcvd_msg=   state_obj.test_user_1.recieved_msgs.shift();
+    let template=   htmlToTemplate(rcvd_msg.content)    
+    let html = "Test 6: Test User 1 Clicked 'User Info'. --> ";
+    if (template.children[1].childNodes[0].data==="A Test Description."){    
       html += "Passed.";
     } else {
-      html += `Failed. Rcvd Msg: ${template.children[1].innerHTML}`;
+      html += `Failed.`;
     }
 
-    let div = document.createElement("div");
-    div.innerHTML = html
-    tests_results_div.append(div);
+    print_test_result(html);
+    
   }
-  // await test_6(socket_test_user1); 
+  await test_6(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
 
   //Test 7
   //Action: Test User 1 Clicking Create A New Game.
-  //Expect: 
+  //Expect: Server sends a message to open Edit Game Modal
   
-  const test_7 = async function (socket_test_user1){
-    let html = "Test 7: ";
-    let test_passed = true;
-    let error_msg = "";
+  const test_7 = async function (socket_test_user1){    
 
     let msg = {
-      type:    "Command",
-      content: {
-        id:   state_obj.test_user_1.id,
-        cmd:  "Create A New Game"
-      }      
+      type:    "Create A New Game",      
+    }
+    socket_test_user1.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 7: Test User 1 clicks Create New Game. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.pop();
+    
+    if (rcvd_msg.type==="Game Info"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_7(socket_test_user1); 
+
+  //Get the Game's ID.
+  let template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
+  state_obj.test_user_1.game_id = template.children[1].dataset.id;  
+
+  //Clear message store
+  state_obj.test_user_1.recieved_msgs = []; 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 8
+  //Action: Test User 1 Clicking the room's name.
+  //Expect: Server Message with room description.
+  const test_8 = async function (socket_test_user1){    
+
+    send_name_clicked_msg("r0000002", socket_test_user1);
+    await sleep();
+    
+    let html=      "Test 8: Test User 1 clicks room name. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift();
+    let template=  htmlToTemplate(rcvd_msg.content);    
+
+    if (template.children[0].innerHTML==="Red Spawn Room"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+
+  }
+  await test_8(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 9: 
+  //Action: Test User 1 Clicking Game Name.
+  //Expect: Server msg with Game Info, Copy ID, Edit Game, Start.
+  const test_9 = async function (socket_test_user1){
+
+    send_name_clicked_msg(state_obj.test_user_1.game_id, socket_test_user1);
+    await sleep();
+    
+    //Get the CMD Box message. 
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift();
+    let rcvd_cmds = "";
+    for (const line of rcvd_msg.content){
+      let template = htmlToTemplate(line);
+      rcvd_cmds += template.firstChild.innerHTML;
+    }    
+  
+    let html = "Test 9: Test User 1 Clicking game name. --> ";  
+    if (rcvd_cmds==="Game InfoCopy IDEdit GameStart"){
+      html += "Pass.";
+    } else {
+      html += "Failed.";
+    }
+  
+    print_test_result(html);
+  }
+  await test_9(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 10: 
+  //Action: Test User 1 Clicking Game Info.
+  //Expect: Server sends a game info msg.
+  const test_10 = async function (socket_test_user1){
+
+    let msg = {
+      type:    "Game Info",
     }
     socket_test_user1.emit('Message From Client', msg); 
 
     await sleep();
 
-    //Get the Joined Game Chat message. 
-    console.log(state_obj.test_user_1.recieved_msgs);
-    
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs[7];
-    let template= htmlToTemplate(rcvd_msg);
+    let rcvd_msg=   state_obj.test_user_1.recieved_msgs.shift();
+    let template=   htmlToTemplate(rcvd_msg.content);
+    template=       template.children[0].children[0];        
 
-    if (template.childNodes[1].data!==" has joined team Red"){ //ChildNodes includes non-elements
-      test_passed = false;
-      error_msg = `Received: ${template.childNodes[1].data}`;
-    }
-
-    //Get The poof msg.
-    rcvd_msg=  state_obj.test_user_1.recieved_msgs[7];
-    if (rcvd_msg!=="**Poof!**"){ 
-      test_passed = false;
-      error_msg = `Received: ${rcvd_msg}`;
-    }
-
-    //Get the Spawn Room Message //continue: fix spawn weapons so it will be before start.
-
-
-    //Get You have been teleported msg
-
-
-    //Get Game Details msg
-
-
-    //Get Game details for game edit modal msg
-
-
-    if (test_passed){    
+    let html = "Test 10: Test User 1 Clicked 'Game Info'. --> ";
+    if (template.innerHTML==="Text Tag"){    
       html += "Passed.";
     } else {
-      html += `Failed. ${error_msg}`;
+      html += `Failed.`;
     }
 
-    let div = document.createElement("div");
-    div.innerHTML = html
-    tests_results_div.append(div);
+    print_test_result(html);
+    
   }
-  // await test_7(socket_test_user1); 
+  await test_10(socket_test_user1); 
 
-  //Test 8
-  //Action: Test User 1 Clicking Create A New Game.
-  //Expect: Server Message with Game Details
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+  
+  //Test 11: 
+  //Action: Test User 1 Clicking Edit Game.
+  //Expect: Server sends a message to open Edit Game Modal.
+  const test_11 = async function (socket_test_user1){    
 
+    let msg = {
+      type:    "Get Game Info For Modal",      
+    }
+    socket_test_user1.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 11: Test User 1 clicks Edit. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.pop();    
+    
+    if (rcvd_msg.content.name==="Text Tag"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_11(socket_test_user1); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 12: 
+  //Action: Test User 1 Setting various parameters of the game.
+  //Expect: Server sends a game info msg with the new parameters..
+  const test_12 = async function (socket_test_user1){    
+
+    let msg = {
+      type:    "Edit Game",
+      content: {
+        props: {
+          name: "My Test Game",
+          max_score: "15" //continue here          
+        }
+      }
+    }
+    socket_test_user1.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 11: Test User 1 clicks Edit. --> ";
+    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.pop();    
+    
+    if (rcvd_msg.content.name==="Text Tag"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_12(socket_test_user1); 
+  
 }
 
 run_test();

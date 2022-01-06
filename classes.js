@@ -140,12 +140,12 @@ class Room {
   }
 
   //Action when a user clicks on the room's name.
-  name_clicked(clicking_user_id){    
+  name_clicked(clicking_user_id){       
     let clicking_user = this.world.get_instance(clicking_user_id);
 
     if (clicking_user.props.container_id===this.props.id){
       //Only cmd is look
-      clicking_user.look_cmd(this.props.id);
+      clicking_user.look_cmd();
     } else {
       //Clicking User not in the same room.
       clicking_user.send_chat_msg_to_client(`You're not in the room anymore.`);      
@@ -407,7 +407,7 @@ class User {
     }
 
     //Target is not on the body or in the same room.
-    this.send_chat_msg_to_client(`It's not in the same room as you you.`);
+    this.send_chat_msg_to_client(`It's not in the same room as you.`);
   }
 
   //Pick an item from the room, and place it in a slot.
@@ -723,9 +723,7 @@ class User {
 
     this.spawn_in_room(this.props.spawn_room_id);
    
-    this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
-        
-    this.game_cmd();  
+    this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p></p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
     
     //Open the edit game modal
     this.send_game_info_to_client();
@@ -1864,7 +1862,7 @@ class Game {
     }
 
     let user = this.world.get_instance(this.props.owner_id);
-    user.send_chat_msg_to_client('Done');
+    user.game_cmd();
   }
 
   //Returns an HTML string for 'Look' or 'Game' commands.

@@ -201,7 +201,7 @@ class Game_Controller {
             break;
           }
 
-          case "Get Game Info":{
+          case "Get Game Info For Modal":{
             user.send_game_info_to_client();
             break;
           }
@@ -218,6 +218,7 @@ class Game_Controller {
 
           case "Game Info":{
             user.game_cmd();
+            break;
           }
 
           case "Use":{
@@ -235,8 +236,8 @@ class Game_Controller {
             break;
           }
 
-          case "Name Clicked":{              
-            let entity = this.world.get_instance(msg.content.id);
+          case "Name Clicked":{                
+            let entity = this.world.get_instance(msg.content.id);            
             entity.name_clicked(socket.user_id);
             break;
           }

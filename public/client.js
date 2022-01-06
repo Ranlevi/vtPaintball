@@ -657,11 +657,7 @@ chat.addEventListener('click', (evt)=>{
     
     case "Edit Game":{
       let msg = {
-        type:    "Command",
-        content: {
-          id:   evt.target.dataset.id,
-          cmd:  "Get Game Info"
-        }      
+        type:    "Get Game Info For Modal"              
       }
       socket.emit('Message From Client', msg);             
       break;
