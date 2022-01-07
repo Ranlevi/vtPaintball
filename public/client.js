@@ -77,7 +77,7 @@ function init(){
 function create_socket(){
   let socket_io = io(); 
 
-  socket_io.on('Message From Server', (msg)=>{
+  socket_io.on('Message From Server', (msg)=>{    
     
     switch(msg.type){
 
@@ -604,11 +604,7 @@ perm_links_cmds_container.addEventListener('click', (evt)=>{
 
   if (clicked_cmd!==null){
     let msg = {
-      type:    "Command",
-      content: {
-        id:   null,
-        cmd:  clicked_cmd
-      }      
+      type: clicked_cmd      
     }
     socket.emit('Message From Client', msg); 
   }

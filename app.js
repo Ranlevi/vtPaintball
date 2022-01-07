@@ -90,7 +90,7 @@ class Game_Controller {
       socket.on('Message From Client', (msg)=>{   
         
         let user = this.world.get_instance(socket.user_id);
-
+        
         switch(msg.type){
 
           case "Say":{

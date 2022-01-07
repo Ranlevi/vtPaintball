@@ -5,6 +5,7 @@ let state_obj = {
     name:                   "Test User 1",
     id:                     null,
     game_id:                null,
+    gun_id:                 null,
     recieved_msgs:          []
   },
   test_user_2: {
@@ -12,6 +13,7 @@ let state_obj = {
     id:                     null,    
     game_id:                null,
     game_list_button_id:    null,
+    gun_id:                 null,
     recieved_msgs:          []
   },
 }
@@ -353,6 +355,7 @@ async function run_test(){
   //Get the Game's ID.
   template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
   state_obj.test_user_1.game_id = template.children[1].dataset.id;  
+  state_obj.test_user_2.game_id = template.children[1].dataset.id;  
 
   //Clear message store
   state_obj.test_user_1.recieved_msgs = []; 
@@ -515,6 +518,9 @@ async function run_test(){
   //------------------------------------------------------------
   //------------------------------------------------------------
 
+  //Clear message store
+  state_obj.test_user_2.recieved_msgs = []; 
+
   //Test 13: 
   //Action: Test User 2 clicking on the Game List Button.
   //Expect: Server msg with Look and Use
@@ -524,35 +530,208 @@ async function run_test(){
     await sleep();
     
     //Get the CMD Box message. 
-    let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift(); //continue here
-    console.log(rcvd_msg);
-    // let rcvd_cmds = "";
-    // for (const line of rcvd_msg.content){
-    //   let template = htmlToTemplate(line);
-    //   rcvd_cmds += template.firstChild.innerHTML;
-    // }    
-  
-    // let html = "Test 13: Test User 2 Clicking Game List Button. --> ";  
-    // if (rcvd_cmds==="Game InfoCopy IDEdit GameStart"){
-    //   html += "Pass.";
-    // } else {
-    //   html += "Failed.";
-    // }
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();
+    
+    let rcvd_cmds = "";
+    for (const line of rcvd_msg.content){
+      let template = htmlToTemplate(line);
+      rcvd_cmds += template.firstChild.innerHTML;
+    }    
+
+    let html = "Test 13: Test User 2 Clicking Game List Button. --> ";  
+    if (rcvd_cmds==="LookUse"){
+      html += "Pass.";
+    } else {
+      html += "Failed.";
+    }
   
     print_test_result(html);
   }
   await test_13(socket_test_user2); 
 
+  //------------------------------------------------------------
+  //------------------------------------------------------------
 
   //Test 14: 
   //Action: Test User 2 clicking on the Game List Button Look cmd.
   //Expect: Server msg with Look results on the button.
+  const test_14 = async function (socket_test_user2){    
+
+    let msg = {
+      type:   "Look",
+      content: {
+        id:   state_obj.test_user_2.game_list_button_id
+      }
+    }
+    socket_test_user2.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 14: Test User 2 clicks Look on Game List Button. --> ";
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();    
+    let template=  htmlToTemplate(rcvd_msg.content);
+    
+    if (template.children[1].innerHTML==="Pressing this button will display the list of publicly available games."){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_14(socket_test_user2); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
 
   //Test 15: 
   //Action: Test User 2 clicking on the Game List Button Use cmd.
   //Expect: Server msg with the game listed.
+  const test_15 = async function (socket_test_user2){    
 
+    let msg = {
+      type:   "Use",
+      content: {
+        id:   state_obj.test_user_2.game_list_button_id
+      }
+    }
+    socket_test_user2.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 15: Test User 2 clicks Use on Game List Button. --> ";
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();
+    let template=  htmlToTemplate(rcvd_msg.content);
+       
+    if (template.children[1].innerText==="My Test Game"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_15(socket_test_user2); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 16: 
+  //Action: Test User 2 clicking on the My Test Game
+  //Expect: Server msg with cmds
+  const test_16 = async function (socket_test_user2){    
+
+    let msg = {
+      type:   "Name Clicked",
+      content: {
+        id:   state_obj.test_user_2.game_id
+      }
+    }
+    socket_test_user2.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 16: Test User 2 clicks the game's name. --> ";
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();    
+    let rcvd_cmds = "";
+    for (const line of rcvd_msg.content){
+      let template = htmlToTemplate(line);
+      rcvd_cmds += template.firstChild.innerHTML;
+    }    
+    
+    if (rcvd_cmds==="Game InfoCopy IDJoin This Game"){
+      html += "Pass.";
+    } else {
+      html += "Failed.";
+    }    
+    print_test_result(html);
+  }
+  await test_16(socket_test_user2); 
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+
+  //Test 17: 
+  //Action: Test User 2 clicking Join Game
+  //Expect: Server msg of joining game.
+  const test_17 = async function (socket_test_user2){    
+
+    let msg = {
+      type:    "Join This Game",
+      content: {
+        id:   state_obj.test_user_2.game_id
+      }
+    }
+    socket_test_user2.emit('Message From Client', msg); 
+
+    await sleep();
+    
+    let html=      "Test 17: Test User 2 clicks Join This Game. --> ";    
+
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();
+    let template=  htmlToTemplate(rcvd_msg.content)    
+    
+    if (template.childNodes[1].data===" has joined team Blue"){ 
+      html += "Passed.";
+    } else {
+      html += "Failed.";
+    }
+
+    print_test_result(html);
+  }
+  await test_17(socket_test_user2);
+
+  //------------------------------------------------------------
+  //------------------------------------------------------------
+  template = htmlToTemplate(state_obj.test_user_2.recieved_msgs[2].content);
+  template = htmlToTemplate(template.children[3].innerHTML);
+  state_obj.test_user_2.gun_id = template.children[0].dataset.id;  
+
+  //Test 18: 
+  //Action: Test User 2 clicking Desert Eagle
+  //Expect: Test User 2 recive cmds: Look, Get, Hold
+  const test_18 = async function (socket_test_user2){
+
+    send_name_clicked_msg(state_obj.test_user_2.game_list_button_id, socket_test_user2);
+    await sleep();
+    
+    //Get the CMD Box message. 
+    let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();
+    
+    let rcvd_cmds = "";
+    for (const line of rcvd_msg.content){
+      let template = htmlToTemplate(line);
+      rcvd_cmds += template.firstChild.innerHTML;
+    }    
+
+    let html = "Test 13: Test User 2 Clicking Game List Button. --> ";  
+    if (rcvd_cmds==="LookUse"){
+      html += "Pass.";
+    } else {
+      html += "Failed.";
+    }
   
+    print_test_result(html);
+  }
+  // await test_18(socket_test_user2); 
+
+
+  //Test 19: 
+  //Action: Test User 2 clicking Hold
+  //Expect: Test User 2 recive msg: You Hold It
+  
+  //Test 20: 
+  //Action: Test User 2 clicking South
+  //Expect: Test User 2 recive new room msg
+
+  //Test 21: 
+  //Action: Test User 1 clicking start
+  //Expect: Test User 2 recive start message.
+
+  //Test 22: 
+  //Action: Test User 2 clicking Look
+  //Expect: Test User 2 recive msg of spawn room with Desert Eagle
+
 }
 
 run_test();

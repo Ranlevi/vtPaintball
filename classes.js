@@ -961,7 +961,7 @@ class User {
   //--------------------
 
   //Send text that will be displayed in the Chat.
-  send_chat_msg_to_client(content){
+  send_chat_msg_to_client(content){    
     let message = {
       type:     "Chat Message",
       content:  content
@@ -1308,7 +1308,7 @@ class Item {
   //Note: we show the user the cmds available, but that does 
   //not mean they can be used (e.g. holding when already holding something else.)
   name_clicked(clicking_user_id){
-
+    
     let clicking_user = this.world.get_instance(clicking_user_id);
 
     let availabe_cmds = [];
@@ -1582,9 +1582,9 @@ class Game {
     return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
-  remove_item_from_game(id){
-    let ix = this.props.entities.indexOf(id);          
-    this.props.entities.splice(ix,1);
+  remove_item_from_game(id){        
+    let ix = this.props.entities.indexOf(id);    
+    this.props.entities.splice(ix,1);    
   }
 
   init_map(){
@@ -1740,33 +1740,32 @@ class Game {
   //Respawn all players in their spawn rooms.
   //Reset the game and start it.
   start_game(){
-
+    
     let temp_arr = [...this.props.entities];
 
     for (const id of temp_arr){      
       let entity = this.world.get_instance(id);
 
       if (entity.props.type==="User"){
-        //Spawn users in their spawn rooms.
+        //Spawn users in their spawn rooms.        
         if (entity.props.container_id!==entity.props.spawn_room_id){
           entity.spawn_in_room(entity.props.spawn_room_id);          
         }
 
         //Remove all items on the user's body.
         for (const body_part of entity.BODY_PARTS){
-          if (entity.props[body_part]!==null){
-            this.remove_item_from_game(entity.props[body_part]);
-            this.world.remove_from_world(entity.props[body_part]);
-            entity.props[body_part]=null;
+          if (entity.props[body_part]!==null){                        
+            entity.props[body_part]=null;            
           }
         }        
-
+        
       } else if (entity.props.type==="Item"){
         //Remove existing items from the world.
         this.remove_item_from_game(entity.props.id);
         this.world.remove_from_world(entity.props.id);        
+        
       }
-    }
+    }    
     
     //Spawn items    
     for (const [item_name, spawn_room_arr] of Object.entries(this.props.item_spawn_rooms)){
@@ -1787,7 +1786,7 @@ class Game {
 
     this.props.is_started = true;
     this.props.blue_points = 0;
-    this.props.red_points = 0;
+    this.props.red_points = 0;    
 
     this.send_msg_to_all_players('THE GAME HAS STARTED!!');
   }
@@ -1798,8 +1797,8 @@ class Game {
 
   send_msg_to_all_players(msg){
     for (const entity_id of this.props.entities){      
-      let entity = this.world.get_instance(entity_id);     
-      if (entity.props.type==="User"){
+      let entity = this.world.get_instance(entity_id);       
+      if (entity.props.type==="User"){        
         entity.send_chat_msg_to_client(msg);
       }
     }
