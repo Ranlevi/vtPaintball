@@ -687,7 +687,7 @@ chat.addEventListener('click', (evt)=>{
     case "Hold":
     case "Consume":
     case "Switch Sides":
-    case "Quit Game":
+    case "Quit To Lobby":
     case "Game Info":
     case "User Info":
     case "Use":

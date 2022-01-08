@@ -127,8 +127,7 @@ class Room {
   }   
 
   //Returns an object with the state of exits (exists===true)
-  get_exits_state(){
-    console.log(this.props.name);
+  get_exits_state(){    
     let obj = {
       north:  (this.props.exits.north===null? false:true),
       south:  (this.props.exits.south===null? false:true),
@@ -911,19 +910,15 @@ class User {
     let game = this.world.get_instance(this.props.current_game_id);    
 
     this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");    
-    game.player_quit(this.props.id);
-    this.spawn_in_room('r0000000');    
+    this.spawn_in_room('r0000000'); 
+
+    game.player_quit(this.props.id);    
   }
 
   //Send the user information about the current game.
-  game_cmd(){
+  game_cmd(game_id){
 
-    if (this.props.current_game_id===null){
-      this.send_chat_msg_to_client("You're not in any game, currently.");
-      return;
-    }
-
-    let game = this.world.get_instance(this.props.current_game_id);
+    let game = this.world.get_instance(game_id);    
     this.send_chat_msg_to_client(game.get_look_string());
   }
 
@@ -1163,14 +1158,17 @@ class User {
       } else {
         //User is in a game
         availabe_cmds.push('Switch Sides');
-        availabe_cmds.push('Quit Game');
+        availabe_cmds.push('Quit To Lobby');
       }
 
     } else {
       //Another user clicked this user's name.
       if (this.props.current_game_id!==null){
         //In a game
-        availabe_cmds.push('Shot');        
+        let game = this.world.get_instance(this.props.current_game_id);
+        if (game.props.is_started){
+          availabe_cmds.push('Shot');        
+        }        
       }
 
       availabe_cmds.push('Look');
@@ -1312,44 +1310,55 @@ class Item {
   name_clicked(clicking_user_id){
     
     let clicking_user = this.world.get_instance(clicking_user_id);
-
     let availabe_cmds = [];
 
-    if (this.props.container_id===clicking_user.props.container_id ||
+    if (this.props.container_id===clicking_user.props.container_id || 
         this.props.container_id===clicking_user_id){
-      //Both item and user are in the same room, or on user's body.
+      //Item is in the same room as user (on or off the body)
       availabe_cmds.push('Look');
-      
-      if (this.props.is_gettable){
-        availabe_cmds.push('Get');        
-      }
 
-      if (this.props.is_holdable){
-        availabe_cmds.push('Hold');        
-      }
-
-      if (this.props.wear_slot!==null){
-        availabe_cmds.push('Wear');        
-      }
-
-      if (clicking_user.props.holding===this.props.id ||
-          clicking_user.props[this.props.wear_slot]===this.props.id){
-          //User is wearing or holding the item.
-        availabe_cmds.push('Remove');        
-      }
-      
-      if (this.props.container_id===clicking_user.props.id){
-        availabe_cmds.push('Drop');
-      }
-      
-      if (this.props.is_consumable){
-        availabe_cmds.push('Consume');
-      }
-      
       if (this.props.action!==null){
         availabe_cmds.push("Use");
       }
-      
+
+      if (this.props.is_consumable){
+        availabe_cmds.push('Consume');
+      }
+
+      if (this.props.container_id===clicking_user_id){
+        //The item is on the user's body
+        availabe_cmds.push('Drop');
+
+        let ix = clicking_user.props.slots.indexOf(this.props.id);
+        if (ix===-1){
+          //Item is not in the user's slot
+          availabe_cmds.push('Remove');
+        } else {
+          //Item is in the user's slots
+          if (this.props.is_holdable){
+            availabe_cmds.push('Hold');        
+          }
+    
+          if (this.props.wear_slot!==null){
+            availabe_cmds.push('Wear');        
+          }
+        }
+
+      } else {
+        //The item is not on the user's body
+        if (this.props.is_holdable){
+          availabe_cmds.push('Hold');        
+        }
+  
+        if (this.props.wear_slot!==null){
+          availabe_cmds.push('Wear');        
+        }
+
+        if (this.props.is_gettable){
+          availabe_cmds.push('Get');        
+        }
+      }
+
     }
     
     if (availabe_cmds.length===0){
@@ -1687,6 +1696,8 @@ class Game {
     
     if (clicking_user.props.current_game_id===null){
       availabe_cmds.push("Join This Game");      
+    } else {
+      availabe_cmds.push("Quit To Lobby");
     }
 
     let cmds_arr = [];
@@ -1817,6 +1828,11 @@ class Game {
     }
 
     let user = this.world.get_instance(user_id);
+
+    if (this.props.owner_id===user.props.id){
+      this.props.owner_id = null;
+    }
+
     user.props.team= null;
     user.props.current_game_id= null;
     user.props.owned_game_id=   null;
@@ -1864,7 +1880,7 @@ class Game {
     }
 
     let user = this.world.get_instance(this.props.owner_id);
-    user.game_cmd();
+    user.game_cmd(this.props.id);
   }
 
   //Returns an HTML string for 'Look' or 'Game' commands.

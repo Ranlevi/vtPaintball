@@ -56,19 +56,7 @@ To that goal, links have two types of information associated with them.
   User gets a message: 'noises from NORTH.' (direction of exit)
 
 
+Room Names: Upper Case, Specific Font.
+Items/User: Tags. Users - White BG. Items - Green BG.
+CMDS: Specific Font.
 
-When the game starts, the user sees a login modal.
-The user fills the username. A Login message is sent to the server,
-and a login reply message is recived with the result.
-
-
-Message is Chat: Welcome, aa! 
-text: welcome <aa>!
-objects: 
-  innerHTML : {
-    id: 
-    classes:[]
-  }
-}
-
-Maybe only predetermind messages. 

@@ -12,12 +12,8 @@ change links to buttons?
 different colors and fonts for items
 sounds.
 look user self
-game info for those in the lobby.
-shot appears before start.
-get, hold cmds when holding gun
 boxes width on mobile
 every time an ite spawns - announce
-maybe remove disconnect btn? player can just close the browser tab.
 give the game 'charecter'. funny? scary? 
 write help page.
 logs
@@ -202,13 +198,13 @@ class Game_Controller {
             break;
           }
 
-          case "Quit Game":{
+          case "Quit To Lobby":{
             user.quit_cmd();
             break;
           }
 
           case "Game Info":{
-            user.game_cmd();
+            user.game_cmd(msg.content.id);
             break;
           }
 
