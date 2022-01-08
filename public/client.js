@@ -77,8 +77,7 @@ function init(){
 function create_socket(){
   let socket_io = io(); 
 
-  socket_io.on('Message From Server', (msg)=>{    
-    
+  socket_io.on('Message From Server', (msg)=>{        
     switch(msg.type){
 
       case "Login Reply":{ 
@@ -108,7 +107,7 @@ function create_socket(){
       }
 
       case "Exits Message":{
-        //{perm_link_north: bol...}        
+        //{perm_link_north: bol...}                   
         for (const [key, value] of Object.entries(msg.content)){
           switch(key){
             case "north":{
@@ -604,7 +603,10 @@ perm_links_cmds_container.addEventListener('click', (evt)=>{
 
   if (clicked_cmd!==null){
     let msg = {
-      type: clicked_cmd      
+      type: clicked_cmd,
+      content: {
+        id: null
+      }
     }
     socket.emit('Message From Client', msg); 
   }

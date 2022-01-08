@@ -8,33 +8,24 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-remove door locks mechanism
-remove getters and setters, just have useful methods.
-
-
-messages from server container data - presentaion is on the client.
 change links to buttons?
-bug: blue killed holding gun - gun not spwaned.
 different colors and fonts for items
 sounds.
 look user self
 game info for those in the lobby.
 shot appears before start.
-game info before start - "its not in the same room as you"??
-on start, respawn - but gun appears only after look room!
 get, hold cmds when holding gun
 boxes width on mobile
 every time an ite spawns - announce
 maybe remove disconnect btn? player can just close the browser tab.
 give the game 'charecter'. funny? scary? 
 write help page.
-tests
 logs
 add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       true;
+const TEST_MODE=       false;
 
 const fs=         require('fs');
 const Classes=    require('./classes');

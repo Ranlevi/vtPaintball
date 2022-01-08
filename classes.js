@@ -110,7 +110,7 @@ class Room {
 
     msg += `<p>${this.props.description}</p>`;
     msg += '<p>In the room: ';
-    
+        
     for (const entity_id of this.props.entities){            
       let entity = this.world.get_instance(entity_id);      
       msg += `${entity.get_name()} `;
@@ -128,6 +128,7 @@ class Room {
 
   //Returns an object with the state of exits (exists===true)
   get_exits_state(){
+    console.log(this.props.name);
     let obj = {
       north:  (this.props.exits.north===null? false:true),
       south:  (this.props.exits.south===null? false:true),
@@ -184,7 +185,7 @@ class User {
       is_game_owner:      false,
       team:               null,
       defense_multiplier: 0, //Allowed Range: 0-9
-      attack_multiplier:  0, //Allowed Range: 0-9
+      attack_multiplier:  5, //Allowed Range: 0-9
       noise_multiplier:   5, //Allowed Range: 0-9
     }
     
@@ -367,6 +368,7 @@ class User {
     this.send_msg_to_room(`${this.get_name()} travels ${direction}.`);
     
     this.__move_to_room(this.props.container_id, next_room_id)
+    this.send_exits_msg_to_client();
     
     //Send a message to the new room.
     this.send_msg_to_room(`${this.get_name()} enters from ${Utils.get_opposite_direction(direction)}.`);
@@ -392,7 +394,7 @@ class User {
     
     if (target_id===null){
       let room= this.world.get_instance(this.props.container_id);   
-      //Look at the room the user is in.
+      //Look at the room the user is in.      
       this.send_chat_msg_to_client(room.get_look_string());      
       return;
     }
@@ -724,7 +726,7 @@ class User {
     this.spawn_in_room(this.props.spawn_room_id);
    
     this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p></p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
-    
+    this.send_exits_msg_to_client();
     //Open the edit game modal
     this.send_game_info_to_client();
   }
@@ -770,12 +772,12 @@ class User {
 
     //User can join the game.
     game.add_player(this.props.id);
-    this.props.current_game_id= game.props.id;
+    this.props.current_game_id= game.props.id;    
 
     this.send_msg_to_room(`${this.get_name()} teleports to a game.`);
 
     this.spawn_in_room(this.props.spawn_room_id);
-
+    this.send_exits_msg_to_client();
     this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p>`);    
     
     this.game_cmd();  
@@ -1002,7 +1004,7 @@ class User {
   } 
 
   //Get the exits from the current room and send them.
-  send_exits_msg_to_client(){
+  send_exits_msg_to_client(){    
     let room = this.world.get_instance(this.props.container_id);
     let msg = {
       type:     "Exits Message",
@@ -1106,11 +1108,11 @@ class User {
 
     let current_room = this.world.get_instance(this.props.container_id);
 
-    for (const [direction, next_room_obj] of Object.entries(current_room.props.exits)){
+    for (const [direction, next_room_id] of Object.entries(current_room.props.exits)){
       //Scan all the room's exits.
       
-      if (next_room_obj!==null){
-        let next_room = this.world.get_instance(next_room_obj.id);
+      if (next_room_id!==null){
+        let next_room = this.world.get_instance(next_room_id);
 
         //Check if there are users in the room, and msg them.
         for (const id of next_room.props.entities){
@@ -1122,12 +1124,12 @@ class User {
         }
 
         //Scan all the other exits of the room, same thing.
-        for (const [dir, next_next_room_obj] of Object.entries(next_room.props.exits)){
+        for (const [dir, next_room_id] of Object.entries(next_room.props.exits)){
 
           //Ignore the direction from which we are coming from in the loop.
-          if (dir!==Utils.get_opposite_direction(direction) && next_next_room_obj!==null){
+          if (dir!==Utils.get_opposite_direction(direction) && next_room_id!==null){
 
-            let next_next_room = this.world.get_instance(next_next_room_obj.id);
+            let next_next_room = this.world.get_instance(next_room_id);
 
             for (const id of next_next_room.props.entities){
               let entity = this.world.get_instance(id);
@@ -1582,7 +1584,7 @@ class Game {
     return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
-  remove_item_from_game(id){        
+  remove_item_from_game(id){    
     let ix = this.props.entities.indexOf(id);    
     this.props.entities.splice(ix,1);    
   }
@@ -1761,9 +1763,10 @@ class Game {
         
       } else if (entity.props.type==="Item"){
         //Remove existing items from the world.
+        let room = this.world.get_instance(entity.props.container_id);
+        room.remove_entity(entity.props.id);
         this.remove_item_from_game(entity.props.id);
         this.world.remove_from_world(entity.props.id);        
-        
       }
     }    
     
