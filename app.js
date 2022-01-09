@@ -8,10 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-change links to buttons?
-insted of background - change the color of the room name?
 sounds.
-look user self
 boxes width on mobile
 every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 

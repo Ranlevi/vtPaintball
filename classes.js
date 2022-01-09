@@ -240,7 +240,7 @@ class User {
       team_class = "red_team";
     }
 
-    return `<span class="tag is-dark clickable ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
+    return `<span class="tag is-warning clickable ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //Return a String message with what other see when they look at the user.
@@ -724,7 +724,7 @@ class User {
 
     this.spawn_in_room(this.props.spawn_room_id);
    
-    this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p></p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
+    this.send_chat_msg_to_client(`<p><b>You have been teleported to the game arena.</b></p></p><p><span class="link" data-id="${game.props.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link">Start</span> the game when you're ready.</p>`);
     this.send_exits_msg_to_client();
     //Open the edit game modal
     this.send_game_info_to_client();
@@ -1235,7 +1235,7 @@ class Item {
         case "list games":{          
           let public_games_ids_arr = this.world.get_public_games();
 
-          let html = "<p>List of publicly available games:</p>";
+          let html = "<p><b>List of publicly available games:</b></p>";
 
           if (public_games_ids_arr.length===0){
             html += "Empty."
@@ -1283,7 +1283,7 @@ class Item {
 
   get_name(){
     //Returns an HTML string for the name of the entity.
-    return `<span class="tag is-link clickable" data-id="${this.props.id}">${this.props.name}</span>`;
+    return `<span class="tag is-primary clickable" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //Send a message to all entities in the room.
@@ -1888,8 +1888,8 @@ class Game {
     
     let html =  `<h1>${this.get_name()} Details:</h1>` +
                 `<p><b>Type</b>: Red Vs. Blue</p>`+
-                `<p>First team to reach the Max Score wins!</p>`+
-                `<p><b>Max Score</b> is: ${this.props.max_score}`;
+                `<p><b>Max Score</b> is: ${this.props.max_score}`+
+                `<p><i>First team to reach the Max Score wins!</i></p>`;
     return html;
   }
 }

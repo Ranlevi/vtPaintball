@@ -56,7 +56,4 @@ To that goal, links have two types of information associated with them.
   User gets a message: 'noises from NORTH.' (direction of exit)
 
 
-Room Names: Upper Case, Specific Font.
-Items/User: Tags. Users - White BG. Items - Green BG.
-CMDS: Specific Font.
 

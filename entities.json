@@ -26,7 +26,7 @@
       "type":               "Item",
       "name":               "Welcome Sign",      
       "subtype":            "Sign",
-      "description":        "The sign reads: 'Welcome to Text Tag! This is a multiplayer, text-based game. Once you enter 'create' or 'join <some ID>', you will be teleported to the game area, which is a made of many connected rooms. You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!'"      
+      "description":        "<p><b>Welcome to Text Tag!</b> This is a multiplayer, text-based Laser Tag game.</p><p>1. Create a new game, or Join an existing one using the Game List Button.</p>2. Take a look at the game area, and once you're ready - Start the game. . You will be assigned to a Red or Blue team: enter 'shot <player name> to eliminate an opponent. First team to reach the required score - Wins!'"      
     }
   },
   "Game List Button":{
