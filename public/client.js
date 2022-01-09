@@ -621,7 +621,10 @@ perm_links_cmds_container.addEventListener('click', (evt)=>{
 chat.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
 
-  if (evt.target.classList[0]!=="link"){
+  if (!(evt.target.classList[0]==="link" || 
+      evt.target.classList[0]==="command" || 
+      evt.target.classList[0]==="room_name" ||
+      evt.target.classList[0]==="tag")){
     //User clicked on a non-link text
     return;
   }
@@ -705,7 +708,7 @@ chat.addEventListener('click', (evt)=>{
       break;
     }
 
-    default:{
+    default:{      
       //Any other link clicked.
       let msg = {
         type: "Name Clicked",

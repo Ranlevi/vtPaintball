@@ -9,7 +9,7 @@ Note: must be https for clipboard to work!
 
 TODO:
 change links to buttons?
-different colors and fonts for items
+insted of background - change the color of the room name?
 sounds.
 look user self
 boxes width on mobile

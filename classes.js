@@ -56,7 +56,7 @@ class Room {
     
   //Returns an HTML string for the name of the room.
   get_name(){    
-    return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;    
+    return `<span class="room_name" data-id="${this.props.id}">${this.props.name}</span>`;    
   }
 
   //Returns a Look Command message (String)
@@ -240,7 +240,7 @@ class User {
       team_class = "red_team";
     }
 
-    return `<span class="link ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
+    return `<span class="tag is-dark clickable ${team_class}" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //Return a String message with what other see when they look at the user.
@@ -1177,7 +1177,7 @@ class User {
 
     let cmds_arr = [];
     for (const cmd of availabe_cmds){
-      cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+      cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
     }
   
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
@@ -1283,7 +1283,7 @@ class Item {
 
   get_name(){
     //Returns an HTML string for the name of the entity.
-    return `<span class="link" data-id="${this.props.id}">${this.props.name}</span>`;
+    return `<span class="tag is-link clickable" data-id="${this.props.id}">${this.props.name}</span>`;
   }
 
   //Send a message to all entities in the room.
@@ -1371,7 +1371,7 @@ class Item {
       //Send the user an array of available cmds.
       let cmds_arr = [];
       for (const cmd of availabe_cmds){
-        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+        cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
       }
       clicking_user.send_cmds_arr_to_client(cmds_arr);
     }
@@ -1702,7 +1702,7 @@ class Game {
 
     let cmds_arr = [];
       for (const cmd of availabe_cmds){
-        cmds_arr.push(`<span class="link" data-id="${this.props.id}">${cmd}</span>`);
+        cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
       }    
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
