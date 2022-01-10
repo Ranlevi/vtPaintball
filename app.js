@@ -8,6 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+keyboard movement on desktop?
 sounds.
 boxes width on mobile
 every time an ite spawns - announce
