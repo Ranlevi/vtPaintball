@@ -210,9 +210,9 @@ class User {
     let destination_room= this.world.get_instance(destination_room_id);
     origin_room.remove_entity(this.props.id);
     destination_room.add_entity(this.props.id);
-    this.send_change_bg_msg_to_client(destination_room.props.background);
-    this.send_exits_msg_to_client();
+    this.send_change_bg_msg_to_client(destination_room.props.background);    
     this.props.container_id = destination_room_id;
+    this.send_exits_msg_to_client();
     this.look_cmd();
   }
 
@@ -221,6 +221,7 @@ class User {
     this.send_msg_to_room(`${this.get_name()} teleports away.`);
     this.__move_to_room(this.props.container_id, dest_id);    
     this.send_msg_to_room(`${this.get_name()} teleported into the room.`);
+    this.send_chat_msg_to_client('You teleport into the room.');
   }
  
   //Called each game tick.  
@@ -678,8 +679,8 @@ class User {
   //Say something that will be heard by all entities in the room.
   say_cmd(content){
     
-    this.send_chat_msg_to_client(`You say: <span class="say_text">${content}</span`);
-    this.send_msg_to_room(`${this.get_name()} says: ${content}`);
+    this.send_chat_msg_to_client(`<b>You say:</b>${content}`);
+    this.send_msg_to_room(`${this.get_name()} <b>says:</b> ${content}`);
   }
 
   //Say something to a specific user.
@@ -692,8 +693,8 @@ class User {
       return;
     }
     
-    this.send_chat_msg_to_client(`You tell ${user.get_name()}: ${content}`);
-    user.get_msg(this.props.id, `${this.get_name()} tells you: ${content}`);
+    this.send_chat_msg_to_client(`<b>You tell</b> ${user.get_name()}: ${content}`);
+    user.get_msg(this.props.id, `${this.get_name()} <b>tells you:</b> ${content}`);
   }
 
   //Emote something that will be seen by all the room.
@@ -779,7 +780,7 @@ class User {
     this.send_exits_msg_to_client();
     this.send_chat_msg_to_client(`<p>You have been teleported to the game arena.</p><p>You are in team ${this.props.team}.</p>`);    
     
-    this.game_cmd();  
+    this.game_cmd(game.props.id);  
   }
 
   //If the user is holding a gun, shot the target
@@ -1167,7 +1168,7 @@ class User {
         //In a game
         let game = this.world.get_instance(this.props.current_game_id);
         if (game.props.is_started){
-          availabe_cmds.push('Shot');        
+          availabe_cmds.push('Shot');        //Fix bug here - only if holding gun.
         }        
       }
 
@@ -1209,7 +1210,8 @@ class Item {
       defense_rating:   0, //Allowed Range: 0-9
       attack_rating:    0,  //Allowed Range: 0-9
       current_game_id:  null, //The game the item belongs to.
-      cooldown:         0 //In ticks.
+      cooldown:         0, //In ticks.
+      current_game_id:  null
     }
       
     //Overwrite the default props with the saved ones.
@@ -1224,6 +1226,28 @@ class Item {
 
   set_container_id(new_container_id){
     this.props.container_id= new_container_id;
+  }
+
+  //Remove item from it's container, and from the world.
+  destroy_item(){
+
+    //If the Item is in a game, remove it from the game.
+    if (this.props.current_game_id!==null){
+      let game = this.world.get_instance(this.props.current_game_id);
+      game.remove_item_from_game(this.props.id);
+    }
+
+    let container = this.world.get_instance(this.props.container_id);
+
+    if (container.props.type==="Room"){
+      container.remove_entity(this.props.id);
+    } else if (container.props.type==="User"){
+      container.remove_item_from_body(this.props.id);
+    } else if (container.props.type==="NPC"){
+      container.remove_item(this.props.id);
+    }
+
+    this.world.remove_from_world(this.props.id);
   }
 
   //An action performed when a user does a Use cmd on the item.
@@ -1362,8 +1386,8 @@ class Item {
     }
     
     if (availabe_cmds.length===0){
-      //Can only happen if the item is in a different room from the user.
-      clicking_user.send_chat_msg_to_client('This item is in another room.');
+      //Do nothing
+      return;
     } else if (availabe_cmds.length===1){
       //If only one cmd exists - it must be Look.
       clicking_user.look_cmd(this.props.id);
@@ -1450,19 +1474,8 @@ class NPC {
   }
 
   //Removes an item from given position.
-  remove_item(id, position){
-    //Assumes the item exists in the given position
-
-    if (position==="slots"){
-      let ix = this.props.slots.indexOf(id);          
-      this.props.slots.splice(ix,1);
-      return;
-    } else if (this.props.subtype==="Human"){
-      if (["holding", "head", "torso", "legs", "feet"].includes(position)){
-        this.props[position] = null;
-        return;
-      } 
-    }
+  remove_item(id){
+    //To be implemented.
   }
 
   //Aux Methods.
@@ -1527,7 +1540,7 @@ class NPC {
   }
 
   say_cmd(msg){
-    this.send_msg_to_room(`says: <span class="say_text">${msg}</span>`);    
+    this.send_msg_to_room(`<b>says:</b> ${msg}`);    
   }
 
   emote_cmd(emote){
@@ -1767,17 +1780,14 @@ class Game {
 
         //Remove all items on the user's body.
         for (const body_part of entity.BODY_PARTS){
-          if (entity.props[body_part]!==null){                        
-            entity.props[body_part]=null;            
+          if (entity.props[body_part]!==null){  
+            let item = this.world.get_instance(entity.props[body_part]); 
+            item.destroy_item();                                 
           }
         }        
         
       } else if (entity.props.type==="Item"){
-        //Remove existing items from the world.
-        let room = this.world.get_instance(entity.props.container_id);
-        room.remove_entity(entity.props.id);
-        this.remove_item_from_game(entity.props.id);
-        this.world.remove_from_world(entity.props.id);        
+        entity.destroy_item();        
       }
     }    
     

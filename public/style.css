@@ -45,6 +45,7 @@ html, body {
   margin-right:     5px;  
   margin-top:       3px;
   padding:          0.5rem;
+  overflow-wrap:    break-word;
 }
 
 .link {
@@ -90,11 +91,6 @@ html, body {
 .red_team {
   color: red;
 }
-
-.say_text {
-  font-weight:      600;
-}
-
 
 .perm_links_container {
   height:           fit-content;

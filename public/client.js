@@ -107,7 +107,7 @@ function create_socket(){
       }
 
       case "Exits Message":{
-        //{perm_link_north: bol...}                   
+        //{perm_link_north: bol...}           
         for (const [key, value] of Object.entries(msg.content)){
           switch(key){
             case "north":{
