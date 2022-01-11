@@ -97,7 +97,11 @@ function create_socket(){
       }
 
       case "Chat Message":{
-        insert_chat_box("box_server", msg.content);
+        if (msg.is_flashing){
+          insert_chat_box("flashing_box_server", msg.content);
+        } else {
+          insert_chat_box("box_server", msg.content);
+        }        
         break;
       }
 
@@ -740,6 +744,11 @@ function insert_chat_box(type, content){
 
     case "box_server":
       div.classList.add("box_server");
+      break;
+
+    case "flashing_box_server":
+      div.classList.add("box_server");
+      div.classList.add("flashing");
       break;
   }
 

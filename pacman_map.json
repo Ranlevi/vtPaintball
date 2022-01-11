@@ -361,8 +361,10 @@
     }
   ],
   "item_spawn_rooms":{
-    "Iron Man Suit": ["r0000011", "r0000013"],
-    "Desert Eagle":  ["r0000001", "r0000002"]
+    "r0000011": ["Iron Man Suit"],
+    "r0000013": ["Iron Man Suit"],
+    "r0000001": ["Desert Eagle"],
+    "r0000002": ["Desert Eagle"]
   } 
 }
 

@@ -834,8 +834,8 @@ class User {
     let num = Math.random();    
     if (num<=normalized_hit_threshold){
       //Hit
-      this.send_chat_msg_to_client(`You hit ${target.get_name()}!`);
-      target.send_chat_msg_to_client(`${this.get_name()} hits you!`);
+      this.send_chat_msg_to_client(`You hit ${target.get_name()}!`, true);
+      target.send_chat_msg_to_client(`${this.get_name()} hits you!`, true);
 
       let game = this.world.get_instance(this.props.current_game_id);
       game.do_hit(this.props.id, target.props.id);
@@ -959,10 +959,11 @@ class User {
   //--------------------
 
   //Send text that will be displayed in the Chat.
-  send_chat_msg_to_client(content){    
+  send_chat_msg_to_client(content, is_flashing=false){    
     let message = {
-      type:     "Chat Message",
-      content:  content
+      type:         "Chat Message",
+      content:      content,
+      is_flashing:  is_flashing
     }    
     this.props.socket.emit('Message From Server', message);
   }
@@ -1164,11 +1165,12 @@ class User {
 
     } else {
       //Another user clicked this user's name.
-      if (this.props.current_game_id!==null){
-        //In a game
+      if (this.props.current_game_id!==null &&
+          clicking_user.props.holding!==null){
+        //In a game and holding a gun
         let game = this.world.get_instance(this.props.current_game_id);
         if (game.props.is_started){
-          availabe_cmds.push('Shot');        //Fix bug here - only if holding gun.
+          availabe_cmds.push('Shot'); 
         }        
       }
 
@@ -1211,7 +1213,8 @@ class Item {
       attack_rating:    0,  //Allowed Range: 0-9
       current_game_id:  null, //The game the item belongs to.
       cooldown:         0, //In ticks.
-      current_game_id:  null
+      current_game_id:  null,
+      spawn_room_id:    null //Id of the Item's spawn room.
     }
       
     //Overwrite the default props with the saved ones.
@@ -1626,7 +1629,9 @@ class Game {
       for (const props of parsed_info.rooms){
         let room = new Room(this.world, props);
         room.props.current_game_id = this.props.id;
-        this.props.entities.push(room.props.id);        
+        this.props.entities.push(room.props.id);
+
+        //continue here: spawn items in the room.
       }     
 
     }  else {
@@ -1720,28 +1725,38 @@ class Game {
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
 
+  respawn_item(id){
+    let item = this.world.get_instance(id);
+        
+    //Respawn the item in a room.
+    let spawn_rooms_arr= this.props.item_spawn_rooms[item.props.name];          
+    let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
+
+    item.props.container_id = spawn_room_id;
+
+    let spawn_room = this.world.get_instance(spawn_room_id);
+    spawn_room.add_entity(item.props.id);
+  }
+
   //Calculate score. If max score reached - finish the game.
   do_hit(shooter_id, victim_id){
 
     let shooter = this.world.get_instance(shooter_id);
     let victim  = this.world.get_instance(victim_id);    
 
-    //Remove all things worn and in slots.
+    //Remove all things worn and in slots of victim
+    //Respawn them
     for (const body_part of victim.BODY_PARTS){
       if (victim.props[body_part]!==null){
-        let item = this.world.get_instance(victim.props[body_part]);
-        //Respawn the item in a room.
-        let spawn_rooms_arr= this.props.item_spawn_rooms[item.props.name];          
-        let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
-
-        item.props.container_id = spawn_room_id;
-
-        let spawn_room = this.world.get_instance(spawn_room_id);
-        spawn_room.add_entity(item.props.id);
-
-        victim.remove_item_from_body(item.props.id);
+        this.respawn_item(victim.props[body_part]);
+        victim.remove_item_from_body(victim.props[body_part]);
       }
-    }      
+    }
+
+    for (const item_id of victim.props.slots){
+      this.respawn_item(item_id);      
+    }
+    victim.props.slots = [];
 
     victim.spawn_in_room(victim.props.spawn_room_id);  
     

@@ -8,6 +8,7 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+spawn by rooms, not by items.
 keyboard movement on desktop?
 sounds.
 boxes width on mobile
@@ -222,8 +223,11 @@ class Game_Controller {
           }
 
           case "Name Clicked":{                
-            let entity = this.world.get_instance(msg.content.id);            
-            entity.name_clicked(socket.user_id);
+            let entity = this.world.get_instance(msg.content.id);
+            if (entity!==undefined){
+              //Prevent user clicking on an already destroyed item.
+              entity.name_clicked(socket.user_id);
+            }            
             break;
           }
 
