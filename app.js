@@ -20,7 +20,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       false;
+const TEST_MODE=       true;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -202,7 +202,7 @@ class Game_Controller {
             break;
           }
 
-          case "Game Info":{
+          case "Game Info":{            
             user.game_cmd(msg.content.id);
             break;
           }
@@ -243,7 +243,7 @@ class Game_Controller {
 
           case "Edit Game":{
             //Note: we assume the user is in a game and owns it, else he
-            //would be able to edit it.            
+            //would be able to edit it.               
             let game = this.world.get_instance(user.props.current_game_id);             
             game.do_edit(msg);            
             break;

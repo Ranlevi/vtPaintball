@@ -23,7 +23,7 @@ const WAIT_TIME = 500; //in ms
 function create_socket(user){
   let socket_io = io(); 
 
-  socket_io.on('Message From Server', (msg)=>{    
+  socket_io.on('Message From Server', (msg)=>{   
     state_obj[user].recieved_msgs.push(msg);
   });
   
@@ -405,8 +405,8 @@ async function run_test(){
       rcvd_cmds += template.firstChild.innerHTML;
     }    
   
-    let html = "Test 9: Test User 1 Clicking game name. --> ";  
-    if (rcvd_cmds==="Game InfoCopy IDEdit GameStart"){
+    let html = "Test 9: Test User 1 Clicking game name. --> ";      
+    if (rcvd_cmds==="Game InfoCopy IDEdit GameStartQuit To Lobby"){
       html += "Pass.";
     } else {
       html += "Failed.";
@@ -426,6 +426,9 @@ async function run_test(){
 
     let msg = {
       type:    "Game Info",
+      content: {
+        id: state_obj.test_user_1.game_id
+      }
     }
     socket_test_user1.emit('Message From Client', msg); 
 
@@ -482,7 +485,7 @@ async function run_test(){
   //Action: Test User 1 Setting various parameters of the game.
   //Expect: Server sends a game info msg with the new parameters..
   const test_12 = async function (socket_test_user1){    
-
+    
     let msg = {
       type:    "Edit Game",
       content: {
@@ -494,15 +497,15 @@ async function run_test(){
     }
     socket_test_user1.emit('Message From Client', msg); 
 
-    await sleep();
-    
+    await sleep();    
+
     let html=      "Test 12: Test User 1 submit Game Edit parameters. --> ";
     let rcvd_msg=  state_obj.test_user_1.recieved_msgs.shift();    
     let template=  htmlToTemplate(rcvd_msg.content);
     template=      template.childNodes[0];
-
+    
     let template2=  htmlToTemplate(rcvd_msg.content);
-    template2=      template2.childNodes[3];            
+    template2=      template2.childNodes[2];            
     
     if (template.childNodes[0].innerHTML==="My Test Game" &&
         template2.childNodes[1].data===" is: 15"){ 
@@ -710,7 +713,7 @@ async function run_test(){
     }    
     
     let html = "Test 18: Test User 2 Clicking Desert Eagle. --> ";  
-    if (rcvd_cmds==="LookGetHold"){
+    if (rcvd_cmds==="LookHoldGet"){
       html += "Pass.";
     } else {
       html += "Failed.";
@@ -738,8 +741,7 @@ async function run_test(){
 
     await sleep();
     
-    let html=      "Test 19: Test User 2 clicks Hold on Gun. --> ";    
-
+    let html=      "Test 19: Test User 2 clicks Hold on Gun. --> ";        
     let rcvd_msg=  state_obj.test_user_2.recieved_msgs.shift();
     if (rcvd_msg.content==="You hold it."){ 
       html += "Passed.";
@@ -781,15 +783,15 @@ async function run_test(){
     }
 
     rcvd_msg=  state_obj.test_user_2.recieved_msgs[2];       
-
     if (!(!rcvd_msg.content.north && rcvd_msg.content.south)){ 
       test_passed = false;
     }        
 
     rcvd_msg=  state_obj.test_user_2.recieved_msgs[3];
+    
     let template = htmlToTemplate(rcvd_msg.content);    
-
-    if (template.children[0].innerHTML!=="Corridor"){ 
+    console.log(template.children[0].innerHTML);
+    if (template.children[0].innerHTML!=="Corridor"){ //continue here: why fail?
       test_passed = false;
     }    
 

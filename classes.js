@@ -916,9 +916,8 @@ class User {
   }
 
   //Send the user information about the current game.
-  game_cmd(game_id){
-
-    let game = this.world.get_instance(game_id);    
+  game_cmd(game_id){    
+    let game = this.world.get_instance(game_id);  
     this.send_chat_msg_to_client(game.get_look_string());
   }
 
@@ -963,7 +962,7 @@ class User {
       type:         "Chat Message",
       content:      content,
       is_flashing:  is_flashing
-    }    
+    }        
     this.props.socket.emit('Message From Server', message);
   }
 
@@ -1860,8 +1859,7 @@ class Game {
   }
 
   //Update edited parameters.
-  do_edit(msg){  
-    
+  do_edit(msg){      
     this.props.name = msg.content.props.name;
 
     if (msg.content.props.max_score!==undefined){
