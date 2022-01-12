@@ -56,4 +56,7 @@ To that goal, links have two types of information associated with them.
   User gets a message: 'noises from NORTH.' (direction of exit)
 
 
-
+A container has entities (room, game.);
+Each entity is responsible for itself. What does that mean? 
+When a user moves - he takes care of everything.
+Same with everything.

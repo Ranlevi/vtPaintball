@@ -265,7 +265,6 @@ class User {
     msg += `</p>`;
     return msg;
   }
-
   
   update_thresholds(){
     //Scan the user's items and update all the thresholds.
@@ -293,21 +292,21 @@ class User {
   
   //Returns an array of objects: {id: string, location: string}
   //Results will be ordered by holding->wearing->slots.
-  get_all_items(){    
-    let inv_arr = [];
+  // get_all_items(){    
+  //   let inv_arr = [];
     
-    for (const part of this.BODY_PARTS){
-      if (this.props[part]!==null) inv_arr.push({id: this.props[part], location: part});
-    }
+  //   for (const part of this.BODY_PARTS){
+  //     if (this.props[part]!==null) inv_arr.push({id: this.props[part], location: part});
+  //   }
 
-    for (const id of this.props.slots){
-      inv_arr.push({id: id, location: "slots"});      
-    }
+  //   for (const id of this.props.slots){
+  //     inv_arr.push({id: id, location: "slots"});      
+  //   }
 
-    return inv_arr;
-  }  
+  //   return inv_arr;
+  // }  
 
-  //Find the slot the item is in, and remote it.
+  //Find the slot the item is in, and remove it.
   //Note: we assume the item is on the body.
   remove_item_from_body(item_id){
 
@@ -1202,9 +1201,7 @@ class Item {
       description:      "This is an unnamed Item.",
       subtype:          "Item",
       container_id:     null,      
-      key_code:         null,      
       action:           null,
-      expiration_limit: null,
       wear_slot:        null,
       is_consumable:    false,
       is_holdable:      false,
@@ -1212,8 +1209,7 @@ class Item {
       defense_rating:   0, //Allowed Range: 0-9
       attack_rating:    0,  //Allowed Range: 0-9
       current_game_id:  null, //The game the item belongs to.
-      cooldown:         0, //In ticks.
-      current_game_id:  null,
+      cooldown:         0, //In ticks.      
       spawn_room_id:    null //Id of the Item's spawn room.
     }
       
@@ -1283,8 +1279,7 @@ class Item {
         default:
           console.error(`User.do_action()-> ${this.props.action} not implemented.`);        
       }
-    }   
-    
+    }       
   }
 
   //Returns a message with what a user sees when looking at the Item.
@@ -1589,7 +1584,7 @@ class Game {
       red_points:         0,
       max_score:          5,
       is_private:         false,
-      item_spawn_rooms:   {} // {entity_name: [room_id, room_id]}
+      item_spawn_rooms:   {} // {room_id: [entity name...]}
     }
 
     //Overwrite the default props with the saved ones.
@@ -1632,28 +1627,24 @@ class Game {
         this.props.entities.push(room.props.id);
 
         //continue here: spawn items in the room.
+        let items_arr = this.props.item_spawn_rooms[room.props.id];
+        if (items_arr!==undefined){
+          for (const item_name of items_arr){
+            let props = this.world.entities_db[item_name].props;
+            let item = new Item(this.world, props);
+            item.props.container_id=  room.props.id; 
+            item.props.spawn_room_id= room.props.id;       
+            item.props.current_game_id=  this.props.id;
+
+            room.add_entity(item.props.id);
+            this.props.entities.push(item.props.id);        
+          }
+        }
       }     
 
     }  else {
       console.error(`classes.game.init_map -> pacman.json does not exist.`);
     }
-
-    //Spawn items    
-    for (const [item_name, spawn_room_arr] of Object.entries(this.props.item_spawn_rooms)){
-      //Spawn all the items in all their rooms.
-      for (const room_id of spawn_room_arr){        
-        let props = this.world.entities_db[item_name].props;
-        let item = new Item(this.world, props);
-        item.props.container_id=  room_id;       
-
-        let room = this.world.get_instance(room_id);
-        room.add_entity(item.props.id);
-        
-        item.props.current_game_id=  this.props.id;
-        this.props.entities.push(item.props.id);        
-      }      
-    }
-
   }
 
   //Join a team according to balance.
@@ -1725,17 +1716,14 @@ class Game {
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
 
-  respawn_item(id){
+  respawn_item(id){ //continue from here - fix bug in spawn after hit.
     let item = this.world.get_instance(id);
-        
-    //Respawn the item in a room.
-    let spawn_rooms_arr= this.props.item_spawn_rooms[item.props.name];          
-    let spawn_room_id=   spawn_rooms_arr[Math.floor(Math.random()*spawn_rooms_arr.length)];
 
-    item.props.container_id = spawn_room_id;
-
-    let spawn_room = this.world.get_instance(spawn_room_id);
+    let spawn_room = this.world.get_instance(item.props.spawn_room_id);
     spawn_room.add_entity(item.props.id);
+    item.props.container_id = spawn_room.props.id;
+
+    item.send_msg_to_room(`${item.get_name()} has spawned here.`);    
   }
 
   //Calculate score. If max score reached - finish the game.
@@ -1747,17 +1735,17 @@ class Game {
     //Remove all things worn and in slots of victim
     //Respawn them
     for (const body_part of victim.BODY_PARTS){
-      if (victim.props[body_part]!==null){
-        this.respawn_item(victim.props[body_part]);
+      if (victim.props[body_part]!==null){        
         victim.remove_item_from_body(victim.props[body_part]);
-      }
+        this.respawn_item(victim.props[body_part]);
+      }   
     }
 
     for (const item_id of victim.props.slots){
+      victim.remove_item_from_body(item_id);
       this.respawn_item(item_id);      
     }
-    victim.props.slots = [];
-
+    
     victim.spawn_in_room(victim.props.spawn_room_id);  
     
     if (shooter.props.team==="Blue"){
@@ -1788,40 +1776,22 @@ class Game {
       let entity = this.world.get_instance(id);
 
       if (entity.props.type==="User"){
+
         //Spawn users in their spawn rooms.        
         if (entity.props.container_id!==entity.props.spawn_room_id){
           entity.spawn_in_room(entity.props.spawn_room_id);          
         }
 
-        //Remove all items on the user's body.
+        //Remove all items on the user's body.(not spawning, only removing)
         for (const body_part of entity.BODY_PARTS){
-          if (entity.props[body_part]!==null){  
-            let item = this.world.get_instance(entity.props[body_part]); 
-            item.destroy_item();                                 
-          }
-        }        
+          entity.props[body_part]=null;          
+        }
+        entity.props.slots = [];
         
       } else if (entity.props.type==="Item"){
-        entity.destroy_item();        
+        this.respawn_item(entity.props.id);
       }
-    }    
-    
-    //Spawn items    
-    for (const [item_name, spawn_room_arr] of Object.entries(this.props.item_spawn_rooms)){
-      //Spawn all the items in all their rooms.
-      for (const room_id of spawn_room_arr){        
-        let props = this.world.entities_db[item_name].props;
-        let item = new Item(this.world, props);        
-        item.props.container_id=  room_id;       
-
-        let room = this.world.get_instance(room_id);
-        room.add_entity(item.props.id);
-        
-        item.props.current_game_id=  this.props.id;
-        this.props.entities.push(item.props.id);
-        this.world.add_to_world(item);
-      }      
-    }
+    } 
 
     this.props.is_started = true;
     this.props.blue_points = 0;
@@ -1880,7 +1850,7 @@ class Game {
 
   //remove rooms, items and the game itself from the world.
   destroy_game(){
-    
+    //Assumes no users are left in the game.    
     for (const id of this.props.entities){
       this.world.remove_from_world(id);
     }
