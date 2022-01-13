@@ -776,25 +776,25 @@ async function run_test(){
     if (rcvd_msg.content!=="You travel south."){ 
       test_passed = false;
     }
-
+    
     rcvd_msg=  state_obj.test_user_2.recieved_msgs[1];
     if (rcvd_msg.content.background!=="#0000ff"){ 
       test_passed = false;
     }
-
+    
     rcvd_msg=  state_obj.test_user_2.recieved_msgs[2];       
-    if (!(!rcvd_msg.content.north && rcvd_msg.content.south)){ 
+    if (!(rcvd_msg.content.north && rcvd_msg.content.south)){ 
       test_passed = false;
     }        
-
+    
     rcvd_msg=  state_obj.test_user_2.recieved_msgs[3];
     
     let template = htmlToTemplate(rcvd_msg.content);    
-    console.log(template.children[0].innerHTML);
+    
     if (template.children[0].innerHTML!=="Corridor"){ //continue here: why fail?
       test_passed = false;
     }    
-
+    
     if (test_passed){
       html += "Passed.";
     } else {
@@ -866,12 +866,12 @@ async function run_test(){
 
     if (template.children[0].innerHTML!=="Blue Spawn Room"){
       test_passed = false;
-    }
-
-    if (template.children[3].innerText!="In the room: Test User 2 Desert Eagle "){
+    }    
+    
+    if (template.children[3].children[0].innerHTML!="Desert Eagle"){
       test_passed = false;
     }
-
+    
     if (test_passed){
       html += "Passed.";
     } else {

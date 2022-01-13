@@ -31,6 +31,7 @@ const CLIENT_VERSION=     0.1;
 
 //Global Variables
 let stop_chat_scroll=         false;
+let sound_mute=               false;
 let socket;
 
 //Initialize the client.
@@ -200,6 +201,35 @@ function create_socket(){
           list += `<li>${item}</li>`;
         }
         insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+        break;
+      }
+
+      case "Sound":{
+
+        if (sound_mute){
+          return;
+        }
+
+        switch(msg.sound){
+          case 'footsteps':{
+            let audioObj = new Audio('sound_steps.mp3');
+            audioObj.play();
+            break;
+          }
+
+          case 'hit':{
+            let audioObj = new Audio('sound_hit.mp3');
+            audioObj.play();
+            break;
+          }
+
+          case 'gun_hold':{
+            let audioObj = new Audio('sound_gun_hold.mp3');
+            audioObj.play();
+            break;
+          }
+
+        }
         break;
       }
     }  

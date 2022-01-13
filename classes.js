@@ -524,6 +524,7 @@ class User {
     //Send messgaes
     this.send_chat_msg_to_client(`You hold it.`);
     this.send_msg_to_room(`holds ${entity.get_name()}.`);
+    this.send_noise_msg_to_client('gun_hold');
   }
 
   //get an item from the slots or room, and wear it.
@@ -835,6 +836,7 @@ class User {
       //Hit
       this.send_chat_msg_to_client(`You hit ${target.get_name()}!`, true);
       target.send_chat_msg_to_client(`${this.get_name()} hits you!`, true);
+      target.send_noise_msg_to_client('hit');
 
       let game = this.world.get_instance(this.props.current_game_id);
       game.do_hit(this.props.id, target.props.id);
@@ -1042,6 +1044,14 @@ class User {
     this.props.socket.emit('Message From Server', msg);
   }
 
+  send_noise_msg_to_client(noise_type){
+    let msg = {
+      type : "Sound",
+      sound: noise_type
+    }
+    this.props.socket.emit('Message From Server', msg);
+  }
+
   //An admin can send a message to all users.
   admin_msg_cmd(msg){
 
@@ -1114,7 +1124,9 @@ class User {
           let entity = this.world.get_instance(id);
           if (entity.props.type==="User"){
             let opposite_dir = Utils.get_opposite_direction(direction);
-            entity.get_msg(this.props.id, `${msg}: ${opposite_dir}.`);
+            entity.get_msg(this.props.id, `${msg}: ${opposite_dir}.`);            
+            entity.send_noise_msg_to_client(noise_type);
+            
           }
         }
 
@@ -1131,6 +1143,7 @@ class User {
               if (entity.props.type==="User"){
                 let opposite_dir = Utils.get_opposite_direction(dir);
                 entity.get_msg(this.props.id, `${msg} ${opposite_dir}`);
+                entity.send_noise_msg_to_client(noise_type);
               }
             }
           }
@@ -1715,8 +1728,9 @@ class Game {
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
 
-  respawn_item(id){ //continue from here - fix bug in spawn after hit.
-    let item = this.world.get_instance(id);
+  respawn_item(id){     
+
+    let item = this.world.get_instance(id);    
 
     let spawn_room = this.world.get_instance(item.props.spawn_room_id);
     spawn_room.add_entity(item.props.id);
@@ -1729,14 +1743,15 @@ class Game {
   do_hit(shooter_id, victim_id){
 
     let shooter = this.world.get_instance(shooter_id);
-    let victim  = this.world.get_instance(victim_id);    
+    let victim  = this.world.get_instance(victim_id);
 
     //Remove all things worn and in slots of victim
     //Respawn them
     for (const body_part of victim.BODY_PARTS){
-      if (victim.props[body_part]!==null){        
-        victim.remove_item_from_body(victim.props[body_part]);
-        this.respawn_item(victim.props[body_part]);
+      if (victim.props[body_part]!==null){
+        let item_id = victim.props[body_part];
+        victim.remove_item_from_body(item_id);        
+        this.respawn_item(item_id);
       }   
     }
 
@@ -1788,7 +1803,10 @@ class Game {
         entity.props.slots = [];
         
       } else if (entity.props.type==="Item"){
-        this.respawn_item(entity.props.id);
+        //Respawn if not in spawn room.
+        if (entity.props.container_id!==entity.props.spawn_room_id){
+          this.respawn_item(entity.props.id);
+        }        
       }
     } 
 
