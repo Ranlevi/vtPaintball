@@ -2,6 +2,10 @@ let chat=                       document.getElementById('Chat');
 let disconnect_btn=             document.getElementById('disconnect_btn');
 let freeze_btn=                 document.getElementById('freeze_btn');
 let parent=                     document.getElementById('Parent');
+let sound_btn=                  document.getElementById('sound_btn');
+let sound_btn_icon=             document.getElementById('sound_btn_icon');
+let music_btn=                  document.getElementById('music_btn');
+let music_btn_icon=             document.getElementById('music_btn_icon');
 
 let perm_link_north=            document.getElementById("perm_link_north");
 let perm_link_south=            document.getElementById("perm_link_south");
@@ -32,7 +36,11 @@ const CLIENT_VERSION=     0.1;
 //Global Variables
 let stop_chat_scroll=         false;
 let sound_mute=               false;
+let music_mute=               false;
+let is_music_playing=         false;
 let socket;
+
+let game_music_obj = new Audio('UpliftingMagicalTranceMain.mp3');
 
 //Initialize the client.
 init();
@@ -230,6 +238,26 @@ function create_socket(){
           }
 
         }
+        break;
+      }
+
+      case "Music":{       
+
+        if (msg.state==="On"){
+          is_music_playing = true;
+
+          if (!music_mute){
+            game_music_obj.play();
+          }
+
+        } else {
+          //Music is Off
+          is_music_playing = false;
+
+          if (is_music_playing){
+            game_music_obj.pause();
+          }
+        }       
         break;
       }
     }  
@@ -645,6 +673,39 @@ perm_links_cmds_container.addEventListener('click', (evt)=>{
     socket.emit('Message From Client', msg); 
   }
   
+});
+
+sound_btn.addEventListener('click', ()=>{    
+
+  if (sound_btn_icon.classList[2]==="mdi-volume-low"){
+    //User wants to mute sounds
+    sound_mute = true;
+    sound_btn_icon.classList.remove("mdi-volume-low");
+    sound_btn_icon.classList.add("mdi-volume-off");
+  } else {
+    sound_mute = false;
+    sound_btn_icon.classList.remove("mdi-volume-off");
+    sound_btn_icon.classList.add("mdi-volume-low");    
+  }
+});
+
+music_btn.addEventListener('click', ()=>{
+  if (music_btn_icon.classList[2]==="mdi-music"){
+    //User wants to silence the music
+    music_mute = true;
+    if (is_music_playing){
+      game_music_obj.pause();
+    }
+    music_btn_icon.classList.remove("mdi-music");
+    music_btn_icon.classList.add("mdi-music-off");
+  } else {
+    music_mute = true;
+    if (is_music_playing){
+      game_music_obj.play();
+    }
+    music_btn_icon.classList.remove("mdi-music-off");
+    music_btn_icon.classList.add("mdi-music");    //todo: create sound message from server.
+  }
 });
 
 //Chat Interface

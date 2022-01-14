@@ -366,8 +366,7 @@ class User {
     this.send_chat_msg_to_client(`You travel ${direction}.`);
     this.send_msg_to_room(`${this.get_name()} travels ${direction}.`);
     
-    this.__move_to_room(this.props.container_id, next_room_id)
-    this.send_exits_msg_to_client();
+    this.__move_to_room(this.props.container_id, next_room_id)    
     
     //Send a message to the new room.
     this.send_msg_to_room(`${this.get_name()} enters from ${Utils.get_opposite_direction(direction)}.`);
@@ -1048,6 +1047,14 @@ class User {
     let msg = {
       type : "Sound",
       sound: noise_type
+    }
+    this.props.socket.emit('Message From Server', msg);
+  }
+
+  send_music_msg_to_client(state){
+    let msg = {
+      type: "Music",
+      state: state
     }
     this.props.socket.emit('Message From Server', msg);
   }
@@ -1815,10 +1822,12 @@ class Game {
     this.props.red_points = 0;    
 
     this.send_msg_to_all_players('THE GAME HAS STARTED!!');
+    this.send_music_msg_to_all_players('On');
   }
   
   end_game(){
     this.props.is_started = false;
+    this.send_music_msg_to_all_players('Off');
   }
 
   send_msg_to_all_players(msg){
@@ -1826,6 +1835,15 @@ class Game {
       let entity = this.world.get_instance(entity_id);       
       if (entity.props.type==="User"){        
         entity.send_chat_msg_to_client(msg);
+      }
+    }
+  }
+
+  send_music_msg_to_all_players(state){
+    for (const entity_id of this.props.entities){      
+      let entity = this.world.get_instance(entity_id);       
+      if (entity.props.type==="User"){        
+        entity.send_music_msg_to_client(state);
       }
     }
   }

@@ -770,7 +770,7 @@ async function run_test(){
     
     let html=      "Test 20: Test User 2 clicks South. --> ";
     let test_passed= true;
-
+    
     let rcvd_msg=  state_obj.test_user_2.recieved_msgs[0];
     
     if (rcvd_msg.content!=="You travel south."){ 

@@ -8,10 +8,9 @@ and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-spawn by rooms, not by items.
+shot btn
+music bug when quiting game
 keyboard movement on desktop?
-sounds.
-boxes width on mobile
 every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 
 write help page.
@@ -20,7 +19,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       false;
+const TEST_MODE=       true;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -75,17 +74,22 @@ class Game_Controller {
 
       socket.on('Message From Client', (msg)=>{   
         
-        let user = this.world.get_instance(socket.user_id);
-        
-        switch(msg.type){
+        switch(msg.type){          
 
           case "Say":{
-            user.say_cmd(msg.content);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.say_cmd(msg.content);
+            }
+            
             break;
           }
 
           case "Tell":{
-            user.tell_cmd(msg.content.target_id, msg.content.message);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.tell_cmd(msg.content.target_id, msg.content.message);
+            }            
             break;
           }
 
@@ -117,9 +121,12 @@ class Game_Controller {
           }
 
           case "Disconnect":{
-            //Remove the user from the world.            
-            user.disconnect_from_game();
-            socket.user_id = null;
+            //Remove the user from the world.
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.disconnect_from_game();
+              socket.user_id = null;
+            }                        
             break;
           }
 
@@ -129,101 +136,158 @@ class Game_Controller {
           case "West":
           case "Up":
           case "Down":{
-            user.move_cmd(msg.type);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.move_cmd(msg.type);
+            }            
             break;
           }
 
           case "Look":{
-            user.look_cmd(msg.content.id);                
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.look_cmd(msg.content.id);                
+            }            
             break;
           }
 
           case "Inventory":{
-            user.inventory_cmd();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.inventory_cmd();
+            }            
             break;
           }
 
           case "Create A New Game":{
-            user.create_cmd();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.create_cmd();
+            }            
             break;
           }  
           
           case "Start":{
-            user.start_cmd();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.start_cmd();
+            }            
             break;
           }
 
           case "Get":{
-            user.get_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.get_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Hold":{
-            user.hold_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.hold_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Remove":{
-            user.remove_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.remove_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Wear":{
-            user.wear_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.wear_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Consume":{
-            user.consume_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.consume_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Drop":{
-            user.drop_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.drop_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Get User Details For Modal":{ 
-            user.send_user_details_to_client();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.send_user_details_to_client();
+            }            
             break;
           }
 
           case "Get Game Info For Modal":{
-            user.send_game_info_to_client();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.send_game_info_to_client();
+            }            
             break;
           }
 
           case "Switch Sides":{
-            user.switch_cmd();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.switch_cmd();
+            }            
             break;
           }
 
           case "Quit To Lobby":{
-            user.quit_cmd();
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.quit_cmd();
+            }            
             break;
           }
 
-          case "Game Info":{            
-            user.game_cmd(msg.content.id);
+          case "Game Info":{
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.game_cmd(msg.content.id);
+            }                        
             break;
           }
 
           case "Use":{
-            user.use_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.use_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Join This Game":{
-            user.join_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.join_cmd(msg.content.id);
+            }            
             break;
           }
 
           case "Shot":{
-            user.shot_cmd(msg.content.id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.shot_cmd(msg.content.id);
+            }            
             break;
           }
 
-          case "Name Clicked":{                
+          case "Name Clicked":{            
             let entity = this.world.get_instance(msg.content.id);
             if (entity!==undefined){
               //Prevent user clicking on an already destroyed item.
@@ -233,30 +297,45 @@ class Game_Controller {
           }
 
           case "Edit User":{
-            user.set_description(msg.content.description);            
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.set_description(msg.content.description);            
+            }            
             break;
           }
 
           case "Join Game":{
-            user.join_cmd(msg.content.game_id);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.join_cmd(msg.content.game_id);
+            }            
             break;
           }
 
           case "Edit Game":{
             //Note: we assume the user is in a game and owns it, else he
             //would be able to edit it.               
-            let game = this.world.get_instance(user.props.current_game_id);             
-            game.do_edit(msg);            
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              let game = this.world.get_instance(user.props.current_game_id);             
+              game.do_edit(msg);            
+            }            
             break;
           }
 
           case "Emote":{
-            user.emote_cmd(msg.content);
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.emote_cmd(msg.content);
+            }            
             break;
           }
 
           case "User Info":{
-            user.send_chat_msg_to_client(user.get_look_string());
+            let user = this.world.get_instance(socket.user_id);
+            if (user!==undefined){
+              user.send_chat_msg_to_client(user.get_look_string());
+            }            
             break;
           }
         }
