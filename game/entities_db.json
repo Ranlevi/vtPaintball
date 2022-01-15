@@ -1,0 +1,30 @@
+{
+  "Desert Eagle": {
+    "type":               "Item",
+    "name":               "Desert Eagle",            
+    "description":        "This is a standard hand gun.",                    
+    "is_holdable":        true,      
+    "is_gettable":        true,
+    "cooldown":           5
+  },
+  "Iron Man Suit": {    
+    "type":               "Item",
+    "name":               "Iron Man Suit",          
+    "description":        "A metalic, shining, power suit. Defense Rating: 5",                          
+    "is_gettable":        true,
+    "defense_rating":     5,
+    "wear_slot":          "torso"
+    
+  },
+  "Welcome Sign": {
+    "type":               "Item",
+    "name":               "Welcome Sign",          
+    "description":        "<p><b>Welcome to Text Tag!</b></p><p>This is a multiplayer, text-based Laser Tag game.</p><p>Create a new game, or Join an existing one using the Game List Button."          
+  },
+  "Game List Button":{
+    "type":               "Item",
+    "name":               "Game List Button",          
+    "description":        "Pressing this button will display the list of publicly available games.",
+    "action":             "list games"      
+  }
+}

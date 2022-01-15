@@ -1,110 +1,97 @@
 /*
+Text Tag
+========
+A text based, multiplayer, virtual Laser Tag game.
+Author: Ran Levi. 
+
 Apps.js
 -------
 Entry point for the server.
-Handles serving the Client to users, user login
-and user input.
+Handles serving the Client to users, user login and user input.
 
 Note: must be https for clipboard to work!
 
 TODO:
-shot btn
+continue with look room, then logs and tests.
+
+
 keyboard movement on desktop?
 every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 
-write help page.
 logs
-add report abuse to user's cmds
 */
 
-const SERVER_VERSION=  0.1;
-const TEST_MODE=       false;
+const SERVER_VERSION=   0.1;
+const PORT=             5000;
+const TEST_MODE=        false;
 
 const fs=         require('fs');
-const Classes=    require('./classes');
-const World=      require('./world');
+const Classes=    require('./game/classes');
+// const World=      require('./world');
 
 const express=    require('express');
 const app=        express();
 const http =      require('http');
 const server =    http.createServer(app);
 const { Server }= require("socket.io");
-
  
-//Serving the client to the browser
-//--------------------------------
-//Serving static ciles (js, css)
+//Serving Files
+//-------------------------------------------------
+//-------------------------------------------------
+
+//Serving static files (js, css)
 if (TEST_MODE){
-  app.use(express.static('Testing'));
+  app.use(express.static('testing'));
 } else {
   app.use(express.static('public'));
 }
 
+//Serving HTML files
 app.get('/', (req, res) => {    
   res.sendFile(__dirname + '/public/index.html');
 });
 
 app.get('/help', (req, res) => {
-  res.sendFile(__dirname + '/public/help.html');    
+  res.sendFile(__dirname + '/public/help/help.html');    
 });
 
-server.listen(5000, () => {
-  console.log('listening on *:5000');
+//Init WebSockets Server
+server.listen(PORT, () => {
+  console.log(`Websockets server listening on Port: ${PORT}`);
 });
 
 //Init the game world, handle users login, process inputs.
 class Game_Controller {
   constructor(){
 
-    this.world=                   new World.World();
-    this.io=                      new Server(server);
-    this.FIRST_ROOM_ID=           "r0000000";
+    this.LOBBY_ID= "r0000000";
 
-    this.init_game();
-    
+    this.io=            new Server(server);
+    this.entities=      new Map(); //id : instance
+    this.entities_db;
+
     //Handle Socket.IO Connections and messages.
     //-----------------------------------------
 
     this.io.on('connection', (socket) => {
-      console.log('a client connected');      
-
-      //Each socket is attached to a single user.
       socket.user_id = null;       
 
-      socket.on('Message From Client', (msg)=>{   
-        
-        switch(msg.type){          
-
-          case "Say":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.say_cmd(msg.content);
-            }
-            
-            break;
-          }
-
-          case "Tell":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.tell_cmd(msg.content.target_id, msg.content.message);
-            }            
-            break;
-          }
+      socket.on('Message From Client', (msg)=>{
+        switch(msg.type){
 
           case "Login":{
             //Try to find an active user with the same username.        
             
             let reply_msg = {
-              type: "Login Reply",
+              type:                 "Login Reply",
               content: {
                 is_login_successful: null
               }
             }
             
-            let user_id = this.world.get_user_id_by_username(msg.content.username);
+            let user_id = this.get_user_id_by_username(msg.content.username);
     
-            if (user_id!==null){
+            if (user_id!==undefined){
               //A user with the same name exists in the game.
               reply_msg.content.is_login_successful = false;                            
               socket.emit('Message From Server', reply_msg);         
@@ -119,338 +106,76 @@ class Game_Controller {
             break;
           }
 
-          case "Disconnect":{
-            //Remove the user from the world.
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.disconnect_from_game();
-              socket.user_id = null;
-            }                        
-            break;
-          }
-
-          case "North":
-          case "South":
-          case "East":
-          case "West":
-          case "Up":
-          case "Down":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.move_cmd(msg.type);
-            }            
-            break;
-          }
-
-          case "Look":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.look_cmd(msg.content.id);                
-            }            
-            break;
-          }
-
-          case "Inventory":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.inventory_cmd();
-            }            
-            break;
-          }
-
-          case "Create A New Game":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.create_cmd();
-            }            
-            break;
-          }  
-          
-          case "Start":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.start_cmd();
-            }            
-            break;
-          }
-
-          case "Get":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.get_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Hold":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.hold_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Remove":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.remove_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Wear":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.wear_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Consume":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.consume_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Drop":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.drop_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Get User Details For Modal":{ 
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.send_user_details_to_client();
-            }            
-            break;
-          }
-
-          case "Get Game Info For Modal":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.send_game_info_to_client();
-            }            
-            break;
-          }
-
-          case "Switch Sides":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.switch_cmd();
-            }            
-            break;
-          }
-
-          case "Quit To Lobby":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.quit_cmd();
-            }            
-            break;
-          }
-
-          case "Game Info":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.game_cmd(msg.content.id);
-            }                        
-            break;
-          }
-
-          case "Use":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.use_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Join This Game":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.join_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Shot":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.shot_cmd(msg.content.id);
-            }            
-            break;
-          }
-
-          case "Name Clicked":{            
-            let entity = this.world.get_instance(msg.content.id);
-            let user = this.world.get_instance(msg.content.id);
-
-            if (entity!==undefined && user!==undefined){
-              //Prevent user clicking on an already destroyed item.
-              entity.name_clicked(socket.user_id);
-            }            
-            break;
-          }
-
-          case "Edit User":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.set_description(msg.content.description);            
-            }            
-            break;
-          }
-
-          case "Join Game":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.join_cmd(msg.content.game_id);
-            }            
-            break;
-          }
-
-          case "Edit Game":{
-            //Note: we assume the user is in a game and owns it, else he
-            //would be able to edit it.               
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              let game = this.world.get_instance(user.props.current_game_id);             
-              game.do_edit(msg);            
-            }            
-            break;
-          }
-
-          case "Emote":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.emote_cmd(msg.content);
-            }            
-            break;
-          }
-
-          case "User Info":{
-            let user = this.world.get_instance(socket.user_id);
-            if (user!==undefined){
-              user.send_chat_msg_to_client(user.get_look_string());
-            }            
-            break;
-          }
         }
-      });  
-      
-      //Handle players who navigate away from the app.
-      socket.on('disconnect', (reason)=>{                
-        if (socket.user_id!==null){
-          let user = this.world.get_instance(socket.user_id);
-          user.disconnect_from_game();
-          socket.user_id = null;
-          console.log(reason);
-        }        
-      })
+      });
     });
+
+    this.init();
   }
 
-  //Runs when the server is created. 
-  //Loads databases, starts the game loop.
-  init_game(){     
+  init(){
     this.load_entities_db();
-    this.load_world();        
-    this.game_loop();      
+    this.init_lobby();
   }
-  
-  //Load all rooms and entities (except users) from the database.
-  load_world(){    
 
-    let path = `./generic_world.json`;
-    
-    if (fs.existsSync(path)){      
-      let parsed_info = JSON.parse(fs.readFileSync(path));  
-      
-      for (const props of parsed_info.rooms){
-        new Classes.Room(this.world, props);        
-      }
-
-      //Spawn items    
-      for (const [item_name, spawn_room_arr] of Object.entries(parsed_info.item_spawn_rooms)){
-        //Spawn all the items in all their rooms.
-        for (const room_id of spawn_room_arr){        
-          let props = this.world.entities_db[item_name].props;
-          let item = new Classes.Item(this.world, props);
-          item.props.container_id=  room_id;       
-
-          let room = this.world.get_instance(room_id);
-          room.add_entity(item.props.id);                  
-        }      
-      }
-      
-    }  else {
-      console.error(`app.load_world -> generic_world.json does not exist.`);
-    }
-    
-  }
-  
-  //Loads the entities.json file into world.entities_db
   load_entities_db(){
-    if (fs.existsSync(`./entities.json`)){      
-      this.world.entities_db = JSON.parse(fs.readFileSync("./entities.json"));      
-    } else {
-      console.error(`app.load_entities -> entities.js does not exist.`);
+    this.entities_db = JSON.parse(fs.readFileSync("./game/entities_db.json"));
+  }
+
+  init_lobby(){
+
+    let props = {
+      type:         "Room",
+      id:           this.LOBBY_ID,
+      name:         "Game Lobby",
+      description:  "This is where players can rest and talk between games."
     }
-  }
-  
-  //Timer for game loop.
-  //Note: the loop technique allows for a minimum fixed length between
-  //loop iterations, regardless of content of the loop.
-  game_loop(){   
-    
-    let timer_id = setTimeout(
-      function update(){
-      
-        this.run_simulation_tick();
 
-        timer_id = setTimeout(update.bind(this), 1000);
-      }.bind(this),
-      1000
-    );
+    let lobby= new Classes.Room(this.entities, props);
+    this.entities.set(lobby.id, lobby);
+
+    //Spawn Lobby Items
+
+    props = this.entities_db["Welcome Sign"];
+    let welcome_sign = new Classes.Item(this.entities, props);
+    this.entities.set(welcome_sign.id, welcome_sign);
+    lobby.add_entity(welcome_sign.id);
   }
 
-  //Iterate on all entities, and process their tick actions
-  run_simulation_tick(){    
-
-    this.world.world.forEach((entity) => {
-      entity.do_tick();
-    });
-
-    this.world.users.forEach((user)=> {
-      user.do_tick();      
-    });
+  get_user_id_by_username(username){
+    for (let inst of this.entities.values()){      
+      if (inst.name===username){
+        return inst.id;        
+      }
+    }
+    //No user with given username was found.
+    return undefined;
   }
 
-  //Create a new user, spawned at spawn room, and associate the socket with it.
-  //Returns the ID of the created user (String)
   create_new_user(socket, username){
-    
-    let user_props = {
+    let props = {
       socket:       socket,
       name:         username,      
-      container_id: this.FIRST_ROOM_ID
+      container_id: this.LOBBY_ID
     }    
     
-    let user= new Classes.User(this.world, user_props);    
+    let user= new Classes.User(this.entities, props);
+    this.entities.set(user.id, user);
 
-    let lobby = this.world.get_instance(this.FIRST_ROOM_ID);    
-    lobby.add_entity(user.props.id);
+    let lobby = this.entities.get(this.LOBBY_ID);    
+    lobby.add_entity(user.id);
 
-    user.send_chat_msg_to_client(`Welcome ${user.get_name()}!`);
-    user.look_cmd();
+    let content = {
+      html:         `Welcome ${user.get_name()}!`,
+      is_flashing:  false
+    }
+    user.send_msg_to_client("Chat Message", content);
     
-    return user.props.id;
-  }  
+    // user.look_cmd();
+    
+    return user.id;    
+  }
 }
 
-//Start Game Server
+//Start the game
 new Game_Controller();

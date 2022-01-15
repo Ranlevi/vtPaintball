@@ -1,40 +1,16 @@
-let body=                       document.getElementById('body');
-let chat=                       document.getElementById('Chat');
-let disconnect_btn=             document.getElementById('disconnect_btn');
-let freeze_btn=                 document.getElementById('freeze_btn');
-let parent=                     document.getElementById('Parent');
-let sound_btn=                  document.getElementById('sound_btn');
-let sound_btn_icon=             document.getElementById('sound_btn_icon');
-let music_btn=                  document.getElementById('music_btn');
-let music_btn_icon=             document.getElementById('music_btn_icon');
-
-let perm_link_north=            document.getElementById("perm_link_north");
-let perm_link_south=            document.getElementById("perm_link_south");
-let perm_link_east=             document.getElementById("perm_link_east");
-let perm_link_west=             document.getElementById("perm_link_west");
-let perm_link_up=               document.getElementById("perm_link_up");
-let perm_link_down=             document.getElementById("perm_link_down");
-let perm_links_container=       document.getElementById("perm_links_container");
-
-let perm_links_cmds_container=  document.getElementById("perm_links_cmds_container");
-let perm_link_look=             document.getElementById("perm_link_look");
-let perm_link_inventory=        document.getElementById("perm_link_inventory");
-let perm_link_say=              document.getElementById("perm_link_say");
-let perm_link_emote=            document.getElementById("perm_link_emote");
-
-let cmds_container=             document.getElementById("cmds_container");
-
-let modal=              document.getElementById('modal');
-let modal_title=        document.getElementById('modal_title');
-let modal_content=      document.getElementById('modal_content');
-let modal_form=         document.getElementById('modal_form');
-let modal_submit_btn=   document.getElementById("modal_submit_btn");
-let modal_cancel_btn=   document.getElementById("modal_cancel_btn");
-
 const CLIENT_VERSION=     0.1;
 
 //Mobile Check on init.
 // const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
+
+let modal=            document.getElementById("modal");
+let modal_title=      document.getElementById("modal_title");
+let modal_content=    document.getElementById("modal_content");
+let modal_form=       document.getElementById("modal_form");
+let modal_cancel_btn= document.getElementById("modal_cancel_btn");
+let modal_submit_btn= document.getElementById("modal_submit_btn");
+let main_window=      document.getElementById("main_window");
+
 
 //Global Variables
 let stop_chat_scroll=         false;
@@ -42,16 +18,13 @@ let sound_mute=               false;
 let music_mute=               false;
 let is_music_playing=         false;
 let socket;
-
-let game_music_obj = new Audio('UpliftingMagicalTranceMain.mp3');
+let game_music_obj=           new Audio('UpliftingMagicalTranceMain.mp3');
 
 //Initialize the client.
 init();
 
-//When index.html loads, the Login Modal appears. 
-//Focus on the username field of the Login Modal.
 function init(){
-  
+
   modal_title.innerHTML = "Login";
 
   modal_content.innerHTML = 
@@ -83,6 +56,137 @@ function init(){
   let username_input = document.getElementById("username_input");
   username_input.focus();
 }
+
+//Create a socket_io instance, and handle incoming messages
+//this happens after a Login Reply (success) is recived.
+function create_socket(){
+
+  let socket_io = io(); 
+
+  socket_io.on('Message From Server', (msg)=>{      
+
+    switch(msg.type){
+
+      case "Login Reply":{ 
+        if (msg.content.is_login_successful){
+          //Clear the modal.
+          modal_title.innerHTML   = '';
+          modal_content.innerHTML = '';
+          modal_form.innerHTML    = '';    
+          modal.classList.remove('is-active'); 
+          modal_cancel_btn.removeAttribute('disabled');
+
+        } else {
+          let warning_text=       document.getElementById("warning_text");
+          warning_text.innerHTML= 'A User with this name already exists in the game.';
+        }
+        break;
+      }
+
+      case "Chat Message":{
+        if (msg.content.is_flashing){
+          insert_chat_box("flashing_box", msg.content.html);
+        } else {
+          insert_chat_box("box", msg.content.html);
+        }        
+        break;
+      }
+    
+    }  
+   
+  }); 
+  
+  return socket_io;
+}
+
+//Handle form submisstions.
+modal_submit_btn.addEventListener('click', ()=>{  
+
+  //Check the content of the modal.
+  switch(modal_title.innerHTML){
+
+    case ("Login"):{
+      //Create a WS socket, send a login msg.
+      //Note: The modal will be closed when a reply msg will arrive.
+      socket = create_socket();
+
+      let msg = {
+        type:       "Login",
+        content: {
+          username : null
+        }
+      }
+
+      let username_input = document.getElementById("username_input");
+
+      if (username_input.value===""){
+        let warning_text = document.getElementById("warning_text");
+        warning_text.innerHTML = "Please enter a Name.";
+      }
+
+      msg.content.username = username_input.value;
+      socket.emit('Message From Client', msg);
+      break;
+    }
+
+  }
+  
+  //When the Submit btn is pressed, we want the modal
+  //to do away - except for the Login modal, who will go away
+  //only after a successful login message from the server.
+  if (modal_title.innerHTML!=="Login"){
+    //Clear the modal.
+    modal_title.innerHTML = '';
+    modal_content.innerHTML = ``;
+    modal_form.innerHTML =  '';
+    modal.classList.remove('is-active');
+  }
+  
+})
+
+//Close the modal without submission/
+//Note: we don't clear the modal, in case the user clicked 'cancel' by mistake.
+modal_cancel_btn.addEventListener('click', ()=>{  
+  modal.classList.remove('is-active');
+})
+
+
+// Aux. Functions
+//-------------------
+
+//Insert a Chat Box to the Chat interface.
+function insert_chat_box(type, content){
+
+  let div = document.createElement("div");
+  div.classList.add("box");
+
+  switch(type){
+    
+    case "box":
+      div.classList.add("box_server");
+      break;
+
+    case "flashing_box":
+      div.classList.add("box_server");
+      div.classList.add("flashing");
+      break;
+  }
+
+  div.innerHTML = content;
+  main_window.append(div);
+
+  if (!stop_chat_scroll){
+    div.scrollIntoView();  
+  }
+
+  //On desktop, focus on the input 
+  // if (!isMobile){
+  //   input_form.focus();    
+  // }
+
+}
+
+/*
 
 //Create a socket_io instance, and handle incoming messages
 //this happens after a Login Reply (success) is recived.
@@ -912,43 +1016,7 @@ cmds_container.addEventListener('click', (evt)=>{
 })
 
 
-// Aux. Functions
-//-------------------
 
-//Insert a Chat Box to the Chat interface.
-function insert_chat_box(type, content){
-
-  let div = document.createElement("div");
-  div.classList.add("box");
-
-  switch(type){
-    case "cmd_box":
-      div.classList.add("box_cmds");      
-      break;
-
-    case "box_server":
-      div.classList.add("box_server");
-      break;
-
-    case "flashing_box_server":
-      div.classList.add("box_server");
-      div.classList.add("flashing");
-      break;
-  }
-
-  div.innerHTML = content;
-  chat.append(div);
-
-  if (!stop_chat_scroll){
-    div.scrollIntoView();  
-  }
-
-  //On desktop, focus on the input 
-  // if (!isMobile){
-  //   input_form.focus();    
-  // }
-
-}
 
 function insert_cmds_to_cmds_container(content){
   cmds_container.replaceChildren();
@@ -959,3 +1027,5 @@ function insert_cmds_to_cmds_container(content){
     cmds_container.append(div);
   }
 }
+
+*/

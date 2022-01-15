@@ -1,76 +1,100 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
   <head>
+
     <title>Text Tag</title>
+
     <meta   charset="utf-8"> <!-- For Hebrew support on old browsers -->
     <meta   http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Support IE browsers -->
-    <meta   name="viewport"              content="width=device-width, initial-scale=1">
-    <link   rel="stylesheet"  href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
-    <link   rel="stylesheet"  href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css">        
-    <link   rel="stylesheet"  href="https://fonts.googleapis.com/css?family=Anton">
-    <link   rel="stylesheet"  href="./style.css"> 
-    <script src="/socket.io/socket.io.js"></script>
-    <script type="module"     src="./client.js" defer></script>
-    </head>
+    <meta   
+      name="viewport"
+      content="width=device-width, initial-scale=1"
+    >
+    <link   
+      rel="stylesheet"  
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css"
+    >
+    <link   
+      rel="stylesheet"  
+      href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css"
+    >
+    <link   
+      rel="stylesheet"  
+      href="https://fonts.googleapis.com/css?family=Anton"
+    >
+    <link rel="stylesheet"  href="./style.css"> 
+    <script 
+      src="https://cdn.socket.io/4.4.1/socket.io.min.js" 
+      integrity="sha384-fKnu0iswBIqkjxrhQCTZ7qlLHOFEgNkRmK2vaO/LbTZSXdJfAu6ewRBdwHPhBo/H" 
+      crossorigin="anonymous">
+    </script>
+    <script type="module" src="./client.js" defer></script>
+
+  </head>
   <body id="body">
 
     <!-- For console debug on mobile browsers -->
     <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script> -->
-    <!-- <script>eruda.init();</script> -->    
-   
+    <!-- <script>eruda.init();</script> -->
+    
     <!-- Game Area -->
-    <div id="Parent">
+    <div class="game_area">
 
-      <!-- Buttons and more -->
-      <div id="Dashboard">
+      <!-- Top Row Buttons -->
+      <div class="top_row">
 
+        <!-- Mute/Unmute Sound -->
         <div id="sound_btn" class="icon is-large">        
           <i id="sound_btn_icon" class="mdi mdi-24px mdi-volume-low"></i>
         </div>
 
+        <!-- Mute/Unmute Music -->
         <div id="music_btn" class="icon is-large">        
           <i id="music_btn_icon" class="mdi mdi-24px mdi-music"></i>
         </div>
 
+        <!-- Freeze/UnFreeze text scroll -->
         <div id="freeze_btn" class="icon is-large has-text-success">        
           <i class="mdi mdi-24px mdi-hand-back-left"></i>
-        </div>
-      
-        <div id="disconnect_btn" class="icon is-large">
-          <i class="mdi mdi-24px mdi-lan-disconnect"></i>        
-        </div>
+        </div>             
 
+        <!-- Open Help page -->
         <div id="help_btn" class="icon is-large">
-          <a href="/help.html" target="_blank"><i class="mdi mdi-24px mdi-help"></i></a>
+          <a 
+            href="/help" 
+            target="_blank"><i class="mdi mdi-24px mdi-help"></i>
+          </a>
         </div>
-      </div>
-
-      <!-- Chat Window -->
-      <div id="Chat" class="is-align-self-stretch"></div>
-
-      <div class="cmds_container" id="cmds_container">
 
       </div>
 
-      <div class="perm_links_container" id="perm_links_container">
-        <div class="perm_links_off" id="perm_link_north">NORTH</div>
-        <div class="perm_links_off" id="perm_link_south">SOUTH</div>
-        <div class="perm_links_off" id="perm_link_east">EAST</div>
-        <div class="perm_links_off" id="perm_link_west">WEST</div>
-        <div class="perm_links_off" id="perm_link_up">UP</div>
-        <div class="perm_links_off" id="perm_link_down">DOWN</div>
+      <!-- Main Window -->
+      <div id="main_window" class="main_window is-align-self-stretch"></div>
+
+      <!-- Dynamic commands Container -->
+      <div class="cmds_container" id="cmds_container"></div>
+
+      <!-- Exits container -->
+      <div class="exits_container" id="exits_container">
+        <div class="exit_link_off" id="exit_link_north">NORTH</div>
+        <div class="exit_link_off" id="exit_link_south">SOUTH</div>
+        <div class="exit_link_off" id="exit_link_east">EAST</div>
+        <div class="exit_link_off" id="exit_link_west">WEST</div>
+        <div class="exit_link_off" id="exit_link_up">UP</div>
+        <div class="exit_link_off" id="exit_link_down">DOWN</div>
       </div>
       
-      <div class="perm_links_container" id="perm_links_cmds_container">
-        <div class="perm_links_on" id="perm_link_look">Look</div>
-        <div class="perm_links_on" id="perm_link_inventory">Inventory</div>
-        <div class="perm_links_on" id="perm_link_say">Say</div>
-        <div class="perm_links_on" id="perm_link_emote">Emote</div>        
+      <!-- Fixed commands container -->
+      <div class="fixed_cmds_container" id="fixed_cmds_container">
+        <div class="cmd_link_on" id="cmd_link_look">Look</div>
+        <div class="cmd_link_on" id="cmd_link_inventory">Inventory</div>
+        <div class="cmd_link_on" id="cmd_link_say">Say</div>
+        <div class="cmd_link_on" id="cmd_link_emote">Emote</div>        
       </div>
         
     </div>
 
-    <!-- Modal -->
+    <!-- Empty Modal, dynamically populated by JS  -->
     <div id="modal" class="modal">
 
       <div class="modal-background"></div>
@@ -93,7 +117,8 @@
 
       </div>
 
-    </div>  
+    </div> 
+  
        
   </body>
 </html>
