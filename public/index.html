@@ -12,7 +12,7 @@
     <script src="/socket.io/socket.io.js"></script>
     <script type="module"     src="./client.js" defer></script>
     </head>
-  <body>
+  <body id="body">
 
     <!-- For console debug on mobile browsers -->
     <!-- <script src="//cdn.jsdelivr.net/npm/eruda"></script> -->
@@ -47,6 +47,10 @@
 
       <!-- Chat Window -->
       <div id="Chat" class="is-align-self-stretch"></div>
+
+      <div class="cmds_container" id="cmds_container">
+
+      </div>
 
       <div class="perm_links_container" id="perm_links_container">
         <div class="perm_links_off" id="perm_link_north">NORTH</div>

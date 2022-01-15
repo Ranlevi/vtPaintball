@@ -9,7 +9,6 @@ Note: must be https for clipboard to work!
 
 TODO:
 shot btn
-music bug when quiting game
 keyboard movement on desktop?
 every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 
@@ -19,7 +18,7 @@ add report abuse to user's cmds
 */
 
 const SERVER_VERSION=  0.1;
-const TEST_MODE=       true;
+const TEST_MODE=       false;
 
 const fs=         require('fs');
 const Classes=    require('./classes');
@@ -289,7 +288,9 @@ class Game_Controller {
 
           case "Name Clicked":{            
             let entity = this.world.get_instance(msg.content.id);
-            if (entity!==undefined){
+            let user = this.world.get_instance(msg.content.id);
+
+            if (entity!==undefined && user!==undefined){
               //Prevent user clicking on an already destroyed item.
               entity.name_clicked(socket.user_id);
             }            

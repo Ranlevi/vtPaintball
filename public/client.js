@@ -1,3 +1,4 @@
+let body=                       document.getElementById('body');
 let chat=                       document.getElementById('Chat');
 let disconnect_btn=             document.getElementById('disconnect_btn');
 let freeze_btn=                 document.getElementById('freeze_btn');
@@ -20,6 +21,8 @@ let perm_link_look=             document.getElementById("perm_link_look");
 let perm_link_inventory=        document.getElementById("perm_link_inventory");
 let perm_link_say=              document.getElementById("perm_link_say");
 let perm_link_emote=            document.getElementById("perm_link_emote");
+
+let cmds_container=             document.getElementById("cmds_container");
 
 let modal=              document.getElementById('modal');
 let modal_title=        document.getElementById('modal_title');
@@ -115,7 +118,8 @@ function create_socket(){
       }
 
       case "Change Background":{
-        chat.style.backgroundColor = msg.content.background;
+        // chat.style.backgroundColor = msg.content.background;
+        body.style.backgroundColor = msg.content.background;
         break;
       }
 
@@ -204,11 +208,13 @@ function create_socket(){
       }
 
       case "Cmds Box":{
-        let list = "";
-        for (const item of msg.content){
-          list += `<li>${item}</li>`;
-        }
-        insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+        // let list = "";
+        // for (const item of msg.content){
+        //   list += `<li>${item}</li>`;
+        // }
+        // insert_chat_box('cmd_box', `<ul>${list}</ul>`);      
+        
+        insert_cmds_to_cmds_container(msg.content);
         break;
       }
 
@@ -252,11 +258,10 @@ function create_socket(){
 
         } else {
           //Music is Off
-          is_music_playing = false;
-
           if (is_music_playing){
             game_music_obj.pause();
           }
+          is_music_playing = false;
         }       
         break;
       }
@@ -726,6 +731,106 @@ chat.addEventListener('click', (evt)=>{
 
   switch(evt.target.innerHTML){
 
+    // case "Say":{
+    //   //Enable the Comm Modal.
+    //   load_say_modal();
+    //   break;
+    // }
+
+    // case "Tell":{
+    //   load_tell_modal(evt.target.dataset.id);
+    //   break;
+    // }
+
+    // case "Edit User":{
+    //   //Send a message to the server, asking for the user details.
+    //   let msg = {
+    //     type:    "Get User Details For Modal"
+    //   }
+    //   socket.emit('Message From Client', msg);       
+    //   break;
+    // }
+
+    // case "Join A Game":{
+    //   load_join_game_modal();
+    //   break;
+    // }
+    
+    // case "Edit Game":{
+    //   let msg = {
+    //     type:    "Get Game Info For Modal"              
+    //   }
+    //   socket.emit('Message From Client', msg);             
+    //   break;
+    // }
+
+    case "Copy ID":
+    case "Copy":{
+      navigator.clipboard.writeText(evt.target.dataset.id).then(function() {
+        let messsage = `Copied ID ${evt.target.dataset.id} to Clipboard.`;
+        insert_chat_box('box_server', messsage);            
+      }, function() {
+        console.error('Copy ID failed.');
+      });
+      break;
+    }
+
+    // case "Emote":{
+    //   load_emote_modal();
+    //   break;
+    // }
+
+    // case "Look":
+    // case "Inventory":
+    case "Start":
+    // case "Get":
+    // case "Drop":
+    // case "Remove":
+    // case "Wear":
+    // case "Hold":
+    // case "Consume":
+    // case "Switch Sides":
+    // case "Quit To Lobby":
+    // case "Game Info":
+    // case "User Info":
+    // case "Use":
+    // case "Shot":
+    // case "Join This Game":
+    // case "Create A New Game":
+    {
+      let msg = {
+        type:    `${evt.target.innerHTML}`,
+        content: {
+          id:   evt.target.dataset.id,
+          cmd:  evt.target.innerHTML
+        }      
+      }
+      socket.emit('Message From Client', msg); 
+      break;
+    }
+
+    default:{      
+      //Any other link clicked.
+      let msg = {
+        type: "Name Clicked",
+        content: {
+          id:     evt.target.dataset.id,
+          target: evt.target.innerHTML        
+        }
+      }      
+      socket.emit('Message From Client', msg); 
+    }
+  }
+
+});
+
+//Cmds_Container
+//----------------------------------------------
+//----------------------------------------------
+cmds_container.addEventListener('click', (evt)=>{
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
+  
+  switch(evt.target.innerHTML){
     case "Say":{
       //Enable the Comm Modal.
       load_say_modal();
@@ -801,22 +906,10 @@ chat.addEventListener('click', (evt)=>{
       }
       socket.emit('Message From Client', msg); 
       break;
-    }
-
-    default:{      
-      //Any other link clicked.
-      let msg = {
-        type: "Name Clicked",
-        content: {
-          id:     evt.target.dataset.id,
-          target: evt.target.innerHTML        
-        }
-      }      
-      socket.emit('Message From Client', msg); 
-    }
+    } 
   }
 
-});
+})
 
 
 // Aux. Functions
@@ -855,4 +948,14 @@ function insert_chat_box(type, content){
   //   input_form.focus();    
   // }
 
+}
+
+function insert_cmds_to_cmds_container(content){
+  cmds_container.replaceChildren();
+
+  for (const item of content){
+    let div = document.createElement("div");
+    div.innerHTML = item;
+    cmds_container.append(div);
+  }
 }

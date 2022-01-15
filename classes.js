@@ -913,7 +913,8 @@ class User {
     this.send_chat_msg_to_client("You quit the game, and return to the Lobby.");    
     this.spawn_in_room('r0000000'); 
 
-    game.player_quit(this.props.id);    
+    game.player_quit(this.props.id);
+    this.send_music_msg_to_client('Off');
   }
 
   //Send the user information about the current game.
@@ -1198,7 +1199,8 @@ class User {
 
     let cmds_arr = [];
     for (const cmd of availabe_cmds){
-      cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+      // cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+      cmds_arr.push(`<span class="button is-small is-warning is-rounded cmd_button" data-id="${this.props.id}">${cmd}</span>`);
     }
   
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
@@ -1412,7 +1414,8 @@ class Item {
       //Send the user an array of available cmds.
       let cmds_arr = [];
       for (const cmd of availabe_cmds){
-        cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+        // cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+        cmds_arr.push(`<span class="button is-small is-primary is-rounded cmd_button" data-id="${this.props.id}">${cmd}</span>`);
       }
       clicking_user.send_cmds_arr_to_client(cmds_arr);
     }
@@ -1730,7 +1733,8 @@ class Game {
 
     let cmds_arr = [];
       for (const cmd of availabe_cmds){
-        cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+        //cmds_arr.push(`<span class="command" data-id="${this.props.id}">${cmd}</span>`);
+        cmds_arr.push(`<span class="button is-small is-danger is-rounded cmd_button" data-id="${this.props.id}">${cmd}</span>`);
       }    
     clicking_user.send_cmds_arr_to_client(cmds_arr);          
   }
