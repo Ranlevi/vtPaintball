@@ -13,8 +13,6 @@ Note: must be https for clipboard to work!
 
 TODO:
 continue with look room, then logs and tests.
-
-
 keyboard movement on desktop?
 every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 
@@ -23,7 +21,7 @@ logs
 
 const SERVER_VERSION=   0.1;
 const PORT=             5000;
-const TEST_MODE=        false;
+const TEST_MODE=        true;
 
 const fs=         require('fs');
 const Classes=    require('./game/classes');
@@ -64,7 +62,7 @@ server.listen(PORT, () => {
 class Game_Controller {
   constructor(){
 
-    this.LOBBY_ID= "r0000000";
+    this.LOBBY_ID=      "r0000000";
 
     this.io=            new Server(server);
     this.entities=      new Map(); //id : instance
@@ -77,6 +75,7 @@ class Game_Controller {
       socket.user_id = null;       
 
       socket.on('Message From Client', (msg)=>{
+        
         switch(msg.type){
 
           case "Login":{
@@ -90,24 +89,34 @@ class Game_Controller {
             }
             
             let user_id = this.get_user_id_by_username(msg.content.username);
-    
+            
             if (user_id!==undefined){
               //A user with the same name exists in the game.
               reply_msg.content.is_login_successful = false;                            
               socket.emit('Message From Server', reply_msg);         
 
-            } else {
+            } else {     
+              
               //Username is not taken, player can enter.
-              //Attach the user_id to the socket, and return a Login Message.
-              socket.user_id = this.create_new_user(socket, msg.content.username);
+              //Attach the user_id to the socket, and return a Login Message.              
               reply_msg.content.is_login_successful = true;                    
-              socket.emit('Message From Server', reply_msg);  
+              socket.emit('Message From Server', reply_msg);
+
+              socket.user_id = this.create_new_user(socket, msg.content.username);
             }
             break;
           }
 
         }
       });
+
+      socket.on('disconnect', (reason)=>{                
+        if (socket.user_id!==null){
+          //Find the user, remove him from the game and reset the socket's user_id.
+          this.entities.delete(socket.user_id);          
+          socket.user_id = null;          
+        }        
+      })
     });
 
     this.init();

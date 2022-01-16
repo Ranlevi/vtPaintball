@@ -23,7 +23,7 @@ const WAIT_TIME = 500; //in ms
 function create_socket(user){
   let socket_io = io(); 
 
-  socket_io.on('Message From Server', (msg)=>{     
+  socket_io.on('Message From Server', (msg)=>{   
     state_obj[user].recieved_msgs.push(msg);
   });
   
@@ -46,28 +46,16 @@ function print_test_result(html){
   tests_results_div.append(div);
 }
 
-function clear_rceived_msgs(user){
-  state_obj[user].recieved_msgs = [];
-}
+function send_name_clicked_msg(clicked_entity_id, user_socket){
 
-function get_formatted_result(result){
-  if ("pass"){
-    return '<span class="pass">Pass</span>';
-  } else {
-    return '<span class="fail">Fail</span>';
+  let msg = {
+    type:         "Name Clicked",
+    content: {
+      id:   clicked_entity_id
+    }
   }
+  user_socket.emit('Message From Client', msg);
 }
-
-// function send_name_clicked_msg(clicked_entity_id, user_socket){
-
-//   let msg = {
-//     type:         "Name Clicked",
-//     content: {
-//       id:   clicked_entity_id
-//     }
-//   }
-//   user_socket.emit('Message From Client', msg);
-// }
 
 async function run_test(){
 
@@ -78,7 +66,6 @@ async function run_test(){
   //Action: Send a nominal login message. 
   //Expect: successful login.
   const setup_test_user_1 = async function(socket_test_user1){    
-    clear_rceived_msgs("test_user_1");
 
     let msg = {
       type:         "Login",
@@ -90,33 +77,36 @@ async function run_test(){
   
     await sleep();
 
-    //Check if login was successful  
     let html = "Setup 1: Login Test User 1. --> ";  
-    let rcvd_msg = state_obj["test_user_1"].recieved_msgs[0];
-    
-    if (rcvd_msg.content.is_login_successful){
-      html += get_formatted_result("pass");
+
+    //Check if login was successful  
+    let rcvd_msg = state_obj["test_user_1"].recieved_msgs.shift();
+
+    let template = htmlToTemplate(rcvd_msg.content);
+
+    let text = template.childNodes[0].textContent;
+    if (text==="Welcome "){
+      html += "Pass.";
     } else {
-      html += get_formatted_result("fail");
+      html += `Fail.`;
     }
-    
     print_test_result(html);   
 
-    //Get the user id    
-    let template = htmlToTemplate(state_obj["test_user_1"].recieved_msgs[1].content.html);    
+    //Get the user id
     state_obj.test_user_1.id = template.childNodes[1].dataset.id;
-    
   }
   await setup_test_user_1(socket_test_user1);
 
   //------------------------------------------------------------
   //------------------------------------------------------------
 
+  //Clear message store
+  state_obj.test_user_1.recieved_msgs = []; 
+
   //Test 1:
   //Action: Try to create another user with the same name.
   //Expect: login error message.
   const test_1 = async function(socket_test_user2){   
-    clear_rceived_msgs("test_user_1");
 
     let msg = {
       type:         "Login",
@@ -132,9 +122,9 @@ async function run_test(){
     
     let html = "Test 1: User with the same name. --> ";  
     if (rcvd_msg.content.is_login_successful){
-      html += get_formatted_result("fail");
+      html += "Fail.";
     } else {
-      html += get_formatted_result("pass");
+      html += "Pass.";
     }
     print_test_result(html);
   }
@@ -147,7 +137,7 @@ async function run_test(){
   //Setup 2nd User
   //Do a noraml login for test user 2
   const setup_test_user_2 = async function(socket_test_user2){
-    clear_rceived_msgs("test_user_2");    
+    let html = "Setup 2: Login Test User 2. --> ";  
 
     let msg = {
       type:         "Login",
@@ -160,31 +150,30 @@ async function run_test(){
     await sleep();
 
     //Check if login was successful  
-    let html = "Setup 2: Login Test User 2. --> ";  
-    let rcvd_msg = state_obj["test_user_2"].recieved_msgs[0];
-    
-    if (rcvd_msg.content.is_login_successful){
-      html += get_formatted_result("pass");
-    } else {
-      html += get_formatted_result("fail");
-    }
+    let rcvd_msg = state_obj["test_user_2"].recieved_msgs.shift();
 
+    let template = htmlToTemplate(rcvd_msg.content);
+
+    let text = template.childNodes[0].textContent;
+    if (text==="Welcome "){
+      html += "Pass.";
+    } else {
+      html += `Fail.`;
+    }
     print_test_result(html);   
 
     //Get the user id
-    let template = htmlToTemplate(state_obj["test_user_2"].recieved_msgs[1].content.html);    
-    state_obj.test_user_2.id = template.childNodes[1].dataset.id;
-    
+    state_obj.test_user_2.id = template.childNodes[1].dataset.id;  
   }
   await setup_test_user_2(socket_test_user2);   
 
   //Get ID of Game List Button
-  // let template= htmlToTemplate(state_obj.test_user_2.recieved_msgs[0].content);
-  // template=     htmlToTemplate(template.children[2].innerHTML);
-  // state_obj.test_user_2.game_list_button_id = template.children[1].dataset.id;  
+  let template= htmlToTemplate(state_obj.test_user_2.recieved_msgs[0].content);
+  template=     htmlToTemplate(template.children[2].innerHTML);
+  state_obj.test_user_2.game_list_button_id = template.children[1].dataset.id;  
   
-  // //Clear message store
-  // state_obj.test_user_2.recieved_msgs = []; 
+  //Clear message store
+  state_obj.test_user_2.recieved_msgs = []; 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -214,7 +203,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_2(socket_test_user1);
+  await test_2(socket_test_user1);
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -242,7 +231,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_3(socket_test_user1);
+  await test_3(socket_test_user1);
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -271,7 +260,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_4(socket_test_user1); 
+  await test_4(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -303,7 +292,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_5(socket_test_user1); 
+  await test_5(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -332,7 +321,7 @@ async function run_test(){
     print_test_result(html);
     
   }
-  // await test_6(socket_test_user1); 
+  await test_6(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -361,15 +350,15 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_7(socket_test_user1); 
+  await test_7(socket_test_user1); 
 
   //Get the Game's ID.
-  // template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
-  // state_obj.test_user_1.game_id = template.children[1].dataset.id;  
-  // state_obj.test_user_2.game_id = template.children[1].dataset.id;  
+  template = htmlToTemplate(state_obj.test_user_1.recieved_msgs[3].content);
+  state_obj.test_user_1.game_id = template.children[1].dataset.id;  
+  state_obj.test_user_2.game_id = template.children[1].dataset.id;  
 
-  // //Clear message store
-  // state_obj.test_user_1.recieved_msgs = []; 
+  //Clear message store
+  state_obj.test_user_1.recieved_msgs = []; 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -395,7 +384,7 @@ async function run_test(){
     print_test_result(html);
 
   }
-  // await test_8(socket_test_user1); 
+  await test_8(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -425,7 +414,7 @@ async function run_test(){
   
     print_test_result(html);
   }
-  // await test_9(socket_test_user1); 
+  await test_9(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -459,7 +448,7 @@ async function run_test(){
     print_test_result(html);
     
   }
-  // await test_10(socket_test_user1); 
+  await test_10(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -487,7 +476,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_11(socket_test_user1); 
+  await test_11(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -527,13 +516,13 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_12(socket_test_user1); 
+  await test_12(socket_test_user1); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
 
   //Clear message store
-  // state_obj.test_user_2.recieved_msgs = []; 
+  state_obj.test_user_2.recieved_msgs = []; 
 
   //Test 13: 
   //Action: Test User 2 clicking on the Game List Button.
@@ -561,7 +550,7 @@ async function run_test(){
   
     print_test_result(html);
   }
-  // await test_13(socket_test_user2); 
+  await test_13(socket_test_user2); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -593,7 +582,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_14(socket_test_user2); 
+  await test_14(socket_test_user2); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -625,7 +614,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_15(socket_test_user2); 
+  await test_15(socket_test_user2); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -660,7 +649,7 @@ async function run_test(){
     }    
     print_test_result(html);
   }
-  // await test_16(socket_test_user2); 
+  await test_16(socket_test_user2); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -693,15 +682,15 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_17(socket_test_user2);
+  await test_17(socket_test_user2);
 
   //------------------------------------------------------------
   //------------------------------------------------------------
-  // template = htmlToTemplate(state_obj.test_user_2.recieved_msgs[2].content);
-  // template = htmlToTemplate(template.children[3].innerHTML);
-  // state_obj.test_user_2.gun_id = template.children[0].dataset.id;  
+  template = htmlToTemplate(state_obj.test_user_2.recieved_msgs[2].content);
+  template = htmlToTemplate(template.children[3].innerHTML);
+  state_obj.test_user_2.gun_id = template.children[0].dataset.id;  
 
-  // state_obj.test_user_2.recieved_msgs = [];
+  state_obj.test_user_2.recieved_msgs = [];
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -732,7 +721,7 @@ async function run_test(){
   
     print_test_result(html);
   }
-  // await test_18(socket_test_user2); 
+  await test_18(socket_test_user2); 
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -762,7 +751,7 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_19(socket_test_user2);
+  await test_19(socket_test_user2);
 
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -814,9 +803,9 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_20(socket_test_user2);
+  await test_20(socket_test_user2);
 
-  // state_obj.test_user_2.recieved_msgs = []
+  state_obj.test_user_2.recieved_msgs = []
   
   //------------------------------------------------------------
   //------------------------------------------------------------
@@ -847,9 +836,9 @@ async function run_test(){
 
     print_test_result(html);
   }
-  // await test_21(socket_test_user1); 
+  await test_21(socket_test_user1); 
 
-  // state_obj.test_user_2.recieved_msgs = []
+  state_obj.test_user_2.recieved_msgs = []
   //------------------------------------------------------------
   //------------------------------------------------------------
 
@@ -891,7 +880,7 @@ async function run_test(){
     
     print_test_result(html);
   }
-  // await test_22(socket_test_user2);
+  await test_22(socket_test_user2);
 
   
 }
