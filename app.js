@@ -21,11 +21,10 @@ logs
 
 const SERVER_VERSION=   0.1;
 const PORT=             5000;
-const TEST_MODE=        true;
+const TEST_MODE=        false;
 
 const fs=         require('fs');
 const Classes=    require('./game/classes');
-// const World=      require('./world');
 
 const express=    require('express');
 const app=        express();
@@ -67,6 +66,7 @@ class Game_Controller {
     this.io=            new Server(server);
     this.entities=      new Map(); //id : instance
     this.entities_db;
+    this.log_msgs=      [];
 
     //Handle Socket.IO Connections and messages.
     //-----------------------------------------
@@ -178,11 +178,32 @@ class Game_Controller {
       html:         `Welcome ${user.get_name()}!`,
       is_flashing:  false
     }
-    user.send_msg_to_client("Chat Message", content);
+    user.send_msg_to_client("Chat", content);
     
     // user.look_cmd();
     
     return user.id;    
+  }
+
+  log_event(event){
+    this.log.push(`${Date()}: ${event}`);
+  }
+
+  game_loop(){   
+    
+    let timer_id = setTimeout(
+      function update(){
+      
+        this.tick();
+
+        timer_id = setTimeout(update.bind(this), 1000);
+      }.bind(this),
+      1000
+    );
+  }
+
+  tick(){
+    //Runs once each second.    
   }
 }
 

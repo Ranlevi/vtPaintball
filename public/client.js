@@ -83,7 +83,7 @@ function create_socket(){
         break;
       }
 
-      case "Chat Message":{
+      case "Chat":{
         if (msg.content.is_flashing){
           insert_chat_box("flashing_box", msg.content.html);
         } else {
