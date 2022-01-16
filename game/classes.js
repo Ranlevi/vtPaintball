@@ -85,20 +85,18 @@ class Room extends Entity {
       exits_html = ` [` + exits_html + ' ]';        
     }
   
-      msg += exits_html;   
-  
-      msg += `<p>${this.props.description}</p>`;
-      msg += '<p>In the room: ';
+    msg += exits_html;   
+
+    msg += `<p>${this.description}</p>`;
+    msg += '<p>In the room: ';
           
-      for (const entity_id of this.props.entities){            
-        let entity = this.world.get_instance(entity_id);      
-        msg += `${entity.get_name()} `;
-      }  
+    for (const entity_id of this.entities){            
+      let entity = this.global_entities.get(entity_id);      
+      msg += `${entity.get_name()} `;
+    }  
   
-      msg += `</p>`
-  
-      return msg;
-    
+    msg += `</p>`  
+    return msg;    
   }
 
   get_name(){    
@@ -138,21 +136,34 @@ class User extends Entity {
     if (target_id===null){
       //Look at the room the user is in.
       let room= this.global_entities.get(this.container_id);
-      this.send_msg_to_client("Chat", room.get_look_string());      
+
+      let content = {
+        html:         room.get_look_string(),
+        is_flashing:  false
+      };
+      this.send_msg_to_client("Chat", content);      
       return;
     }
 
-    // //Target was found.
-    // let entity = this.world.get_instance(target_id);
+    //Target is specified.
+    let entity = this.global_entities.get(target_id);
 
-    // if (entity.props.container_id===this.props.id || 
-    //     entity.props.container_id===this.props.container_id){
-    //   this.send_chat_msg_to_client(entity.get_look_string());
-    //   return;
-    // }
+    if (entity.container_id===this.id || 
+        entity.container_id===this.container_id){
 
-    // //Target is not on the body or in the same room.
-    // this.send_chat_msg_to_client(`It's not in the same room as you.`);
+      let content = {
+        html:         entity.get_look_string(),
+        is_flashing:  false
+      };
+      this.send_msg_to_client("Chat", content);      
+    }
+
+    //Target is not on the body or in the same room.
+    let content = {
+      html:         `It's not in the same room as you.`,
+      is_flashing:  false
+    };
+    this.send_msg_to_client("Chat", content);    
   }
 }
 
@@ -161,9 +172,8 @@ class Item extends Entity {
     super(global_entities);
 
     this.cooldown_counter = 0;
-    this.cooldown_period;
-    this.action;
-
+    this.cooldown_period= null;
+    this.action=null;
 
     //Overwrite the default props.
     if (props!==null){
@@ -171,6 +181,11 @@ class Item extends Entity {
         this[key]= value;
       }
     }
+  }
+
+  get_name(){
+    //Returns an HTML string for the name of the entity.
+    return `<span class="tag is-primary clickable" data-id="${this.id}">${this.name}</span>`;
   }
 }
 

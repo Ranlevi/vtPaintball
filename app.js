@@ -179,8 +179,7 @@ class Game_Controller {
       is_flashing:  false
     }
     user.send_msg_to_client("Chat", content);
-    
-    // user.look_cmd();
+    user.look_cmd();
     
     return user.id;    
   }

@@ -164,7 +164,7 @@ modal_cancel_btn.addEventListener('click', ()=>{
 
 //Insert a Chat Box to the Chat interface.
 function insert_chat_box(type, content){
-
+  console.log(content);
   let div = document.createElement("div");
   div.classList.add("box");
 
