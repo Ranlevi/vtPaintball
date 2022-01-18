@@ -158,13 +158,30 @@ modal_cancel_btn.addEventListener('click', ()=>{
   modal.classList.remove('is-active');
 })
 
+//Handle clicks on hyperlinks
+main_window.addEventListener('click', (evt)=>{
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
+
+  if (evt.target.classList[2]=="clickable"){
+    
+    let msg = {
+      type:       "Entity Clicked",
+      content: {
+        target_id: evt.target.dataset.id
+      }
+    }
+    socket.emit('Message From Client', msg); 
+  }
+
+});
+
 
 // Aux. Functions
 //-------------------
 
 //Insert a Chat Box to the Chat interface.
 function insert_chat_box(type, content){
-  console.log(content);
+
   let div = document.createElement("div");
   div.classList.add("box");
 

@@ -3,24 +3,39 @@ const Utils= require('./utils');
 
 class Entity {
   constructor(global_entities){
-    this.global_entities=  global_entities;
-    this.id=        Utils.id_generator.get_new_id("room");
+    this.global_entities=  global_entities;    
     this.type= "";
     this.name="";
     this.description="";
     this.container_id="";
     this.entities=  [];
-    this.current_game_id = null;
+    this.current_game_id = null;    
   }
 
-  add_entity(id){
-    this.entities.push(id);
+  //Add to the containers. Set entity's container id.
+  add_to_container(container_id){
+    let container = this.global_entities.get(container_id);
+    container.entities.push(this.id);
+    this.container_id = container_id;
+  }
+
+  //Remove from current container. Zero entity's container id.
+  remove_from_container(){
+    let container = this.global_entities.get(this.container_id);
+
+    if (container!==undefined){
+      //Container exists. We assume the entity is in the container.
+      container.entities.splice(container.entities.indexOf(this.id),1);        
+    }
+    
+    this.container_id = null;
   }
 }
 
 class Room extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
+    this.id=        Utils.id_generator.get_new_id("room");
 
     this.exits= {
       north: null, //direction: id of next room.
@@ -37,6 +52,8 @@ class Room extends Entity {
         this[key]= value;
       }
     }
+
+    this.global_entities.set(this.id, this);
   }
 
   get_look_string(){
@@ -44,10 +61,10 @@ class Room extends Entity {
     let msg = `${this.get_name()} `;
 
     //If in game, add the game name.
-    if (this.current_game_id!==null){
-      let game = this.global_entities.get(this.current_game_id);
-      msg += `(${game.get_name()})`;
-    }
+    // if (this.current_game_id!==null){
+    //   let game = this.global_entities.get(this.current_game_id);
+    //   msg += `(${game.get_name()})`;
+    // }
 
     //Exits
     let exits_html = '';    
@@ -89,7 +106,7 @@ class Room extends Entity {
 
     msg += `<p>${this.description}</p>`;
     msg += '<p>In the room: ';
-          
+  
     for (const entity_id of this.entities){            
       let entity = this.global_entities.get(entity_id);      
       msg += `${entity.get_name()} `;
@@ -107,6 +124,7 @@ class Room extends Entity {
 class User extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
+    this.id=        Utils.id_generator.get_new_id("user");
 
     this.socket;
 
@@ -116,6 +134,8 @@ class User extends Entity {
         this[key]= value;
       }
     }
+
+    this.global_entities.set(this.id, this);
   }
 
   send_msg_to_client(msg_type, content){
@@ -165,11 +185,25 @@ class User extends Entity {
     };
     this.send_msg_to_client("Chat", content);    
   }
+
+  destroy_user(){
+    //Remove the user from his room.
+    this.remove_from_container();
+    
+    let content = {
+      html:        `Disconnected! To re-enter, refresh the page. Bye Bye!`,
+      is_flashing: false
+    }
+    
+    this.send_msg_to_client('Chat', content);
+    this.global_entities.delete(this.id);
+  }
 }
 
 class Item extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
+    this.id=        Utils.id_generator.get_new_id("item");
 
     this.cooldown_counter = 0;
     this.cooldown_period= null;
@@ -181,6 +215,8 @@ class Item extends Entity {
         this[key]= value;
       }
     }
+
+    this.global_entities.set(this.id, this);
   }
 
   get_name(){

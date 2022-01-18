@@ -107,15 +107,20 @@ class Game_Controller {
             break;
           }
 
+          case "Entity Clicked":{
+            //continue from here.
+          }
+
         }
       });
 
-      socket.on('disconnect', (reason)=>{                
+      socket.on('disconnect', (reason)=>{         
         if (socket.user_id!==null){
           //Find the user, remove him from the game and reset the socket's user_id.
-          this.entities.delete(socket.user_id);          
+          let user = this.entities.get(socket.user_id);
+          user.destroy_user();          
           socket.user_id = null;          
-        }        
+        }
       })
     });
 
@@ -140,15 +145,13 @@ class Game_Controller {
       description:  "This is where players can rest and talk between games."
     }
 
-    let lobby= new Classes.Room(this.entities, props);
-    this.entities.set(lobby.id, lobby);
+    let lobby= new Classes.Room(this.entities, props);    
 
     //Spawn Lobby Items
 
     props = this.entities_db["Welcome Sign"];
     let welcome_sign = new Classes.Item(this.entities, props);
-    this.entities.set(welcome_sign.id, welcome_sign);
-    lobby.add_entity(welcome_sign.id);
+    welcome_sign.add_to_container(lobby.id);    
   }
 
   get_user_id_by_username(username){
@@ -168,11 +171,8 @@ class Game_Controller {
       container_id: this.LOBBY_ID
     }    
     
-    let user= new Classes.User(this.entities, props);
-    this.entities.set(user.id, user);
-
-    let lobby = this.entities.get(this.LOBBY_ID);    
-    lobby.add_entity(user.id);
+    let user= new Classes.User(this.entities, props);    
+    user.add_to_container(this.LOBBY_ID);
 
     let content = {
       html:         `Welcome ${user.get_name()}!`,
@@ -182,10 +182,6 @@ class Game_Controller {
     user.look_cmd();
     
     return user.id;    
-  }
-
-  log_event(event){
-    this.log.push(`${Date()}: ${event}`);
   }
 
   game_loop(){   
