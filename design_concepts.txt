@@ -60,3 +60,15 @@ A container has entities (room, game.);
 Each entity is responsible for itself. What does that mean? 
 When a user moves - he takes care of everything.
 Same with everything.
+
+
+User can't interact with what he can't see.
+How would this look like in a text game? 
+
+X enters the room.
+X leaves the room. 
+Interactive items should be marked.
+
+If client knew the state, could be done. 
+Say the client tracks items on body and room, and entities. 
+

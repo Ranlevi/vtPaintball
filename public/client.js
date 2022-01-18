@@ -10,7 +10,7 @@ let modal_form=       document.getElementById("modal_form");
 let modal_cancel_btn= document.getElementById("modal_cancel_btn");
 let modal_submit_btn= document.getElementById("modal_submit_btn");
 let main_window=      document.getElementById("main_window");
-
+let cmds_container=   document.getElementById("cmds_container");
 
 //Global Variables
 let stop_chat_scroll=         false;
@@ -91,6 +91,16 @@ function create_socket(){
         }        
         break;
       }
+
+      case "Commands Array": {
+        cmds_container.replaceChildren();
+
+        for (const item of msg.content.cmds_arr){
+          let div = document.createElement("div");
+          div.innerHTML = item;
+          cmds_container.append(div);
+        }
+      }
     
     }  
    
@@ -161,7 +171,7 @@ modal_cancel_btn.addEventListener('click', ()=>{
 //Handle clicks on hyperlinks
 main_window.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
-
+  
   if (evt.target.classList[2]=="clickable"){
     
     let msg = {
@@ -175,6 +185,19 @@ main_window.addEventListener('click', (evt)=>{
 
 });
 
+cmds_container.addEventListener('click', (evt)=>{
+  evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
+  
+  let msg = {
+    type: "Command Clicked",
+    content: {
+      cmd:        evt.target.innerHTML,
+      target_id:  evt.target.dataset.id
+    }
+  }
+  socket.emit('Message From Client', msg); 
+  //continue: recive msg on server
+});
 
 // Aux. Functions
 //-------------------

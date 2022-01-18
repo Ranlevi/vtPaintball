@@ -108,7 +108,9 @@ class Game_Controller {
           }
 
           case "Entity Clicked":{
-            //continue from here.
+            let entity = this.entities.get(msg.content.target_id);
+            entity.name_clicked(socket.user_id);
+            break;
           }
 
         }

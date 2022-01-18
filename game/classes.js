@@ -119,6 +119,15 @@ class Room extends Entity {
   get_name(){    
     return `<span class="room_name" data-id="${this.id}">${this.name}</span>`;    
   }
+
+  name_clicked(clicking_user_id){       
+    let clicking_user = this.global_entities.get(clicking_user_id);
+
+    if (clicking_user.container_id===this.id){
+      //Only cmd is look
+      clicking_user.look_cmd();
+    }    
+  }
 }
 
 class User extends Entity {
@@ -198,6 +207,53 @@ class User extends Entity {
     this.send_msg_to_client('Chat', content);
     this.global_entities.delete(this.id);
   }
+
+  name_clicked(clicking_user_id){
+    
+    let availabe_cmds = [];  
+    let clicking_user = this.global_entities.get(clicking_user_id);
+  
+    if (clicking_user_id===this.id){
+      //The user clicked his own name.
+      availabe_cmds.push('User Info');
+      availabe_cmds.push('Edit User');      
+
+      if (this.current_game_id===null){
+        //user not in a game.
+        availabe_cmds.push('Create A New Game');
+        availabe_cmds.push('Join A Game');
+      } else {
+        //User is in a game
+        availabe_cmds.push('Switch Sides');
+        availabe_cmds.push('Quit To Lobby');
+      }
+
+    } else {
+      //Another user clicked this user's name.
+      if (this.props.current_game_id!==null &&
+          clicking_user.props.holding!==null){
+        //In a game and holding a gun
+        let game = this.world.get_instance(this.props.current_game_id);
+        if (game.props.is_started){
+          availabe_cmds.push('Shot'); 
+        }        
+      }
+
+      availabe_cmds.push('Look');
+      availabe_cmds.push(`Tell`); 
+    }
+  
+    let cmds_arr = [];
+    for (const cmd of availabe_cmds){
+      cmds_arr.push(`<span class="button is-small is-warning is-rounded cmd_button" data-id="${this.id}">${cmd}</span>`);
+    }
+
+    let content = {
+      cmds_arr: cmds_arr      
+    }
+    
+    clicking_user.send_msg_to_client("Commands Array", content);    
+  }
 }
 
 class Item extends Entity {
@@ -208,6 +264,9 @@ class Item extends Entity {
     this.cooldown_counter = 0;
     this.cooldown_period= null;
     this.action=null;
+    this.is_consumable= false;
+    this.is_gettable= false;
+    this.is_holdable= false;
 
     //Overwrite the default props.
     if (props!==null){
@@ -222,6 +281,80 @@ class Item extends Entity {
   get_name(){
     //Returns an HTML string for the name of the entity.
     return `<span class="tag is-primary clickable" data-id="${this.id}">${this.name}</span>`;
+  }
+
+  name_clicked(clicking_user_id){
+    
+    let clicking_user = this.global_entities.get(clicking_user_id);
+    let availabe_cmds = [];
+
+    if (this.container_id===clicking_user.container_id || 
+        this.container_id===clicking_user_id){
+      //Item is in the same room as user (on or off the body)
+      availabe_cmds.push('Look');
+
+      if (this.action!==null){
+        availabe_cmds.push("Use");
+      }
+
+      if (this.is_consumable){
+        availabe_cmds.push('Consume');
+      }
+
+      if (this.container_id===clicking_user_id){
+        //The item is on the user's body
+        availabe_cmds.push('Drop');
+
+        let ix = clicking_user.entities.indexOf(this.id);
+        if (ix===-1){
+          //Item is not in the user's slot
+          availabe_cmds.push('Remove');
+        } else {
+          //Item is in the user's slots
+          if (this.is_holdable){
+            availabe_cmds.push('Hold');        
+          }
+    
+          if (this.wear_slot!==null){
+            availabe_cmds.push('Wear');        
+          }
+        }
+
+      } else {
+        //The item is not on the user's body
+        if (this.is_holdable){
+          availabe_cmds.push('Hold');        
+        }
+  
+        if (this.wear_slot!==null){
+          availabe_cmds.push('Wear');        
+        }
+
+        if (this.is_gettable){
+          availabe_cmds.push('Get');        
+        }
+      }
+
+    }
+    
+    if (availabe_cmds.length===0){
+      //Do nothing
+      return;
+    } else if (availabe_cmds.length===1){
+      //If only one cmd exists - it must be Look.
+      clicking_user.look_cmd(this.id);
+    } else {
+      //Send the user an array of available cmds.
+      let cmds_arr = [];
+      for (const cmd of availabe_cmds){
+        cmds_arr.push(`<span class="button is-small is-primary is-rounded cmd_button" data-id="${this.id}">${cmd}</span>`);
+      }
+
+      let content = {
+        cmds_arr: cmds_arr
+      }
+      clicking_user.send_msg_to_client("Commands Array", content);
+    }
   }
 }
 
