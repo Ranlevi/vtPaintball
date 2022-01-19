@@ -113,6 +113,65 @@ class Game_Controller {
             break;
           }
 
+          case "Command Clicked":{
+
+            let user = this.entities.get(socket.user_id);
+            if (user===undefined){
+              return;
+            }
+            
+            switch(msg.content.cmd){
+
+              case "Look":{
+                user.look_cmd(msg.content.target_id);
+                break;
+              }
+
+              case "User Info":{
+                let content = {
+                  html:         user.get_look_string(),
+                  is_flashing:  false
+                }
+                user.send_msg_to_client("Chat", content);            
+                break;
+              }
+
+              case "Edit User":{
+                let content = {
+                  user_obj: {
+                    description: user.description
+                  }
+                }
+                user.send_msg_to_client("Open Edit User Modal", content);
+                break;
+              }
+
+              case "Create A New Game":{//continue here
+                break;
+              }
+
+              case "Join A Game":{
+                break;
+              }
+
+            }            
+            break;
+          }
+
+          case "Edit User":{
+            let user = this.entities.get(socket.user_id);
+            if (user!==undefined){
+              user.set_props(msg.content);
+
+              let content = {
+                html:         "Changes saved.",
+                is_flashing:  false
+              }
+              user.send_msg_to_client("Chat", content);
+            }
+            break;
+          }
+
         }
       });
 
@@ -153,7 +212,7 @@ class Game_Controller {
 
     props = this.entities_db["Welcome Sign"];
     let welcome_sign = new Classes.Item(this.entities, props);
-    welcome_sign.add_to_container(lobby.id);    
+    welcome_sign.add_to_container(lobby.id);        
   }
 
   get_user_id_by_username(username){

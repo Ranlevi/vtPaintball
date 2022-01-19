@@ -30,6 +30,18 @@ class Entity {
     
     this.container_id = null;
   }
+
+  get_look_string(){
+    let msg = `<h1>${this.get_name()}</h1>` +
+              `<p>${this.description}</p>`;    
+    return msg;
+  }
+
+  set_props(props){
+    for (const [key, value] of Object.entries(props)){
+      this[key] = value;
+    }
+  }
 }
 
 class Room extends Entity {
@@ -117,7 +129,7 @@ class Room extends Entity {
   }
 
   get_name(){    
-    return `<span class="room_name" data-id="${this.id}">${this.name}</span>`;    
+    return `<span class="room_name clickable" data-id="${this.id}">${this.name}</span>`;    
   }
 
   name_clicked(clicking_user_id){       
@@ -133,7 +145,8 @@ class Room extends Entity {
 class User extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
-    this.id=        Utils.id_generator.get_new_id("user");
+    this.id=            Utils.id_generator.get_new_id("user");
+    this.description=   "A Human player.";
 
     this.socket;
 
@@ -173,10 +186,10 @@ class User extends Entity {
       this.send_msg_to_client("Chat", content);      
       return;
     }
-
+    
     //Target is specified.
     let entity = this.global_entities.get(target_id);
-
+    
     if (entity.container_id===this.id || 
         entity.container_id===this.container_id){
 
@@ -184,7 +197,8 @@ class User extends Entity {
         html:         entity.get_look_string(),
         is_flashing:  false
       };
-      this.send_msg_to_client("Chat", content);      
+      this.send_msg_to_client("Chat", content);
+      return;
     }
 
     //Target is not on the body or in the same room.
@@ -254,6 +268,7 @@ class User extends Entity {
     
     clicking_user.send_msg_to_client("Commands Array", content);    
   }
+  
 }
 
 class Item extends Entity {
@@ -267,6 +282,7 @@ class Item extends Entity {
     this.is_consumable= false;
     this.is_gettable= false;
     this.is_holdable= false;
+    this.wear_slot= null;
 
     //Overwrite the default props.
     if (props!==null){
@@ -356,6 +372,7 @@ class Item extends Entity {
       clicking_user.send_msg_to_client("Commands Array", content);
     }
   }
+  
 }
 
 exports.User=             User;

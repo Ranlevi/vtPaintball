@@ -100,6 +100,12 @@ function create_socket(){
           div.innerHTML = item;
           cmds_container.append(div);
         }
+        break;
+      }
+
+      case "Open Edit User Modal": {
+        load_edit_user_modal(msg.content.user_obj);
+        break;
       }
     
     }  
@@ -139,6 +145,19 @@ modal_submit_btn.addEventListener('click', ()=>{
       break;
     }
 
+    case "Edit User":{
+      let user_description_input = document.getElementById("user_description_input");
+      let msg = {
+        type: "Edit User",
+        content: {
+          description: user_description_input.value
+        }
+      }      
+      socket.emit('Message From Client', msg);      
+      break;
+    }
+
+
   }
   
   //When the Submit btn is pressed, we want the modal
@@ -172,7 +191,7 @@ modal_cancel_btn.addEventListener('click', ()=>{
 main_window.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
   
-  if (evt.target.classList[2]=="clickable"){
+  if (evt.target.classList.contains("clickable")){
     
     let msg = {
       type:       "Entity Clicked",
@@ -196,7 +215,6 @@ cmds_container.addEventListener('click', (evt)=>{
     }
   }
   socket.emit('Message From Client', msg); 
-  //continue: recive msg on server
 });
 
 // Aux. Functions
@@ -231,5 +249,26 @@ function insert_chat_box(type, content){
   // if (!isMobile){
   //   input_form.focus();    
   // }
+
+}
+
+//Appears when the 'edit' (user) command is clicked.
+function load_edit_user_modal(user_obj){
+  
+  modal_title.innerHTML = "Edit User";
+
+  modal_form.innerHTML =   
+    `<label class="label">Enter a new description for your charecter:</label>`+    
+    `<div class="control">`+
+    ` <textarea `+
+    `   id=           "user_description_input"`+
+    `   class=        "textarea"`+    
+    `   rows=         "3">${user_obj.description}</textarea>`+
+    `</div>`;    
+  
+  modal.classList.add('is-active');
+
+  let user_description_input = document.getElementById("user_description_input");
+  user_description_input.focus();
 
 }
