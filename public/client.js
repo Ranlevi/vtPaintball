@@ -107,6 +107,11 @@ function create_socket(){
         load_edit_user_modal(msg.content.user_obj);
         break;
       }
+
+      case "Open Edit Game Modal":{
+        load_edit_game_modal(msg.content);
+        break;
+      }
     
     }  
    
@@ -157,7 +162,24 @@ modal_submit_btn.addEventListener('click', ()=>{
       break;
     }
 
+    //User submitted the "Edit Game" form, and now we create the game.
+    case "Edit Game":{
+      let formData = new FormData(modal_form);
 
+      let msg = {
+        type:     "Create Game",
+        content:  {
+          props: {}
+        }        
+      }
+
+      for (const [key, value] of formData.entries()){
+        msg.content.props[key] = value;
+      }
+      
+      socket.emit('Message From Client', msg);
+      break;
+    }
   }
   
   //When the Submit btn is pressed, we want the modal
@@ -271,4 +293,56 @@ function load_edit_user_modal(user_obj){
   let user_description_input = document.getElementById("user_description_input");
   user_description_input.focus();
 
+}
+
+//Appears when the 'edit game' command is clicked.
+function load_edit_game_modal(game_info){
+  modal_title.innerHTML = "Edit Game";
+
+  modal_form.innerHTML =  
+  `<label class="label">Game Name:</label>`+    
+  `<div class="control">`+    
+  `   <input `+
+  `     name=         "name"`+
+  `     id=           "game_name_input"`+    
+  `     autocomplete= "off"`+ 
+  `     class=        "input"`+ 
+  `     type=         "text"`+ 
+  `     value=        "${game_info.name}"`+
+  `     placeholder=  "e.g. Game Of Thrones">`+
+  `  </div>`+  
+  `  <label class="label">Select Map:</label>`+
+  `  <div class="control">`+
+  `   <div class="select">`+
+  `     <select name="map_name">`;
+
+  for (const name of game_info.maps){
+    modal_form.innerHTML += `<option value="${name}">${name}</option>`;
+  }
+
+  modal_form.innerHTML += 
+      `</select>`+
+    `</div>`+
+  `</div>`+
+
+    `<label class="label">Max Score</label>`+
+    `<div class="control">`+
+      `<div class="select">`+
+        `<select name="max_score">`;
+
+  for (const score of game_info.max_score_options){
+    modal_form.innerHTML += `<option value="${score}">${score}</option>`;
+  }
+
+  modal_form.innerHTML += 
+        `</select>`+
+      `</div>`+
+    `</div>`+
+    `<div class="block">`+
+      `<label class="checkbox">`+
+      `<input type="checkbox" name="is_private" ${game_info.is_private? "checked": ""}>`+
+      `Game is Private</label>`+
+    `</div>`;
+  
+  modal.classList.add('is-active');  
 }

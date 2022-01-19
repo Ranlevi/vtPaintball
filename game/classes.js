@@ -41,7 +41,7 @@ class Entity {
     for (const [key, value] of Object.entries(props)){
       this[key] = value;
     }
-  }
+  }  
 }
 
 class Room extends Entity {
@@ -140,6 +140,18 @@ class Room extends Entity {
       clicking_user.look_cmd();
     }    
   }
+
+  get_exits(){
+    let obj = {
+      north:  (this.exits.north===null? false:true),
+      south:  (this.exits.south===null? false:true),
+      east:   (this.exits.east===null?  false:true),
+      west:   (this.exits.west===null?  false:true),
+      up:     (this.exits.up===null?    false:true),
+      down:   (this.exits.down===null?  false:true),
+    }
+    return obj;
+  }
 }
 
 class User extends Entity {
@@ -149,6 +161,7 @@ class User extends Entity {
     this.description=   "A Human player.";
 
     this.socket;
+    this.team_color = null;
 
     //Overwrite the default props.
     if (props!==null){
@@ -207,6 +220,16 @@ class User extends Entity {
       is_flashing:  false
     };
     this.send_msg_to_client("Chat", content);    
+  }
+  
+  //Get the exits from the current room and send them.
+  send_exits_msg_to_client(){    
+    let room = this.global_entities.get(this.container_id);
+    let content = {
+      type:     "Exits Message",
+      content:  room.get_exits()
+    }    
+    this.props.socket.emit('Exits Message', content);
   }
 
   destroy_user(){
@@ -268,6 +291,7 @@ class User extends Entity {
     
     clicking_user.send_msg_to_client("Commands Array", content);    
   }
+  
   
 }
 
@@ -375,6 +399,114 @@ class Item extends Entity {
   
 }
 
+class Game extends Entity {
+  constructor(global_entities, props=null){
+    super(global_entities);
+    this.id=        Utils.id_generator.get_new_id("game");
+
+    this.owner_id=        null;
+    this.spawn_rooms=     {
+      red:  [],
+      blue: []
+    };
+    this.game_has_started= false;
+    this.score=           {
+      red:  0,
+      blue: 0
+    };
+    this.max_score=         5;
+    this.is_private=        false;
+    this.items_spawn_rooms= {}; //entity_name: room array
+    this.teams = {
+      red:  [], //user_ids
+      blue: []
+    }
+    this.map_name = null;
+
+    //Overwrite the default props.
+    if (props!==null){
+      for (const [key, value] of Object.entries(props)){
+        this[key]= value;
+      }
+    }
+
+    this.global_entities.set(this.id, this);
+  }
+
+  init(){
+    let path = `./maps/pacman_map.json`;
+    
+    if (fs.existsSync(path)){      
+      let parsed_info = JSON.parse(fs.readFileSync(path));    
+      
+      this.props.blue_spawn_room_id=  parsed_info.blue_spawn_room_id;
+      this.props.red_spawn_room_id=   parsed_info.red_spawn_room_id;
+      this.props.item_spawn_rooms=    parsed_info.item_spawn_rooms;
+
+      //Spawn Rooms
+      for (const props of parsed_info.rooms){
+        let room = new Room(this.world, props);
+        room.props.current_game_id = this.props.id;
+        this.props.entities.push(room.props.id);
+
+        //continue here: spawn items in the room.
+        let items_arr = this.props.item_spawn_rooms[room.props.id];
+        if (items_arr!==undefined){
+          for (const item_name of items_arr){
+            let props = this.world.entities_db[item_name].props;
+            let item = new Item(this.world, props);
+            item.props.container_id=  room.props.id; 
+            item.props.spawn_room_id= room.props.id;       
+            item.props.current_game_id=  this.props.id;
+
+            room.add_entity(item.props.id);
+            this.props.entities.push(item.props.id);        
+          }
+        }
+      }     
+
+    }  else {
+      console.error(`classes.game.init_map -> pacman.json does not exist.`);
+    }
+  }
+
+  add_player(user_id){
+    
+    this.add_to_container(user_id);
+    
+    let user = this.global_entities.get(user_id);    
+
+    if (this.teams.red.length<= this.teams.blue.length){
+      //i.e., game owner is always Red.
+      this.teams.red.push(user_id);
+      user.team_color = "Red";
+    } else {
+      this.teams.blue.push(user_id);
+      user.team_color = "Blue";
+    }
+    
+    //Announce to all existing players.
+    let content = {
+      html:       `${user.get_name()} has joined team ${user.team_color}`,
+      is_flashing: false
+    };
+    this.send_msg_to_all_players(content);
+  }
+
+  send_msg_to_all_players(content){
+    for (const user_id of this.teams.red){
+      let user = this.global_entities.get(user_id);
+      user.send_msg_to_client("Chat", content);
+    }
+
+    for (const user_id of this.teams.blue){
+      let user = this.global_entities.get(user_id);
+      user.send_msg_to_client("Chat", content);
+    }
+  }
+}
+
 exports.User=             User;
 exports.Room=             Room;
 exports.Item=             Item;
+exports.Game=             Game;

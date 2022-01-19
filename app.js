@@ -146,11 +146,67 @@ class Game_Controller {
                 break;
               }
 
-              case "Create A New Game":{//continue here
+              //Open an Edit Game modal in the use's client.
+              case "Create A New Game":{
+                let content = {      
+                  name:         "Text Tag",
+                  maps:         ["Pacman"],
+                  max_score_options: [5,10,15],
+                  is_private:   false
+                }    
+                user.socket.emit('Open Edit Game Modal', content);                 
                 break;
               }
 
               case "Join A Game":{
+                break;
+              }
+
+              case "Switch Sides":{
+                break;
+              }
+
+              case "Quit To Lobby":{
+                break;
+              }
+
+              case "Shot":{
+                break;
+              }
+
+              case "Tell":{
+                break;
+              }
+
+              case "Say":{
+                break;
+              }
+
+              case "Use":{
+                break;
+              }
+
+              case "Consume":{
+                break;
+              }
+
+              case "Drop":{
+                break;
+              }
+
+              case "Remove":{
+                break;
+              }
+
+              case "Hold":{
+                break;
+              }
+
+              case "Wear":{
+                break;
+              }
+
+              case "Get":{
                 break;
               }
 
@@ -169,6 +225,28 @@ class Game_Controller {
               }
               user.send_msg_to_client("Chat", content);
             }
+            break;
+          }
+
+          case "Create Game":{
+            let user = this.entities.get(socket.user_id);
+            if (user!==undefined){
+
+              let props = {
+                owner_id: user.id
+              }
+              let game = new Classes.Game(this.global_entities, props);    
+              user.current_game_id= game.id;
+
+              game.add_player(user.id); //Do spawn
+
+              let content = {
+                html: `<p><b>You have been teleported to the game arena.</b></p></p><p><span class="link" data-id="${game.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link" data-id="${game.id}">Start</span> the game when you're ready.</p>`,
+                is_flashing: false
+              };
+              user.send_msg_to_client("Chat", content);
+              user.send_exits_msg_to_client();
+            }            
             break;
           }
 
