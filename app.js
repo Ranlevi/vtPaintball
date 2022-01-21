@@ -154,7 +154,7 @@ class Game_Controller {
                   max_score_options: [5,10,15],
                   is_private:   false
                 }    
-                user.socket.emit('Open Edit Game Modal', content);                 
+                user.send_msg_to_client('Open Edit Game Modal', content);                 
                 break;
               }
 
@@ -235,7 +235,7 @@ class Game_Controller {
               let props = {
                 owner_id: user.id
               }
-              let game = new Classes.Game(this.global_entities, props);    
+              let game = new Classes.Game(this.entities, props);    
               user.current_game_id= game.id;
 
               game.add_player(user.id); //Do spawn

@@ -64,7 +64,7 @@ function create_socket(){
   let socket_io = io(); 
 
   socket_io.on('Message From Server', (msg)=>{      
-    
+
     switch(msg.type){      
 
       case "Login Reply":{ 
@@ -299,7 +299,7 @@ function load_edit_user_modal(user_obj){
 function load_edit_game_modal(game_info){
   modal_title.innerHTML = "Edit Game";
 
-  modal_form.innerHTML =  
+  let html =  
   `<label class="label">Game Name:</label>`+    
   `<div class="control">`+    
   `   <input `+
@@ -309,18 +309,20 @@ function load_edit_game_modal(game_info){
   `     class=        "input"`+ 
   `     type=         "text"`+ 
   `     value=        "${game_info.name}"`+
-  `     placeholder=  "e.g. Game Of Thrones">`+
-  `  </div>`+  
-  `  <label class="label">Select Map:</label>`+
+  `     placeholder=  "e.g. Game Of Thrones"/>`+
+  `</div>`;
+  
+  html += 
+  `<label class="label">Select Map:</label>`+
   `  <div class="control">`+
-  `   <div class="select">`+
-  `     <select name="map_name">`;
+  `    <div class="select">`+
+  `      <select name="map_name">`;
 
-  for (const name of game_info.maps){
-    modal_form.innerHTML += `<option value="${name}">${name}</option>`;
+  for (const name of game_info.maps){    
+    html += `<option value="${name}">${name}</option>`;
   }
 
-  modal_form.innerHTML += 
+  html += 
       `</select>`+
     `</div>`+
   `</div>`+
@@ -331,10 +333,10 @@ function load_edit_game_modal(game_info){
         `<select name="max_score">`;
 
   for (const score of game_info.max_score_options){
-    modal_form.innerHTML += `<option value="${score}">${score}</option>`;
+    html += `<option value="${score}">${score}</option>`;
   }
 
-  modal_form.innerHTML += 
+  html += 
         `</select>`+
       `</div>`+
     `</div>`+
@@ -343,6 +345,8 @@ function load_edit_game_modal(game_info){
       `<input type="checkbox" name="is_private" ${game_info.is_private? "checked": ""}>`+
       `Game is Private</label>`+
     `</div>`;
+
+  modal_form.innerHTML = html;
   
   modal.classList.add('is-active');  
 }
