@@ -38,9 +38,11 @@ class Entity {
   }
 
   set_props(props){
-    for (const [key, value] of Object.entries(props)){
-      this[key] = value;
-    }
+    if (props!==null){
+      for (const [key, value] of Object.entries(props)){
+        this[key] = value;
+      }
+    }    
   }  
 }
 
@@ -57,14 +59,9 @@ class Room extends Entity {
       up:    null,
       down:  null
     }
+    this.background = "white";
 
-    //Overwrite the default props.
-    if (props!==null){
-      for (const [key, value] of Object.entries(props)){
-        this[key]= value;
-      }
-    }
-
+    this.set_props(props);
     this.global_entities.set(this.id, this);
   }
 
@@ -163,13 +160,7 @@ class User extends Entity {
     this.socket;
     this.team_color = null;
 
-    //Overwrite the default props.
-    if (props!==null){
-      for (const [key, value] of Object.entries(props)){
-        this[key]= value;
-      }
-    }
-
+    this.set_props(props);
     this.global_entities.set(this.id, this);
   }
 
@@ -229,7 +220,7 @@ class User extends Entity {
       type:     "Exits Message",
       content:  room.get_exits()
     }    
-    this.props.socket.emit('Exits Message', content);
+    this.send_msg_to_client('Exits Message', content);
   }
 
   destroy_user(){
@@ -307,14 +298,8 @@ class Item extends Entity {
     this.is_gettable= false;
     this.is_holdable= false;
     this.wear_slot= null;
-
-    //Overwrite the default props.
-    if (props!==null){
-      for (const [key, value] of Object.entries(props)){
-        this[key]= value;
-      }
-    }
-
+    
+    this.set_props(props);
     this.global_entities.set(this.id, this);
   }
 
@@ -400,9 +385,10 @@ class Item extends Entity {
 }
 
 class Game extends Entity {
-  constructor(global_entities, props=null){
+  constructor(global_entities, entities_db, props=null){
     super(global_entities);
-    this.id=        Utils.id_generator.get_new_id("game");
+    this.entities_db= entities_db;
+    this.id=          Utils.id_generator.get_new_id("game");
 
     this.owner_id=        null;
     this.spawn_rooms=     {
@@ -423,13 +409,7 @@ class Game extends Entity {
     }
     this.map_name = null;
 
-    //Overwrite the default props.
-    if (props!==null){
-      for (const [key, value] of Object.entries(props)){
-        this[key]= value;
-      }
-    }
-
+    this.set_props(props);
     this.global_entities.set(this.id, this);
   }
 
@@ -439,28 +419,26 @@ class Game extends Entity {
     if (fs.existsSync(path)){      
       let parsed_info = JSON.parse(fs.readFileSync(path));    
       
-      this.props.blue_spawn_room_id=  parsed_info.blue_spawn_room_id;
-      this.props.red_spawn_room_id=   parsed_info.red_spawn_room_id;
-      this.props.item_spawn_rooms=    parsed_info.item_spawn_rooms;
+      this.spawn_rooms.blue=  parsed_info.blue_spawn_room_id;
+      this.spawn_rooms.red=   parsed_info.red_spawn_room_id;
+      this.item_spawn_rooms=  parsed_info.item_spawn_rooms;
+      this.map_name= "Pacman";
 
       //Spawn Rooms
       for (const props of parsed_info.rooms){
-        let room = new Room(this.world, props);
-        room.props.current_game_id = this.props.id;
-        this.props.entities.push(room.props.id);
-
-        //continue here: spawn items in the room.
-        let items_arr = this.props.item_spawn_rooms[room.props.id];
+        let room = new Room(this.global_entities, props);
+        room.current_game_id = this.id;
+        room.add_to_container(this.id);
+        
+        //spawn items in the room. Add them to the game.
+        let items_arr = this.item_spawn_rooms[room.id];
         if (items_arr!==undefined){
           for (const item_name of items_arr){
-            let props = this.world.entities_db[item_name].props;
-            let item = new Item(this.world, props);
-            item.props.container_id=  room.props.id; 
-            item.props.spawn_room_id= room.props.id;       
-            item.props.current_game_id=  this.props.id;
-
-            room.add_entity(item.props.id);
-            this.props.entities.push(item.props.id);        
+            let props=  this.entities_db[item_name];
+            let item=   new Item(this.global_entities, props);
+            item.add_to_container(room.id);
+            item.current_game_id=  this.id;
+            item.add_to_container(this.id);
           }
         }
       }     
@@ -484,6 +462,9 @@ class Game extends Entity {
       this.teams.blue.push(user_id);
       user.team_color = "Blue";
     }
+
+    //Spawn in Team's room.
+    
     
     //Announce to all existing players.
     let content = {

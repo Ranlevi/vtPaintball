@@ -235,7 +235,7 @@ class Game_Controller {
               let props = {
                 owner_id: user.id
               }
-              let game = new Classes.Game(this.entities, props);    
+              let game = new Classes.Game(this.entities, this.entities_db, props);    
               user.current_game_id= game.id;
 
               game.add_player(user.id); //Do spawn
@@ -246,6 +246,8 @@ class Game_Controller {
               };
               user.send_msg_to_client("Chat", content);
               user.send_exits_msg_to_client();
+
+
             }            
             break;
           }

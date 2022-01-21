@@ -6,7 +6,6 @@
       "type":         "Room",
       "id":           "r0000001",
       "name":         "Blue Spawn Room",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -23,7 +22,6 @@
       "type":         "Room",
       "id":           "r0000002",
       "name":         "Red Spawn Room",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -40,7 +38,6 @@
       "type":         "Room",
       "id":           "r0000003",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -57,7 +54,6 @@
       "type":         "Room",
       "id":           "r0000004",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -74,7 +70,6 @@
       "type":         "Room",
       "id":           "r0000005",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -91,7 +86,6 @@
       "type":         "Room",
       "id":           "r0000006",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -108,7 +102,6 @@
       "type":         "Room",
       "id":           "r0000007",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -125,7 +118,6 @@
       "type":         "Room",
       "id":           "r0000008",
       "name":         "Corner",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -142,7 +134,6 @@
       "type":         "Room",
       "id":           "r0000009",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -159,7 +150,6 @@
       "type":         "Room",
       "id":           "r0000010",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -176,7 +166,6 @@
       "type":         "Room",
       "id":           "r0000011",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -193,7 +182,6 @@
       "type":         "Room",
       "id":           "r0000012",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -210,7 +198,6 @@
       "type":         "Room",
       "id":           "r0000013",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -227,7 +214,6 @@
       "type":         "Room",
       "id":           "r0000014",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -244,7 +230,6 @@
       "type":         "Room",
       "id":           "r0000015",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -261,7 +246,6 @@
       "type":         "Room",
       "id":           "r0000016",
       "name":         "Corner",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -278,7 +262,6 @@
       "type":         "Room",
       "id":           "r0000017",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -295,7 +278,6 @@
       "type":         "Room",
       "id":           "r0000018",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -312,7 +294,6 @@
       "type":         "Room",
       "id":           "r0000019",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -329,7 +310,6 @@
       "type":         "Room",
       "id":           "r0000020",
       "name":         "T-Junction",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
@@ -346,7 +326,6 @@
       "type":         "Room",
       "id":           "r0000021",
       "name":         "Corridor",      
-      "subtype":      "Room",
       "description":  "",
       "entities":     [],
       "exits": {
