@@ -44,6 +44,23 @@ class Entity {
       }
     }    
   }  
+
+  //Add to container. If it's a room - notify other users.
+  spawn(container_id){
+    this.add_to_container(container_id);
+
+    let container = this.global_entities.get(container_id);
+    if (container.type==="Room"){
+      
+      //If the spawned entity is a user, don't send the message to him.
+      let sender_id = null;
+      if (this.type==="User"){
+        sender_id = this.id;
+      }
+
+      container.send_msg_to_all_users_in_the_room(`${this.get_name()} has spawned here.`, sender_id);
+    }
+  }  
 }
 
 class Room extends Entity {
@@ -51,6 +68,7 @@ class Room extends Entity {
     super(global_entities);
     this.id=        Utils.id_generator.get_new_id("room");
 
+    this.type =     "Room";
     this.exits= {
       north: null, //direction: id of next room.
       south: null,
@@ -70,10 +88,10 @@ class Room extends Entity {
     let msg = `${this.get_name()} `;
 
     //If in game, add the game name.
-    // if (this.current_game_id!==null){
-    //   let game = this.global_entities.get(this.current_game_id);
-    //   msg += `(${game.get_name()})`;
-    // }
+    if (this.current_game_id!==null){
+      let game = this.global_entities.get(this.current_game_id);
+      msg += `(${game.get_name()})`;
+    }
 
     //Exits
     let exits_html = '';    
@@ -149,6 +167,26 @@ class Room extends Entity {
     }
     return obj;
   }
+
+  send_msg_to_all_users_in_the_room(html, sender_id=null){
+
+    let content = {
+      html:         html,
+      is_flashing:  false
+    };
+
+    for (const entity_id of this.entities){
+
+      if (entity_id===sender_id){
+        return;
+      }
+
+      let entity = this.global_entities.get(entity_id);
+      if (entity.type==="User"){
+        entity.send_msg_to_client("Chat", content);
+      }
+    }
+  }
 }
 
 class User extends Entity {
@@ -157,8 +195,9 @@ class User extends Entity {
     this.id=            Utils.id_generator.get_new_id("user");
     this.description=   "A Human player.";
 
+    this.type=          "User";
     this.socket;
-    this.team_color = null;
+    this.team_color=    null;
 
     this.set_props(props);
     this.global_entities.set(this.id, this);
@@ -217,8 +256,8 @@ class User extends Entity {
   send_exits_msg_to_client(){    
     let room = this.global_entities.get(this.container_id);
     let content = {
-      type:     "Exits Message",
-      content:  room.get_exits()
+      type:         "Exits Message",
+      exits_state:  room.get_exits()
     }    
     this.send_msg_to_client('Exits Message', content);
   }
@@ -283,21 +322,37 @@ class User extends Entity {
     clicking_user.send_msg_to_client("Commands Array", content);    
   }
   
+  //Pop out of current room. Spawn in destination room.
+  teleport(dest_container_id){
+    let current_room = this.global_entities.get(this.container_id);
+    current_room.send_msg_to_all_users_in_the_room(`${this.get_name()} has teleported away.`, this.id);
+    current_room.remove_from_container(this.id);
+
+    this.spawn(dest_container_id);
+    
+    let dest_room = this.global_entities.get(dest_container_id);
+    let content = {
+        background: dest_room.background
+    }
+    this.send_msg_to_client("Change Background", content);
+    this.look_cmd();
+  }
   
 }
 
 class Item extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
-    this.id=        Utils.id_generator.get_new_id("item");
+    this.id=                Utils.id_generator.get_new_id("item");
 
-    this.cooldown_counter = 0;
-    this.cooldown_period= null;
-    this.action=null;
-    this.is_consumable= false;
-    this.is_gettable= false;
-    this.is_holdable= false;
-    this.wear_slot= null;
+    this.type=              "Item";
+    this.cooldown_counter=  0;
+    this.cooldown_period=   null;
+    this.action=            null;
+    this.is_consumable=     false;
+    this.is_gettable=       false;
+    this.is_holdable=       false;
+    this.wear_slot=         null;
     
     this.set_props(props);
     this.global_entities.set(this.id, this);
@@ -390,10 +445,11 @@ class Game extends Entity {
     this.entities_db= entities_db;
     this.id=          Utils.id_generator.get_new_id("game");
 
+    this.type=        "Game";
     this.owner_id=        null;
     this.spawn_rooms=     {
-      red:  [],
-      blue: []
+      red:  null,
+      blue: null
     };
     this.game_has_started= false;
     this.score=           {
@@ -411,10 +467,11 @@ class Game extends Entity {
 
     this.set_props(props);
     this.global_entities.set(this.id, this);
+    this.init();
   }
 
   init(){
-    let path = `./maps/pacman_map.json`;
+    let path = __dirname + `/maps/pacman_map.json`; //continue here - why path not found? maybe user __dir, etc.
     
     if (fs.existsSync(path)){      
       let parsed_info = JSON.parse(fs.readFileSync(path));    
@@ -426,6 +483,8 @@ class Game extends Entity {
 
       //Spawn Rooms
       for (const props of parsed_info.rooms){
+
+        //Create the room, add it to the game.
         let room = new Room(this.global_entities, props);
         room.current_game_id = this.id;
         room.add_to_container(this.id);
@@ -434,9 +493,12 @@ class Game extends Entity {
         let items_arr = this.item_spawn_rooms[room.id];
         if (items_arr!==undefined){
           for (const item_name of items_arr){
+
+            //Create the item. Add to room. Add to game.
             let props=  this.entities_db[item_name];
             let item=   new Item(this.global_entities, props);
-            item.add_to_container(room.id);
+            item.spawn(room.id);
+
             item.current_game_id=  this.id;
             item.add_to_container(this.id);
           }
@@ -452,19 +514,19 @@ class Game extends Entity {
     
     this.add_to_container(user_id);
     
-    let user = this.global_entities.get(user_id);    
+    let user = this.global_entities.get(user_id);
+    user.current_game_id= this.id;
 
     if (this.teams.red.length<= this.teams.blue.length){
       //i.e., game owner is always Red.
       this.teams.red.push(user_id);
-      user.team_color = "Red";
+      user.team_color = "Red";      
+      user.teleport(this.spawn_rooms.red);
     } else {
       this.teams.blue.push(user_id);
       user.team_color = "Blue";
+      user.teleport(this.spawn_rooms.blue);
     }
-
-    //Spawn in Team's room.
-    
     
     //Announce to all existing players.
     let content = {
@@ -484,6 +546,11 @@ class Game extends Entity {
       let user = this.global_entities.get(user_id);
       user.send_msg_to_client("Chat", content);
     }
+  }
+
+  get_name(){
+    //Returns an HTML string for the name of the entity.
+    return `<span class="link clickable" data-id="${this.id}">${this.name}</span>`;
   }
 }
 

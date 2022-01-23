@@ -3,6 +3,7 @@ const CLIENT_VERSION=     0.1;
 //Mobile Check on init.
 // const isMobile = window.matchMedia("only screen and (max-width: 760px)").matches;
 
+let body=             document.getElementById("body");
 let modal=            document.getElementById("modal");
 let modal_title=      document.getElementById("modal_title");
 let modal_content=    document.getElementById("modal_content");
@@ -11,6 +12,12 @@ let modal_cancel_btn= document.getElementById("modal_cancel_btn");
 let modal_submit_btn= document.getElementById("modal_submit_btn");
 let main_window=      document.getElementById("main_window");
 let cmds_container=   document.getElementById("cmds_container");
+let exit_link_north=  document.getElementById("exit_link_north");
+let exit_link_south=  document.getElementById("exit_link_south");
+let exit_link_east=   document.getElementById("exit_link_east");
+let exit_link_west=   document.getElementById("exit_link_west");
+let exit_link_up=     document.getElementById("exit_link_up");
+let exit_link_down=   document.getElementById("exit_link_down");
 
 //Global Variables
 let stop_chat_scroll=         false;
@@ -110,6 +117,86 @@ function create_socket(){
 
       case "Open Edit Game Modal":{
         load_edit_game_modal(msg.content);
+        break;
+      }
+
+      case "Exits Message":{
+        //{perm_link_north: bol...}   
+        
+        for (const [key, value] of Object.entries(msg.content.exits_state)){
+          switch(key){
+            case "north":{
+              if (value===true){
+                exit_link_north.classList.remove("exit_link_off");
+                exit_link_north.classList.add("exit_link_on")
+              } else {
+                exit_link_north.classList.remove("exit_link_on");
+                exit_link_north.classList.add("exit_link_off")
+              }
+              break;
+            }      
+
+            case "south":{
+              if (value===true){
+                exit_link_south.classList.remove("exit_link_off");
+                exit_link_south.classList.add("exit_link_on")
+              } else {
+                exit_link_south.classList.remove("exit_link_on");
+                exit_link_south.classList.add("exit_link_off")
+              }
+              break;
+            }
+
+            case "east":{
+              if (value===true){
+                exit_link_east.classList.remove("exit_link_off");
+                exit_link_east.classList.add("exit_link_on")
+              } else {
+                exit_link_east.classList.remove("exit_link_on");
+                exit_link_east.classList.add("exit_link_off")
+              }
+              break;
+            }
+
+            case "west":{
+              if (value===true){
+                exit_link_west.classList.remove("exit_link_off");
+                exit_link_west.classList.add("exit_link_on")
+              } else {
+                exit_link_west.classList.remove("exit_link_on");
+                exit_link_west.classList.add("exit_link_off")
+              }
+              break;
+            }
+
+            case "up":{
+              if (value===true){
+                exit_link_up.classList.remove("exit_link_off");
+                exit_link_up.classList.add("exit_link_on")
+              } else {
+                exit_link_up.classList.remove("exit_link_on");
+                exit_link_up.classList.add("exit_link_off")
+              }
+              break;
+            }
+
+            case "down":{
+              if (value===true){
+                exit_link_down.classList.remove("exit_link_off");
+                exit_link_down.classList.add("exit_link_on")
+              } else {
+                exit_link_down.classList.remove("exit_link_on");
+                exit_link_down.classList.add("exit_link_off")
+              }
+              break;
+            }
+          }
+        }
+        break;
+      }
+
+      case "Change Background":{        
+        body.style.backgroundColor = msg.content.background;
         break;
       }
     

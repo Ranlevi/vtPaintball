@@ -230,24 +230,26 @@ class Game_Controller {
 
           case "Create Game":{
             let user = this.entities.get(socket.user_id);
+
             if (user!==undefined){
 
-              let props = {
-                owner_id: user.id
+              //Create a new game. Add the player as owner.
+              let props = {};
+              for (const [key, value] of Object.entries(msg.content.props)){
+                props[key] = value;
               }
-              let game = new Classes.Game(this.entities, this.entities_db, props);    
-              user.current_game_id= game.id;
+              props.owner_id = user.id;
 
+              let game = new Classes.Game(this.entities, this.entities_db, props);    
               game.add_player(user.id); //Do spawn
 
+              //Send welcome message to user. Send exits.
               let content = {
                 html: `<p><b>You have been teleported to the game arena.</b></p></p><p><span class="link" data-id="${game.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link" data-id="${game.id}">Start</span> the game when you're ready.</p>`,
                 is_flashing: false
               };
               user.send_msg_to_client("Chat", content);
               user.send_exits_msg_to_client();
-
-
             }            
             break;
           }

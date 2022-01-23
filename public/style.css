@@ -55,6 +55,7 @@ html, body {
   justify-content:  flex-start;
   align-items:      center;
   flex-wrap:        wrap;
+  margin-top:       4px;
 }
 
 /* #dashboard_text {
@@ -81,7 +82,7 @@ html, body {
 }
 
 .box_server {  
-  background-color: #00947e1f;
+  background-color: #e2f1ef;
 }
 
 /* .box_cmds {
