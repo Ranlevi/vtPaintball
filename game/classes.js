@@ -1,15 +1,16 @@
 const fs=    require('fs');
 const Utils= require('./utils');
 
+//Base class for all entities in the game. Holds generic props and methods.
 class Entity {
   constructor(global_entities){
-    this.global_entities=  global_entities;    
-    this.type= "";
-    this.name="";
-    this.description="";
-    this.container_id="";
-    this.entities=  [];
-    this.current_game_id = null;    
+    this.global_entities=   global_entities;//Pointer to all entities in the app.
+    this.type=              "";
+    this.name=              "";
+    this.description=       "";
+    this.container_id=      "";
+    this.entities=          [];//Ids of entities contained inside the entity.
+    this.current_game_id =  null;//ID of the game the entity belongs to (if exists)    
   }
 
   //Add to the containers. Set entity's container id.
@@ -31,6 +32,7 @@ class Entity {
     this.container_id = null;
   }
 
+  //Returns an html string with the entity's name and description.
   get_look_string(){
     let msg = `<h1>${this.get_name()}</h1>` +
               `<p>${this.description}</p>`;    
@@ -45,7 +47,7 @@ class Entity {
     }    
   }  
 
-  //Add to container. If it's a room - notify other users.
+  //Spawn the entity in the given container. If it's a room - notify other users in it.
   spawn(container_id){
     this.add_to_container(container_id);
 
@@ -63,6 +65,7 @@ class Entity {
   }  
 }
 
+//All activity in the game happens in rooms, that users move between.
 class Room extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
@@ -70,12 +73,12 @@ class Room extends Entity {
 
     this.type =     "Room";
     this.exits= {
-      north: null, //direction: id of next room.
-      south: null,
-      east:  null,
-      west:  null,
-      up:    null,
-      down:  null
+                    north: null, //direction: id of next room.
+                    south: null,
+                    east:  null,
+                    west:  null,
+                    up:    null,
+                    down:  null
     }
     this.background = "white";
 
@@ -83,6 +86,7 @@ class Room extends Entity {
     this.global_entities.set(this.id, this);
   }
 
+  //Returns an HTML string describing the room and its contents.
   get_look_string(){
         
     let msg = `${this.get_name()} `;
@@ -139,14 +143,37 @@ class Room extends Entity {
       msg += `${entity.get_name()} `;
     }  
   
-    msg += `</p>`  
+    msg += `</p>`;
+
+    //If the room is the lobby - display available public games.
+    if (this.id==="r0000000"){
+      msg += "<p><b>Publicly available games:</b></p>";
+
+      let games_arr = [];
+      for (const entity of this.global_entities.values()){
+        if (entity.type==="Game" && !entity.is_private){
+          games_arr.push(entity.get_name());
+        }
+      }
+
+      if (games_arr.length===0){
+        msg += "<p>None.</p>"
+      } else {
+        for (const item of games_arr){
+          msg += `<p>${item}</p>`;
+        }
+      }
+    }
+
     return msg;    
   }
 
+  //Returns an HTML string with the room's name and relevant CSS classes.
   get_name(){    
     return `<span class="room_name clickable" data-id="${this.id}">${this.name}</span>`;    
   }
 
+  //Handle clicks on the room's name.
   name_clicked(clicking_user_id){       
     let clicking_user = this.global_entities.get(clicking_user_id);
 
@@ -156,6 +183,7 @@ class Room extends Entity {
     }    
   }
 
+  //Returns an object with the state of room's exits (true===exit available.)
   get_exits(){
     let obj = {
       north:  (this.exits.north===null? false:true),
@@ -178,6 +206,7 @@ class Room extends Entity {
     for (const entity_id of this.entities){
 
       if (entity_id===sender_id){
+        //If sender_id is specified, don't send the message to that sender.
         return;
       }
 
@@ -189,20 +218,22 @@ class Room extends Entity {
   }
 }
 
+//Logged in users.
 class User extends Entity {
   constructor(global_entities, props=null){
     super(global_entities);
     this.id=            Utils.id_generator.get_new_id("user");
-    this.description=   "A Human player.";
-
-    this.type=          "User";
     this.socket;
+
+    this.description=   "A Human player.";
+    this.type=          "User";    
     this.team_color=    null;
 
     this.set_props(props);
     this.global_entities.set(this.id, this);
   }
 
+  //Generic method to handle all comm to client.
   send_msg_to_client(msg_type, content){
     let msg = {
       type:     msg_type,
@@ -212,10 +243,12 @@ class User extends Entity {
     this.socket.emit('Message From Server', msg);
   }
 
+  //HTML string of user's name and description.
   get_name(){
     return `<span class="tag is-warning clickable" data-id="${this.id}">${this.name}</span>`;
   }
 
+  //Handle click on "Look" command.
   look_cmd(target_id=null){    
         
     if (target_id===null){
@@ -235,6 +268,7 @@ class User extends Entity {
     
     if (entity.container_id===this.id || 
         entity.container_id===this.container_id){
+      //Target is on the user or in the same room as he.
 
       let content = {
         html:         entity.get_look_string(),
@@ -262,6 +296,7 @@ class User extends Entity {
     this.send_msg_to_client('Exits Message', content);
   }
 
+  //Remove user from the current room and from the app.  
   destroy_user(){
     //Remove the user from his room.
     this.remove_from_container();
@@ -471,7 +506,11 @@ class Game extends Entity {
   }
 
   init(){
-    let path = __dirname + `/maps/pacman_map.json`; //continue here - why path not found? maybe user __dir, etc.
+
+    let path;
+    if (this.map_name==="Pacman"){
+      path = __dirname + `/maps/pacman_map.json`;
+    }
     
     if (fs.existsSync(path)){      
       let parsed_info = JSON.parse(fs.readFileSync(path));    
@@ -551,6 +590,59 @@ class Game extends Entity {
   get_name(){
     //Returns an HTML string for the name of the entity.
     return `<span class="link clickable" data-id="${this.id}">${this.name}</span>`;
+  }
+
+  //Remove a user from the current game. If no more users exist, destroy the game.
+  remove_player(user_id){    
+
+    let user = this.global_entities.get(user_id);
+
+    if (user.team_color==="Red"){
+      let ix = this.teams.red.indexOf(user_id);
+      this.teams.red.splice(ix,1);//continue here
+
+    }
+
+
+    //Check if other users exist.
+    if (this.teams.red.length===0 && this.teams.blue.length===0){
+      //
+      this.destroy_game();
+    } else {
+
+    }
+
+
+
+    let ix = this.props.entities.indexOf(user_id);
+    if (ix!==-1){
+      this.props.entities.splice(ix,1);
+    }
+
+    let user = this.world.get_instance(user_id);
+
+    if (this.props.owner_id===user.props.id){
+      this.props.owner_id = null;
+    }
+
+    user.props.team= null;
+    user.props.current_game_id= null;
+    user.props.owned_game_id=   null;
+
+    //Check how many players are left in the game.
+    let num_of_players = 0;
+    for (const id of this.props.entities){
+      let entity = this.world.get_instance(id);
+
+      if (entity.props.type==="User"){
+        num_of_players += 1;
+      }
+    }
+
+    if (num_of_players===0){
+      //All player have quit the game. Close it.
+      this.destroy_game();
+    }
   }
 }
 

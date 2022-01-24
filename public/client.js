@@ -30,6 +30,7 @@ let game_music_obj=           new Audio('./assets/UpliftingMagicalTranceMain.mp3
 //Initialize the client.
 init();
 
+//Display the login modal.
 function init(){
 
   modal_title.innerHTML = "Login";
@@ -74,6 +75,7 @@ function create_socket(){
 
     switch(msg.type){      
 
+      //If login successful, remove the login modal. Else display error msg.
       case "Login Reply":{ 
         if (msg.content.is_login_successful){
           //Clear the modal.
@@ -90,6 +92,7 @@ function create_socket(){
         break;
       }
 
+      //Send a message to the main window.
       case "Chat":{
         if (msg.content.is_flashing){
           insert_chat_box("flashing_box", msg.content.html);
@@ -99,6 +102,7 @@ function create_socket(){
         break;
       }
 
+      //Populate the cmds container with the available cmds for the pressed entity.
       case "Commands Array": {
         cmds_container.replaceChildren();
 
@@ -110,16 +114,22 @@ function create_socket(){
         break;
       }
 
+      //Server sent the current User properties. Open the Edit User modal
+      //and populate it with these properties.
       case "Open Edit User Modal": {
         load_edit_user_modal(msg.content.user_obj);
         break;
       }
 
+      //Server sent the current Game props. Open the Edit Game modal
+      //and populate it with this properties.
       case "Open Edit Game Modal":{
         load_edit_game_modal(msg.content);
         break;
       }
 
+      //Server sent the current available exits to the room. Enable/Disable
+      //the exit links accordingly.
       case "Exits Message":{
         //{perm_link_north: bol...}   
         
@@ -195,6 +205,7 @@ function create_socket(){
         break;
       }
 
+      //Change the apps backgroud.
       case "Change Background":{        
         body.style.backgroundColor = msg.content.background;
         break;
@@ -207,7 +218,8 @@ function create_socket(){
   return socket_io;
 }
 
-//Handle form submisstions.
+//Handle form submisstions. Send the server the forms data,
+//according to which modal is currently active.
 modal_submit_btn.addEventListener('click', ()=>{  
 
   //Check the content of the modal.
@@ -290,7 +302,7 @@ modal_form.addEventListener('submit', (evt)=>{
   }    
 ) 
 
-//Close the modal without submission/
+//Close the modal without submission
 //Note: we don't clear the modal, in case the user clicked 'cancel' by mistake.
 modal_cancel_btn.addEventListener('click', ()=>{  
   modal.classList.remove('is-active');
@@ -313,6 +325,7 @@ main_window.addEventListener('click', (evt)=>{
 
 });
 
+//Handle clicks on commands in the cmds container.
 cmds_container.addEventListener('click', (evt)=>{
   evt.preventDefault(); //to prevent Chrome Mobile from selecting the text.
   

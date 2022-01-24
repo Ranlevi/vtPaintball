@@ -6,7 +6,18 @@ A text based paintball game.
 Login:
 User enters a name. The server verifies that no other user has the same name.
 The user spawns in a lobby. 
-He can chat with other users, or commands: create / join #### (some code).
+He can chat with other users, create a game or join one.
+
+Client Modals:
+Some user actions result in a modal opening to change props.
+The way this is implemented:
+- User clicks the initial commands (e.g. Edit User or Create Game)
+- Client sends the command to the server.
+- Server returns a message with current props.
+- Client opens the modal and populates it with the given props.
+
+
+
 
 If create, he is teleported to a room in a map, and gets a code that he can share ingame (via tell or invite cmds).
 He can also edit some game parameters: max num of users, max score. etc.

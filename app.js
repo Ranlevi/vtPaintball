@@ -2,7 +2,8 @@
 Text Tag
 ========
 A text based, multiplayer, virtual Laser Tag game.
-Author: Ran Levi. 
+Author: Ran Levi., 2021-2022
+See design_concepts.txt for more design info.
 
 Apps.js
 -------
@@ -12,9 +13,7 @@ Handles serving the Client to users, user login and user input.
 Note: must be https for clipboard to work!
 
 TODO:
-continue with look room, then logs and tests.
 keyboard movement on desktop?
-every time an ite spawns - announce
 give the game 'charecter'. funny? scary? 
 logs
 */
@@ -64,20 +63,26 @@ class Game_Controller {
     this.LOBBY_ID=      "r0000000";
 
     this.io=            new Server(server);
-    this.entities=      new Map(); //id : instance
-    this.entities_db;
+    this.entities=      new Map(); //id : instance. Holds all entities of all types.
+    this.entities_db;   //item_name: props. Holds props for available items.
     this.log_msgs=      [];
 
     //Handle Socket.IO Connections and messages.
     //-----------------------------------------
 
     this.io.on('connection', (socket) => {
+      //Each connection needs to be tied to a specific user.
+      //Note: sometimes the connection exists but the user is not logged it. That is
+      //      why we check the user_id when handling messages.
       socket.user_id = null;       
 
       socket.on('Message From Client', (msg)=>{
         
         switch(msg.type){
 
+          //Login message from a client. Server tries to find a user with
+          //the same name: if exists, login failed. If not - a new user is created.
+          //Send a reply to the client with the result.
           case "Login":{
             //Try to find an active user with the same username.        
             
@@ -107,12 +112,16 @@ class Game_Controller {
             break;
           }
 
+          //The user clicked an entity name.
           case "Entity Clicked":{
-            let entity = this.entities.get(msg.content.target_id);
-            entity.name_clicked(socket.user_id);
-            break;
+            if (socket.user_id!==null){
+              let entity = this.entities.get(msg.content.target_id);
+              entity.name_clicked(socket.user_id);
+              break;
+            }            
           }
 
+          //Handle user clicks on Commands.
           case "Command Clicked":{
 
             let user = this.entities.get(socket.user_id);
@@ -136,6 +145,8 @@ class Game_Controller {
                 break;
               }
 
+              //Get the user's props and send them to the client, for populating
+              //the Edit User modal.
               case "Edit User":{
                 let content = {
                   user_obj: {
@@ -149,10 +160,10 @@ class Game_Controller {
               //Open an Edit Game modal in the use's client.
               case "Create A New Game":{
                 let content = {      
-                  name:         "Text Tag",
-                  maps:         ["Pacman"],
-                  max_score_options: [5,10,15],
-                  is_private:   false
+                  name:               "Text Tag",
+                  maps:               ["Pacman"],
+                  max_score_options:  [5,10,15],
+                  is_private:         false
                 }    
                 user.send_msg_to_client('Open Edit Game Modal', content);                 
                 break;
@@ -214,6 +225,7 @@ class Game_Controller {
             break;
           }
 
+          //Get the modified props from the Edit User modal.
           case "Edit User":{
             let user = this.entities.get(socket.user_id);
             if (user!==undefined){
@@ -228,6 +240,8 @@ class Game_Controller {
             break;
           }
 
+          //Get the game parameters from the Edit Game modal, and 
+          //create a new game with these params.
           case "Create Game":{
             let user = this.entities.get(socket.user_id);
 
@@ -257,6 +271,7 @@ class Game_Controller {
         }
       });
 
+      //Handle disconnects
       socket.on('disconnect', (reason)=>{         
         if (socket.user_id!==null){
           //Find the user, remove him from the game and reset the socket's user_id.
@@ -275,10 +290,12 @@ class Game_Controller {
     this.init_lobby();
   }
 
+  //Load a database of pre-existing items.
   load_entities_db(){
     this.entities_db = JSON.parse(fs.readFileSync("./game/entities_db.json"));
   }
 
+  //Create the Lobby room.
   init_lobby(){
 
     let props = {
@@ -291,12 +308,12 @@ class Game_Controller {
     let lobby= new Classes.Room(this.entities, props);    
 
     //Spawn Lobby Items
-
     props = this.entities_db["Welcome Sign"];
     let welcome_sign = new Classes.Item(this.entities, props);
     welcome_sign.add_to_container(lobby.id);        
   }
 
+  //Gets a username, returns the user's id (if exists) or undefined.
   get_user_id_by_username(username){
     for (let inst of this.entities.values()){      
       if (inst.name===username){
@@ -307,6 +324,7 @@ class Game_Controller {
     return undefined;
   }
 
+  //Create a new user with the give name. Place him in the Lobby.
   create_new_user(socket, username){
     let props = {
       socket:       socket,
@@ -327,6 +345,7 @@ class Game_Controller {
     return user.id;    
   }
 
+  //Excecute every second.
   game_loop(){   
     
     let timer_id = setTimeout(
