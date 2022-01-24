@@ -1,4 +1,5 @@
 {  
+  "minimum_num_of_players": 2,
   "blue_spawn_room_id": "r0000001",
   "red_spawn_room_id":  "r0000002",
   "rooms": [

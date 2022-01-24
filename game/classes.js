@@ -63,6 +63,10 @@ class Entity {
       container.send_msg_to_all_users_in_the_room(`${this.get_name()} has spawned here.`, sender_id);
     }
   }  
+
+  tick(){
+    //Implement for each class.
+  }
 }
 
 //All activity in the game happens in rooms, that users move between.
@@ -285,6 +289,8 @@ class User extends Entity {
     };
     this.send_msg_to_client("Chat", content);    
   }
+
+  //Note: move cmd - can't move from spawn room before game starts.
   
   //Get the exits from the current room and send them.
   send_exits_msg_to_client(){    
@@ -480,8 +486,11 @@ class Game extends Entity {
     this.entities_db= entities_db;
     this.id=          Utils.id_generator.get_new_id("game");
 
+    this.countdown_enabled = false;
+    this.countdown_counter = 60;//seconds.
     this.type=        "Game";
-    this.owner_id=        null;
+    this.minimum_num_of_players = 2;
+    this.current_num_of_players = 0;
     this.spawn_rooms=     {
       red:  null,
       blue: null
@@ -515,10 +524,10 @@ class Game extends Entity {
     if (fs.existsSync(path)){      
       let parsed_info = JSON.parse(fs.readFileSync(path));    
       
-      this.spawn_rooms.blue=  parsed_info.blue_spawn_room_id;
-      this.spawn_rooms.red=   parsed_info.red_spawn_room_id;
-      this.item_spawn_rooms=  parsed_info.item_spawn_rooms;
-      this.map_name= "Pacman";
+      this.minimum_num_of_players=  parsed_info.minimum_num_of_players;
+      this.spawn_rooms.blue=        parsed_info.blue_spawn_room_id;
+      this.spawn_rooms.red=         parsed_info.red_spawn_room_id;
+      this.item_spawn_rooms=        parsed_info.item_spawn_rooms;      
 
       //Spawn Rooms
       for (const props of parsed_info.rooms){
@@ -542,7 +551,7 @@ class Game extends Entity {
             item.add_to_container(this.id);
           }
         }
-      }     
+      }   
 
     }  else {
       console.error(`classes.game.init_map -> pacman.json does not exist.`);
@@ -573,6 +582,14 @@ class Game extends Entity {
       is_flashing: false
     };
     this.send_msg_to_all_players(content);
+
+    //Check if enough users have joined the game.
+    if (this.current_num_of_players===this.minimum_num_of_players){
+      this.countdown_enabled = true;
+    } else {
+      content.html = `<p>Waiting for more players to join the game.</p><p>Minimum number of players for this map: ${this.minimum_num_of_players}.</p>`;
+      this.send_msg_to_all_players(content);
+    }    
   }
 
   send_msg_to_all_players(content){
@@ -597,52 +614,67 @@ class Game extends Entity {
 
     let user = this.global_entities.get(user_id);
 
+    //Remove user from the teams.
     if (user.team_color==="Red"){
       let ix = this.teams.red.indexOf(user_id);
-      this.teams.red.splice(ix,1);//continue here
-
+      this.teams.red.splice(ix,1);
+    } else if (user.team_color==="Blue"){
+      let ix = this.teams.blue.indexOf(user_id);
+      this.teams.blue.splice(ix,1);
     }
 
+    //Remove user from the game.
+    let ix = this.entities.indexOf(user_id);
+    this.entities.splice(ix,1);
 
-    //Check if other users exist.
-    if (this.teams.red.length===0 && this.teams.blue.length===0){
-      //
+    user.current_game_id = null;
+
+    //Check if other users exist. If not - close the game.
+    if (this.current_num_of_players===0){      
       this.destroy_game();
-    } else {
+    }
+  }
 
+  //remove rooms, items and the game itself from the world.
+  destroy_game(){
+    //Assumes no users are left in the game.    
+    for (const id of this.entities){
+      this.global_entities.delete(id);
     }
 
+    //remove the game itself
+    this.global_entities.delete(this.id);
+  }
 
+  tick(){
 
-    let ix = this.props.entities.indexOf(user_id);
-    if (ix!==-1){
-      this.props.entities.splice(ix,1);
-    }
+    if (this.countdown_enabled){
 
-    let user = this.world.get_instance(user_id);
+      if ([60,45,30,20,10,5,3,2,1].includes(this.countdown_counter)){
+        this.send_msg_to_all_players(`Game starts in ${this.countdown_counter} seconds.`);
+      }
 
-    if (this.props.owner_id===user.props.id){
-      this.props.owner_id = null;
-    }
-
-    user.props.team= null;
-    user.props.current_game_id= null;
-    user.props.owned_game_id=   null;
-
-    //Check how many players are left in the game.
-    let num_of_players = 0;
-    for (const id of this.props.entities){
-      let entity = this.world.get_instance(id);
-
-      if (entity.props.type==="User"){
-        num_of_players += 1;
+      if (this.countdown_counter!==0){
+        this.countdown_counter -= 1;
+      } else {
+        //Count down reached zero.
+        this.countdown_enabled = false;
+        this.countdown_counter = 60;
+        this.start_game();
       }
     }
+  }
 
-    if (num_of_players===0){
-      //All player have quit the game. Close it.
-      this.destroy_game();
-    }
+  start_game(){
+ 
+    this.game_has_started  = true;
+    this.score= {
+      red:  0,
+      blue: 0
+    };
+    
+    this.send_msg_to_all_players('THE GAME HAS STARTED!!');
+    // this.send_music_msg_to_all_players('On');
   }
 }
 

@@ -13,6 +13,8 @@ Handles serving the Client to users, user login and user input.
 Note: must be https for clipboard to work!
 
 TODO:
+bug: can't start game.
+bug: aa still in lobby after creating a game.
 keyboard movement on desktop?
 give the game 'charecter'. funny? scary? 
 logs
@@ -247,22 +249,17 @@ class Game_Controller {
 
             if (user!==undefined){
 
-              //Create a new game. Add the player as owner.
-              let props = {};
-              for (const [key, value] of Object.entries(msg.content.props)){
-                props[key] = value;
-              }
-              props.owner_id = user.id;
-
-              let game = new Classes.Game(this.entities, this.entities_db, props);    
-              game.add_player(user.id); //Do spawn
+              //Create a new game              
+              let game = new Classes.Game(this.entities, this.entities_db, msg.content.props);                  
 
               //Send welcome message to user. Send exits.
               let content = {
-                html: `<p><b>You have been teleported to the game arena.</b></p></p><p><span class="link" data-id="${game.id}">Copy</span> the game's ID and tell it to the other players.</p><p><span class="link" data-id="${game.id}">Start</span> the game when you're ready.</p>`,
+                html: `<p><b>You have been teleported to the game arena.</b></p></p><p><span class="link" data-id="${game.id}">Copy</span> the game's ID and tell it to the other players.</p>`,
                 is_flashing: false
               };
-              user.send_msg_to_client("Chat", content);
+              user.send_msg_to_client("Chat", content);              
+              game.add_player(user.id); //Do spawn
+
               user.send_exits_msg_to_client();
             }            
             break;
@@ -351,17 +348,16 @@ class Game_Controller {
     let timer_id = setTimeout(
       function update(){
       
-        this.tick();
+        for (const entity of this.entities.values()){
+          entity.tick();
+        }        
 
         timer_id = setTimeout(update.bind(this), 1000);
       }.bind(this),
       1000
     );
   }
-
-  tick(){
-    //Runs once each second.    
-  }
+  
 }
 
 //Start the game

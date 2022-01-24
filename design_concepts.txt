@@ -83,3 +83,10 @@ Interactive items should be marked.
 If client knew the state, could be done. 
 Say the client tracks items on body and room, and entities. 
 
+
+User creates the game.
+User joins the game.
+Send 'waiting' message.
+
+User joins game.
+If equal to minimum, start countdown.
