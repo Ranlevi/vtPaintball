@@ -48,7 +48,8 @@ class Entity {
   }  
 
   //Spawn the entity in the given container. If it's a room - notify other users in it.
-  spawn(container_id){
+  spawn(container_id){      
+
     this.add_to_container(container_id);
 
     let container = this.global_entities.get(container_id);
@@ -365,10 +366,11 @@ class User extends Entity {
   
   //Pop out of current room. Spawn in destination room.
   teleport(dest_container_id){
+
     let current_room = this.global_entities.get(this.container_id);
     current_room.send_msg_to_all_users_in_the_room(`${this.get_name()} has teleported away.`, this.id);
-    current_room.remove_from_container(this.id);
-
+    this.remove_from_container();
+        
     this.spawn(dest_container_id);
     
     let dest_room = this.global_entities.get(dest_container_id);
@@ -510,7 +512,7 @@ class Game extends Entity {
     this.map_name = null;
 
     this.set_props(props);
-    this.global_entities.set(this.id, this);
+    this.global_entities.set(this.id, this);    
     this.init();
   }
 
@@ -560,11 +562,14 @@ class Game extends Entity {
 
   add_player(user_id){
     
+    //Add user to game.
     this.add_to_container(user_id);
     
+    //Remove the user from the lobby
     let user = this.global_entities.get(user_id);
-    user.current_game_id= this.id;
+    user.current_game_id= this.id;    
 
+    //Determine the team the user is in, teleport him to the spawn room.
     if (this.teams.red.length<= this.teams.blue.length){
       //i.e., game owner is always Red.
       this.teams.red.push(user_id);
@@ -574,7 +579,8 @@ class Game extends Entity {
       this.teams.blue.push(user_id);
       user.team_color = "Blue";
       user.teleport(this.spawn_rooms.blue);
-    }
+    }   
+
     
     //Announce to all existing players.
     let content = {
@@ -675,6 +681,31 @@ class Game extends Entity {
     
     this.send_msg_to_all_players('THE GAME HAS STARTED!!');
     // this.send_music_msg_to_all_players('On');
+  }
+
+  name_clicked(clicking_user_id){
+
+    let clicking_user = this.global_entities.get(clicking_user_id);
+    let availabe_cmds = [];    
+    
+    availabe_cmds.push('Game Info');
+    availabe_cmds.push('Copy ID');       
+    
+    if (clicking_user.current_game_id===null){
+      availabe_cmds.push("Join This Game");      
+    } else {
+      availabe_cmds.push("Quit To Lobby");
+    }
+
+    let cmds_arr = [];
+      for (const cmd of availabe_cmds){
+        cmds_arr.push(`<span class="button is-small is-danger is-rounded cmd_button" data-id="${this.id}">${cmd}</span>`);
+      }
+
+    let content = {
+      cmds_arr: cmds_arr
+    }
+    clicking_user.send_msg_to_client("Commands Array", content);         
   }
 }
 

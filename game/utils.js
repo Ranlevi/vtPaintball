@@ -39,7 +39,7 @@ class ID_Generator {
         id = 'n';
         break;
 
-      case "Game":
+      case "game":
         id = 'g';
         break;
     }

@@ -116,7 +116,7 @@ class Game_Controller {
 
           //The user clicked an entity name.
           case "Entity Clicked":{
-            if (socket.user_id!==null){
+            if (socket.user_id!==null){              
               let entity = this.entities.get(msg.content.target_id);
               entity.name_clicked(socket.user_id);
               break;
@@ -171,7 +171,10 @@ class Game_Controller {
                 break;
               }
 
-              case "Join A Game":{
+              case "Join This Game":{
+                user.send_msg_to_client("Clear Chat", null);
+                let game = this.entities.get(msg.content.target_id);
+                game.add_player(socket.user_id);                
                 break;
               }
 
@@ -250,7 +253,9 @@ class Game_Controller {
             if (user!==undefined){
 
               //Create a new game              
-              let game = new Classes.Game(this.entities, this.entities_db, msg.content.props);                  
+              let game = new Classes.Game(this.entities, this.entities_db, msg.content.props);   
+              
+              user.send_msg_to_client("Clear Chat", null);
 
               //Send welcome message to user. Send exits.
               let content = {

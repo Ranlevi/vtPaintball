@@ -210,6 +210,11 @@ function create_socket(){
         body.style.backgroundColor = msg.content.background;
         break;
       }
+
+      case "Clear Chat":{
+        main_window.replaceChildren();
+        break;
+      }
     
     }  
    
